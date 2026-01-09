@@ -1,0 +1,5 @@
+google-genai
+yt-dlp
+python-dotenv
+youtube-transcript-api
+rapidfuzz

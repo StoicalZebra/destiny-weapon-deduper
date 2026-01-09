@@ -1,0 +1,61 @@
+{
+  "version": "1.0",
+  "exportedAt": "2025-01-06T00:00:00.000Z",
+  "godRolls": [
+    {
+      "weaponHash": 1429497048,
+      "weaponName": "Austringer",
+      "profiles": [
+        {
+          "id": "example-uuid-1234",
+          "name": "PvP God Roll",
+          "notes": "My preferred roll for Crucible",
+          "selection": {
+            "3661387068": "AND",
+            "1015611457": "AND",
+            "47981717": "OR",
+            "1359896290": "OR"
+          }
+        },
+        {
+          "id": "example-uuid-5678",
+          "name": "PvE God Roll",
+          "notes": "Great for add clear",
+          "selection": {
+            "3661387068": "AND",
+            "1168162263": "AND"
+          }
+        }
+      ]
+    },
+    {
+      "weaponHash": 2490524120,
+      "weaponName": "Beloved",
+      "profiles": [
+        {
+          "id": "example-uuid-9012",
+          "name": "Snapshot Roll",
+          "selection": {
+            "957782887": "AND",
+            "3425386926": "AND"
+          }
+        }
+      ]
+    }
+  ],
+
+  "_legend": {
+    "_description": "This section documents the god roll JSON file format. It is ignored during import.",
+    "version": "(required) File format version, must be '1.0'",
+    "exportedAt": "(optional) ISO 8601 timestamp when the file was created",
+    "godRolls": "(required) Array of weapons with saved god roll profiles",
+    "godRolls[].weaponHash": "(required) Destiny 2 manifest hash for the weapon (find on light.gg or d2foundry.gg)",
+    "godRolls[].weaponName": "(optional) Human-readable weapon name, for your reference only",
+    "godRolls[].profiles": "(required) Array of god roll profiles for this weapon",
+    "godRolls[].profiles[].id": "(required) Unique identifier (UUID format)",
+    "godRolls[].profiles[].name": "(required) Display name for the profile (e.g., 'PvP God Roll')",
+    "godRolls[].profiles[].notes": "(optional) Notes about this roll",
+    "godRolls[].profiles[].selection": "(required) Object mapping perk hashes to selection type",
+    "godRolls[].profiles[].selection[perkHash]": "'AND' = must have (required perk), 'OR' = nice to have (optional perk)"
+  }
+}
