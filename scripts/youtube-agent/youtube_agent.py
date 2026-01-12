@@ -52,26 +52,60 @@ WEAPON_LOOKUP = load_lookup('weapon_lookup.json')
 
 # --- PROMPT ---
 GOD_ROLL_PROMPT = """
-Analyze this Destiny 2 video transcript and extract god roll weapon recommendations.
+You are a Destiny 2 expert analyzing a video transcript for god roll weapon recommendations.
 
-OUTPUT FORMAT - Return ONLY a valid JSON array, no markdown, no explanation:
+DESTINY 2 WEAPON STRUCTURE:
+Weapons have distinct perk columns:
+- Column 1: Barrels/Sights (affects stats like stability, range, handling)
+- Column 2: Magazines/Batteries (affects ammo, reload, stats)
+- Column 3: Trait 1 (first main perk - e.g., Outlaw, Subsistence, Slideshot)
+- Column 4: Trait 2 (second main perk - e.g., Kill Clip, Rampage, Headstone)
+- Origin Trait: Weapon-specific perk (e.g., Skulking Wolf, Vanguard's Vindication)
+- Masterwork: Stat boost (Range, Stability, Handling, Reload Speed)
+
+OUTPUT FORMAT - Return ONLY valid JSON, no markdown:
 [
   {
-    "weapon": "Exact weapon name as shown in game",
-    "mode": "PvE" or "PvP" or "Both",
-    "perks": ["Perk Name 1", "Perk Name 2", "Perk Name 3"],
-    "notes": "Any relevant context from the video",
+    "weapon": "Exact weapon name",
+    "mode": "PvE" | "PvP" | "Both",
+    "barrel": ["Perk Name"],
+    "magazine": ["Perk Name"],
+    "trait1": ["Perk Name", "Alternative Perk"],
+    "trait2": ["Perk Name"],
+    "masterwork": "Stat Name or null",
+    "originTrait": "Perk Name or null",
+    "reasoning": "Why these perks synergize and what playstyle they enable",
     "timestamp": "MM:SS"
   }
 ]
 
 RULES:
-1. Use EXACT Destiny 2 perk names with proper capitalization (e.g., "Kill Clip", "Slideshot", "Vorpal Weapon")
-2. Include ALL perks mentioned for each roll (barrels, magazines, traits)
-3. If the creator says "or" between perks, include all options in the perks array
-4. Separate PvE and PvP rolls as different entries if they have different perks
-5. If no god rolls are discussed in the video, return: []
-6. Output ONLY valid JSON - no markdown code blocks, no text before or after
+1. Use EXACT Destiny 2 perk names with proper capitalization
+2. Include "The" prefix for weapons that have it (e.g., "The Martlet", "The Immortal")
+3. If creator says "X or Y" for a column, put both in that column's array as alternatives
+4. Extract recommendations even if only trait1 OR trait2 is mentioned - partial rolls are OK
+5. Separate PvE and PvP as different entries ONLY if they have different perks
+6. The "reasoning" field must explain WHY these perks work together, not just restate them
+7. Auto-captions have errors - use your Destiny 2 knowledge to correct obvious mishearings
+   (e.g., "vorpal" not "vorp all", "Kill Clip" not "kill clip")
+8. If a column isn't mentioned, use null (don't guess)
+9. If no god rolls are discussed, return: []
+
+EXAMPLE OUTPUT:
+[
+  {
+    "weapon": "Solemn Remembrance",
+    "mode": "PvE",
+    "barrel": ["Arrowhead Brake"],
+    "magazine": ["Tactical Mag"],
+    "trait1": ["Headstone"],
+    "trait2": ["Firefly"],
+    "masterwork": "Stability",
+    "originTrait": null,
+    "reasoning": "Headstone creates a Stasis crystal on precision kills, and Firefly's explosion instantly shatters it, causing chain reaction damage for exceptional add clear.",
+    "timestamp": "01:42"
+  }
+]
 
 TRANSCRIPT:
 """
@@ -142,6 +176,35 @@ def build_timestamped_url(video_id, timestamp_str):
         return f"{base_url}&t={seconds}s"
     return base_url
 
+def clean_vtt_transcript(vtt_content):
+    """Clean VTT subtitle format to plain text."""
+    lines = vtt_content.split('\n')
+    seen_lines = set()
+    clean_lines = []
+
+    for line in lines:
+        # Skip VTT header, timing lines, and empty lines
+        if line.startswith('WEBVTT') or line.startswith('Kind:') or line.startswith('Language:'):
+            continue
+        if '-->' in line:  # Timing line
+            continue
+        if not line.strip():
+            continue
+        if line.strip().startswith('NOTE'):
+            continue
+
+        # Remove HTML-like tags (e.g., <c>, </c>, <00:00:01.234>)
+        clean_line = re.sub(r'<[^>]+>', '', line)
+        clean_line = clean_line.strip()
+
+        # Skip duplicate lines (VTT often repeats lines)
+        if clean_line and clean_line not in seen_lines:
+            seen_lines.add(clean_line)
+            clean_lines.append(clean_line)
+
+    return ' '.join(clean_lines)
+
+
 def get_transcript_with_ytdlp(video_url):
     """Download subtitles for a video using yt-dlp."""
     temp_filename = "temp_subs"
@@ -166,7 +229,7 @@ def get_transcript_with_ytdlp(video_url):
             return None
 
         with open(files[0], 'r', encoding='utf-8') as f:
-            content = f.read()
+            vtt_content = f.read()
 
         # Cleanup temp files
         for f in files:
@@ -175,8 +238,9 @@ def get_transcript_with_ytdlp(video_url):
             except:
                 pass
 
-        return content
-    except Exception as e:
+        # Clean VTT to plain text
+        return clean_vtt_transcript(vtt_content)
+    except Exception:
         return None
 
 def analyze_transcript(text_content, video_title):
@@ -223,7 +287,7 @@ def parse_gemini_response(response_text):
     except json.JSONDecodeError:
         return None
 
-def lookup_hash(name, lookup_dict, threshold=80):
+def lookup_hash(name, lookup_dict, threshold=75):
     """Look up a hash by name, with optional fuzzy matching."""
     if not name:
         return None, False
@@ -247,7 +311,7 @@ def convert_to_d3_format(god_rolls, video_info):
     """Convert parsed god rolls to D3 import format.
 
     Args:
-        god_rolls: List of god roll dicts from Gemini
+        god_rolls: List of god roll dicts from Gemini (new structured format)
         video_info: Dict with 'title', 'id', 'channel', 'url' keys
     """
     results = []
@@ -257,6 +321,9 @@ def convert_to_d3_format(god_rolls, video_info):
     video_id = video_info.get('id', '')
     video_channel = video_info.get('channel', 'Unknown')
     video_url = video_info.get('url', '')
+
+    # Perk columns to process (in order)
+    perk_columns = ['barrel', 'magazine', 'trait1', 'trait2', 'originTrait', 'masterwork']
 
     for roll in god_rolls:
         weapon_name = roll.get('weapon', '')
@@ -269,27 +336,41 @@ def convert_to_d3_format(god_rolls, video_info):
         if not exact_weapon:
             uncertain.append(f"⚠️ Fuzzy weapon match: '{weapon_name}'")
 
-        # Build perk selection
+        # Build perk selection from all columns
         selection = {}
-        perks_list = roll.get('perks', [])
 
-        for perk_name in perks_list:
-            perk_hash, exact_perk = lookup_hash(perk_name, PERK_LOOKUP)
-            if perk_hash:
-                selection[str(perk_hash)] = "OR"
-                if not exact_perk:
-                    uncertain.append(f"⚠️ Fuzzy perk match: '{perk_name}'")
-            else:
-                uncertain.append(f"❓ Unknown perk: '{perk_name}'")
+        for column in perk_columns:
+            column_value = roll.get(column)
+            if not column_value:
+                continue
+
+            # Handle both array and string values
+            perks_list = column_value if isinstance(column_value, list) else [column_value]
+
+            for perk_name in perks_list:
+                if not perk_name or perk_name == 'null':
+                    continue
+                perk_hash, exact_perk = lookup_hash(perk_name, PERK_LOOKUP)
+                if perk_hash:
+                    selection[str(perk_hash)] = "OR"
+                    if not exact_perk:
+                        uncertain.append(f"⚠️ Fuzzy perk match: '{perk_name}'")
+                else:
+                    uncertain.append(f"❓ Unknown perk: '{perk_name}'")
 
         if selection:  # Only add if we found at least one perk
             mode = roll.get('mode', 'Unknown')
-            notes = roll.get('notes', '')
+            reasoning = roll.get('reasoning', '')
             timestamp = roll.get('timestamp', '')
 
             # Build URLs
             timestamped_url = build_timestamped_url(video_id, timestamp) if video_id else video_url
             base_url = f"https://www.youtube.com/watch?v={video_id}" if video_id else video_url
+
+            # Build notes with reasoning and source attribution
+            notes = reasoning
+            if notes and video_title:
+                notes = f"{reasoning} (from: {video_title} @ {timestamp})" if timestamp else f"{reasoning} (from: {video_title})"
 
             profile = {
                 "id": str(uuid.uuid4()),
