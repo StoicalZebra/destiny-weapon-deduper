@@ -7,6 +7,8 @@ import WeaponDetailView from '@/views/WeaponDetailView.vue'
 import PlaygroundView from '@/views/PlaygroundView.vue'
 import SettingsView from '@/views/SettingsView.vue'
 import GodRollsView from '@/views/GodRollsView.vue'
+import WishlistsView from '@/views/WishlistsView.vue'
+import WishlistDetailView from '@/views/WishlistDetailView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -48,6 +50,16 @@ const router = createRouter({
       name: 'godrolls',
       component: GodRollsView,
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/wishlists',
+      name: 'wishlists',
+      component: WishlistsView
+    },
+    {
+      path: '/wishlists/:id',
+      name: 'wishlist-detail',
+      component: WishlistDetailView
     }
   ]
 })

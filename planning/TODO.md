@@ -188,7 +188,22 @@ To fix
   - Make community pick cards bigger so can see all text
     - Make sure Youtuber name / Author shows up, links etc.
 
-- Use LittleLite wishlist maker for creating your own god rolls? - https://wishlists.littlelight.club/
+- Use LittleLight wishlist maker for creating your own god rolls? - https://wishlists.littlelight.club/
+
+2026-01-12
+New focus: small subset of DIM & Littlelight functions needed for inventory deduping
+- DIM: Wishlist usage + showing weapons with large numbers of duplicates + marking keep / junk
+- Littlelight: wishlist CRUD
+- My own addition: Youtube parser for God Roll videos
+
+Workflow
+- Have a good wishlist to reduce "analysis paralysis" → "What roll is good?"" (use preset wishlist, make your own custom wishlist - wishlists are compatible with DIM & Littlelight)
+- UI shows which weapons in your pile of dupes are "good" according to wishlist
+- Mark dupes as junk / keep in DIM (possible?)
+- Go into Destiny 2 to purge vault of junk
+
+Docs
+- Merge Idea.md into a top section called "Initial Idea" in Spec.md
 
 
 

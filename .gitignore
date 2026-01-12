@@ -36,3 +36,4 @@ scripts/youtube-agent/weapon_perk_pools.json
 scripts/youtube-agent/perk_names.json
 __pycache__/
 *.pyc
+.playwright-mcp/

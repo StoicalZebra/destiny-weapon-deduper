@@ -23,6 +23,13 @@
         </RouterLink>
 
         <RouterLink
+          to="/wishlists"
+          class="text-gray-300 hover:text-white transition"
+        >
+          Wishlists
+        </RouterLink>
+
+        <RouterLink
           to="/settings"
           class="text-gray-300 hover:text-white transition"
         >

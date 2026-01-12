@@ -101,6 +101,11 @@ export type ManifestTableName = typeof REQUIRED_MANIFEST_TABLES[number]
 
 // IndexedDB configuration
 export const DB_NAME = 'd3deduper'
-export const DB_VERSION = 1
+export const DB_VERSION = 2 // Incremented for wishlists store
 export const MANIFEST_STORE_NAME = 'manifest'
 export const MANIFEST_VERSION_KEY = 'manifest_version'
+export const WISHLIST_STORE_NAME = 'wishlists'
+
+// localStorage keys for wishlists
+export const WISHLIST_USER_PREFIX = 'd3_wishlist_user_'
+export const WISHLIST_VERSIONS_KEY = 'd3_wishlist_versions'
