@@ -554,14 +554,12 @@ if __name__ == "__main__":
 
     # Create output directory
     os.makedirs(OUTPUT_DIR, exist_ok=True)
-    json_filename = os.path.join(OUTPUT_DIR, f"God_Roll_Import_{timestamp}.json")
-    review_filename = os.path.join(OUTPUT_DIR, f"God_Roll_Review_{timestamp}.md")
-    readable_filename = os.path.join(OUTPUT_DIR, f"God_Rolls_{timestamp}.md")
+    json_filename = os.path.join(OUTPUT_DIR, f"God_Rolls_{timestamp}.json")
+    markdown_filename = os.path.join(OUTPUT_DIR, f"God_Rolls_{timestamp}.md")
 
     print(f"\n📝 Output files:")
     print(f"   • {json_filename} (D3 import)")
-    print(f"   • {readable_filename} (human readable)")
-    print(f"   • {review_filename} (issues/warnings)")
+    print(f"   • {markdown_filename} (human readable)")
     print(f"🤖 Model: {MODEL_NAME}")
     print("-" * 50)
 
@@ -655,26 +653,21 @@ if __name__ == "__main__":
     # --- FINAL SUMMARY ---
     print(f"\n✅ Saved {len(all_results)} weapons to {json_filename}")
 
-    # Human-readable markdown
-    with open(readable_filename, 'w', encoding='utf-8') as f:
+    # Human-readable markdown (with review section at bottom)
+    with open(markdown_filename, 'w', encoding='utf-8') as f:
         f.write(f"# God Roll Recommendations\n\n")
         f.write(f"Generated: {timestamp}\n")
         f.write(f"Source: {video_link}\n\n")
         f.write(generate_readable_markdown(all_raw_rolls))
 
-    print(f"📖 Readable file: {readable_filename}")
-
-    # Review/warnings markdown
-    with open(review_filename, 'w', encoding='utf-8') as f:
-        f.write(f"# God Roll Review - Issues & Warnings\n")
-        f.write(f"Generated: {timestamp}\n")
-        f.write(f"Source: {video_link}\n\n")
-
+        # Add review/warnings section at bottom
+        f.write("\n---\n\n")
         if all_uncertain:
-            f.write("## ⚠️ Items Needing Review\n")
+            f.write("## ⚠️ Items Needing Review\n\n")
             f.write("\n".join(all_uncertain))
+            f.write("\n")
         else:
-            f.write("✅ All items matched successfully!\n")
+            f.write("## ✅ All items matched successfully!\n")
 
-    print(f"📋 Review file: {review_filename}")
+    print(f"📖 Markdown: {markdown_filename}")
     print(f"\n🎉 Done! Import {json_filename} into D3.")
