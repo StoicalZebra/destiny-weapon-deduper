@@ -110,6 +110,36 @@ EXAMPLE OUTPUT:
 TRANSCRIPT:
 """
 
+def is_playlist_url(url):
+    """Check if URL is a playlist or single video."""
+    return 'list=' in url
+
+
+def get_single_video(video_url):
+    """Get video info for a single video URL."""
+    print(f"\n🔍 Fetching video info...")
+    metadata = get_video_metadata(video_url)
+    if metadata:
+        # Extract video ID from URL
+        video_id = metadata.get('id', '')
+        if not video_id:
+            # Try to parse from URL
+            if 'v=' in video_url:
+                video_id = video_url.split('v=')[1].split('&')[0]
+            elif 'youtu.be/' in video_url:
+                video_id = video_url.split('youtu.be/')[1].split('?')[0]
+
+        video_data = [{
+            'title': metadata.get('title', 'Unknown Video'),
+            'url': f"https://www.youtube.com/watch?v={video_id}" if video_id else video_url,
+            'id': video_id,
+            'channel': metadata.get('channel', 'Unknown'),
+        }]
+        print(f"✅ Found: {video_data[0]['title']}")
+        return video_data
+    return []
+
+
 def get_playlist_videos(playlist_url):
     """Extract video info from a YouTube playlist."""
     print(f"\n🔍 Scanning playlist...")
@@ -307,6 +337,92 @@ def lookup_hash(name, lookup_dict, threshold=75):
 
     return None, False
 
+def generate_readable_markdown(all_raw_rolls):
+    """Generate human-readable markdown from raw god roll data."""
+    lines = []
+
+    # Group by weapon
+    weapons = {}
+    for item in all_raw_rolls:
+        video_info = item['video_info']
+        for roll in item['rolls']:
+            weapon_name = roll.get('weapon', 'Unknown')
+            if weapon_name not in weapons:
+                weapons[weapon_name] = []
+            weapons[weapon_name].append({
+                'roll': roll,
+                'video': video_info
+            })
+
+    # Sort weapons alphabetically
+    for weapon_name in sorted(weapons.keys()):
+        lines.append(f"## {weapon_name}\n")
+
+        for entry in weapons[weapon_name]:
+            roll = entry['roll']
+            video = entry['video']
+
+            mode = roll.get('mode', 'Unknown')
+            lines.append(f"### {mode} Roll\n")
+
+            # Perks table
+            lines.append("| Column | Perks |")
+            lines.append("|--------|-------|")
+
+            if roll.get('barrel'):
+                perks = roll['barrel'] if isinstance(roll['barrel'], list) else [roll['barrel']]
+                perks = [p for p in perks if p]
+                if perks:
+                    lines.append(f"| Barrel | {', '.join(perks)} |")
+
+            if roll.get('magazine'):
+                perks = roll['magazine'] if isinstance(roll['magazine'], list) else [roll['magazine']]
+                perks = [p for p in perks if p]
+                if perks:
+                    lines.append(f"| Magazine | {', '.join(perks)} |")
+
+            if roll.get('trait1'):
+                perks = roll['trait1'] if isinstance(roll['trait1'], list) else [roll['trait1']]
+                perks = [p for p in perks if p]
+                if perks:
+                    lines.append(f"| Trait 1 | {', '.join(perks)} |")
+
+            if roll.get('trait2'):
+                perks = roll['trait2'] if isinstance(roll['trait2'], list) else [roll['trait2']]
+                perks = [p for p in perks if p]
+                if perks:
+                    lines.append(f"| Trait 2 | {', '.join(perks)} |")
+
+            if roll.get('originTrait'):
+                lines.append(f"| Origin | {roll['originTrait']} |")
+
+            if roll.get('masterwork'):
+                lines.append(f"| Masterwork | {roll['masterwork']} |")
+
+            lines.append("")
+
+            # Reasoning
+            if roll.get('reasoning'):
+                lines.append(f"**Why:** {roll['reasoning']}\n")
+
+            # Source
+            timestamp = roll.get('timestamp', '')
+            video_title = video.get('title', '')
+            video_id = video.get('id', '')
+            channel = video.get('channel', '')
+
+            if video_id and timestamp:
+                seconds = timestamp_to_seconds(timestamp)
+                url = f"https://www.youtube.com/watch?v={video_id}&t={seconds}s" if seconds else f"https://www.youtube.com/watch?v={video_id}"
+                lines.append(f"**Source:** [{video_title}]({url}) by {channel} @ {timestamp}\n")
+            elif video_title:
+                lines.append(f"**Source:** {video_title} by {channel}\n")
+
+            lines.append("---\n")
+
+    return "\n".join(lines)
+
+
 def convert_to_d3_format(god_rolls, video_info):
     """Convert parsed god rolls to D3 import format.
 
@@ -419,10 +535,20 @@ if __name__ == "__main__":
     else:
         print("⚠️  Fuzzy matching disabled (install rapidfuzz for better matching)")
 
-    playlist_link = input("\n🔗 Paste the YouTube Playlist URL: ").strip()
+    video_link = input("\n🔗 Paste YouTube URL (video or playlist): ").strip()
 
-    start_input = input("▶️  Start at video # (Press Enter for 1): ").strip()
-    start_index = int(start_input) - 1 if start_input else 0
+    # Detect single video vs playlist
+    if is_playlist_url(video_link):
+        start_input = input("▶️  Start at video # (Press Enter for 1): ").strip()
+        start_index = int(start_input) - 1 if start_input else 0
+        videos = get_playlist_videos(video_link)
+    else:
+        start_index = 0
+        videos = get_single_video(video_link)
+
+    if not videos:
+        print("❌ No videos found!")
+        exit(1)
 
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M")
 
@@ -430,17 +556,18 @@ if __name__ == "__main__":
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     json_filename = os.path.join(OUTPUT_DIR, f"God_Roll_Import_{timestamp}.json")
     review_filename = os.path.join(OUTPUT_DIR, f"God_Roll_Review_{timestamp}.md")
-
-    videos = get_playlist_videos(playlist_link)
+    readable_filename = os.path.join(OUTPUT_DIR, f"God_Rolls_{timestamp}.md")
 
     print(f"\n📝 Output files:")
     print(f"   • {json_filename} (D3 import)")
-    print(f"   • {review_filename} (human review)")
+    print(f"   • {readable_filename} (human readable)")
+    print(f"   • {review_filename} (issues/warnings)")
     print(f"🤖 Model: {MODEL_NAME}")
     print("-" * 50)
 
     all_results = []
     all_uncertain = []
+    all_raw_rolls = []  # For readable markdown
 
     for i, video in enumerate(videos):
         if i < start_index:
@@ -500,6 +627,12 @@ if __name__ == "__main__":
             'url': url,
         }
 
+        # Store raw rolls for readable markdown
+        all_raw_rolls.append({
+            'video_info': video_info,
+            'rolls': god_rolls
+        })
+
         results, uncertain = convert_to_d3_format(god_rolls, video_info)
         all_results.extend(results)
 
@@ -522,11 +655,20 @@ if __name__ == "__main__":
     # --- FINAL SUMMARY ---
     print(f"\n✅ Saved {len(all_results)} weapons to {json_filename}")
 
-    # Review markdown
-    with open(review_filename, 'w', encoding='utf-8') as f:
-        f.write(f"# God Roll Review\n")
+    # Human-readable markdown
+    with open(readable_filename, 'w', encoding='utf-8') as f:
+        f.write(f"# God Roll Recommendations\n\n")
         f.write(f"Generated: {timestamp}\n")
-        f.write(f"Source: {playlist_link}\n\n")
+        f.write(f"Source: {video_link}\n\n")
+        f.write(generate_readable_markdown(all_raw_rolls))
+
+    print(f"📖 Readable file: {readable_filename}")
+
+    # Review/warnings markdown
+    with open(review_filename, 'w', encoding='utf-8') as f:
+        f.write(f"# God Roll Review - Issues & Warnings\n")
+        f.write(f"Generated: {timestamp}\n")
+        f.write(f"Source: {video_link}\n\n")
 
         if all_uncertain:
             f.write("## ⚠️ Items Needing Review\n")
