@@ -39,6 +39,8 @@ export interface Wishlist {
   lastFetched?: string // ISO timestamp of last fetch
   lastUpdated?: string // ISO timestamp of content update
   items: WishlistItem[] // All rolls in this wishlist
+  // Note: enabled state is stored separately in localStorage via wishlistStorageService
+  // for performance reasons. See README "Wishlist Performance Architecture" section.
 }
 
 /**

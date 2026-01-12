@@ -109,3 +109,4 @@ export const WISHLIST_STORE_NAME = 'wishlists'
 // localStorage keys for wishlists
 export const WISHLIST_USER_PREFIX = 'd3_wishlist_user_'
 export const WISHLIST_VERSIONS_KEY = 'd3_wishlist_versions'
+export const WISHLIST_ENABLED_STATES_KEY = 'd3_wishlist_enabled_states'

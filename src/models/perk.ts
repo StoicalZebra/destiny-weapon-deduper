@@ -6,4 +6,9 @@ export interface Perk {
   isOwned: boolean
   /** All variant hashes (e.g., enhanced + non-enhanced) that map to this perk */
   variantHashes?: number[]
+  /**
+   * If true, this perk cannot be obtained on new drops of the weapon.
+   * It was available in past seasons but has been retired from the perk pool.
+   */
+  cannotCurrentlyRoll?: boolean
 }

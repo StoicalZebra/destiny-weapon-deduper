@@ -70,6 +70,11 @@ export interface DestinyPlugSetDefinition extends ManifestDefinition {
   }
   reusablePlugItems: Array<{
     plugItemHash: number
+    /**
+     * Whether this perk can currently roll on new drops.
+     * If false, this perk was available in past seasons but can no longer be obtained.
+     */
+    currentlyCanRoll?: boolean
     craftingRequirements?: any
   }>
 }

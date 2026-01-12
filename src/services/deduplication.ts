@@ -180,11 +180,24 @@ function getPlugItemTypeNames(plugItemHashes: number[]): string[] {
   return Array.from(typeNames)
 }
 
-function getPlugItemHashes(socketEntry: SocketEntry): number[] {
-  const hashes = new Set<number>()
+interface PlugItemInfo {
+  hash: number
+  /**
+   * True if this perk can currently roll on new weapon drops.
+   * False means it was available in past seasons but has been retired.
+   * Undefined means we don't have data (treat as rollable).
+   */
+  currentlyCanRoll?: boolean
+}
 
+function getPlugItemsWithRollStatus(socketEntry: SocketEntry): PlugItemInfo[] {
+  // Map hash -> best known currentlyCanRoll status
+  // If any entry has currentlyCanRoll = true, the perk is rollable
+  const plugMap = new Map<number, boolean | undefined>()
+
+  // singleInitialItemHash is typically a default/curated plug - assume it can roll
   if (socketEntry.singleInitialItemHash) {
-    hashes.add(socketEntry.singleInitialItemHash)
+    plugMap.set(socketEntry.singleInitialItemHash, true)
   }
 
   const plugSetHashes = [
@@ -197,11 +210,30 @@ function getPlugItemHashes(socketEntry: SocketEntry): number[] {
     if (!plugSet) continue
 
     for (const plugItem of plugSet.reusablePlugItems) {
-      hashes.add(plugItem.plugItemHash)
+      const hash = plugItem.plugItemHash
+      const canRoll = plugItem.currentlyCanRoll
+
+      // If we already know this perk can roll, keep that status
+      // Otherwise, update with the new information
+      const existing = plugMap.get(hash)
+      if (existing === true) {
+        // Already marked as rollable, don't downgrade
+        continue
+      }
+      // If canRoll is true, mark as rollable; otherwise keep the existing or set to canRoll
+      plugMap.set(hash, canRoll === true ? true : (existing ?? canRoll))
     }
   }
 
-  return Array.from(hashes)
+  return Array.from(plugMap.entries()).map(([hash, currentlyCanRoll]) => ({
+    hash,
+    currentlyCanRoll
+  }))
+}
+
+// Keep the simple version for backwards compatibility where we don't need roll status
+function getPlugItemHashes(socketEntry: SocketEntry): number[] {
+  return getPlugItemsWithRollStatus(socketEntry).map(p => p.hash)
 }
 
 function getOwnedPlugHashes(
@@ -231,21 +263,33 @@ function getOwnedPlugHashes(
 
 function buildPerkColumn(
   socketEntry: SocketEntry,
-  plugItemHashes: number[],
+  plugItems: PlugItemInfo[],
   socketIndex: number,
   instances: WeaponInstance[],
   fallbackName: string
 ): PerkColumn | null {
-  if (plugItemHashes.length === 0) return null
+  if (plugItems.length === 0) return null
 
   const ownedPerks = getOwnedPlugHashes(instances, socketIndex)
-  const allPlugHashes = new Set<number>(plugItemHashes)
 
-  for (const ownedHash of ownedPerks) {
-    allPlugHashes.add(ownedHash)
+  // Build a map of hash -> currentlyCanRoll status from the plug items
+  const rollStatusMap = new Map<number, boolean | undefined>()
+  for (const item of plugItems) {
+    rollStatusMap.set(item.hash, item.currentlyCanRoll)
   }
 
-  const perkGroups = new Map<string, { hash: number; name: string }[]>()
+  // Combine manifest perks with owned perks
+  const allPlugHashes = new Set<number>(plugItems.map(p => p.hash))
+  for (const ownedHash of ownedPerks) {
+    allPlugHashes.add(ownedHash)
+    // Owned perks that aren't in the manifest plug sets are assumed rollable
+    // (they could be from current drops the player has)
+    if (!rollStatusMap.has(ownedHash)) {
+      rollStatusMap.set(ownedHash, true)
+    }
+  }
+
+  const perkGroups = new Map<string, { hash: number; name: string; canRoll?: boolean }[]>()
 
   for (const hash of allPlugHashes) {
     const perkDef = manifestService.getInventoryItem(hash)
@@ -255,7 +299,11 @@ function buildPerkColumn(
     if (!perkGroups.has(normalized)) {
       perkGroups.set(normalized, [])
     }
-    perkGroups.get(normalized)!.push({ hash, name: perkName })
+    perkGroups.get(normalized)!.push({
+      hash,
+      name: perkName,
+      canRoll: rollStatusMap.get(hash)
+    })
   }
 
   const availablePerks: Perk[] = []
@@ -278,6 +326,11 @@ function buildPerkColumn(
       }
     }
 
+    // Determine if any variant can currently roll
+    // If ALL variants have currentlyCanRoll === false, then this perk cannot roll
+    // If any variant has currentlyCanRoll === true or undefined, it's considered rollable
+    const cannotCurrentlyRoll = variants.every(v => v.canRoll === false)
+
     // Collect all variant hashes (enhanced + non-enhanced) for hover matching
     const variantHashes = variants.map((v) => v.hash)
 
@@ -287,11 +340,19 @@ function buildPerkColumn(
       description: perkDef?.displayProperties?.description || '',
       icon: perkDef?.displayProperties?.icon || '',
       isOwned,
-      variantHashes
+      variantHashes,
+      cannotCurrentlyRoll: cannotCurrentlyRoll || undefined // Only set if true
     })
   }
 
-  availablePerks.sort((a, b) => a.name.localeCompare(b.name))
+  // Sort perks: rollable perks first (alphabetically), then retired perks at the bottom
+  availablePerks.sort((a, b) => {
+    // Retired perks go to the bottom
+    if (a.cannotCurrentlyRoll && !b.cannotCurrentlyRoll) return 1
+    if (!a.cannotCurrentlyRoll && b.cannotCurrentlyRoll) return -1
+    // Within each group, sort alphabetically
+    return a.name.localeCompare(b.name)
+  })
 
   return {
     columnIndex: socketIndex,
@@ -358,7 +419,7 @@ function buildPerkMatrix(
     socketTypeName: string
     categoryName: string | null
     kind: ColumnKind
-    plugItemHashes: number[]
+    plugItems: PlugItemInfo[]
     perkTypeNames: string[]
   }> = []
 
@@ -375,7 +436,8 @@ function buildPerkMatrix(
       socketEntry.socketTypeHash,
       `Perk Column ${socketIndex + 1}`
     )
-    const plugItemHashes = getPlugItemHashes(socketEntry)
+    const plugItems = getPlugItemsWithRollStatus(socketEntry)
+    const plugItemHashes = plugItems.map(p => p.hash)
     const perkTypeNames = getPlugItemTypeNames(plugItemHashes)
     const kind = getColumnKind(socketTypeName, categoryName, perkTypeNames)
 
@@ -385,7 +447,7 @@ function buildPerkMatrix(
       socketTypeName,
       categoryName,
       kind,
-      plugItemHashes,
+      plugItems,
       perkTypeNames
     })
   }
@@ -453,13 +515,14 @@ function buildPerkMatrix(
         socketTypeName.toLowerCase().includes('masterwork') ||
         plugItemHashes.some((hash) => isMasterworkPlug(hash))
       ) {
+        const plugItems = getPlugItemsWithRollStatus(socketEntry)
         masterworkCandidate = {
           socketIndex: index,
           socketEntry,
           socketTypeName,
           categoryName: null,
           kind: 'masterwork',
-          plugItemHashes,
+          plugItems,
           perkTypeNames: getPlugItemTypeNames(plugItemHashes)
         }
         break
@@ -471,7 +534,7 @@ function buildPerkMatrix(
   if (intrinsic) {
     const column = buildPerkColumn(
       intrinsic.socketEntry,
-      intrinsic.plugItemHashes,
+      intrinsic.plugItems,
       intrinsic.socketIndex,
       instances,
       'Intrinsic Traits'
@@ -500,7 +563,7 @@ function buildPerkMatrix(
   for (const { label, candidate } of orderedColumns) {
     const column = buildPerkColumn(
       candidate.socketEntry,
-      candidate.plugItemHashes,
+      candidate.plugItems,
       candidate.socketIndex,
       instances,
       label

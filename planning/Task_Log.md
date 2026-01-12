@@ -169,7 +169,7 @@ When managing Inventory I want to know:
       - Text
 
 
-2026-01-07
+## 2026-01-07
 Community picks
   Ok here's my thought on community picks for normal users
   Create - no, just admin; users can create their own god rolls / import /export etc.
@@ -190,7 +190,10 @@ To fix
 
 - Use LittleLight wishlist maker for creating your own god rolls? - https://wishlists.littlelight.club/
 
-2026-01-12
+## 2026-01-12
+Docs
+- [x] Merge Idea.md into a top section called "Initial Idea" in Spec.md]
+
 New focus: small subset of DIM & Littlelight functions needed for inventory deduping
 - DIM: Wishlist usage + showing weapons with large numbers of duplicates + marking keep / junk
 - Littlelight: wishlist CRUD
@@ -202,8 +205,31 @@ Workflow
 - Mark dupes as junk / keep in DIM (possible?)
 - Go into Destiny 2 to purge vault of junk
 
-Docs
-- Merge Idea.md into a top section called "Initial Idea" in Spec.md
+- [ ] Flow change: separate management for "what you have" vs "what you want"
+  - Home page: "what you have" management
+    - Shows overview of inventory
+    - Click into specific weapon: see "Perk Coverage" on Weapons Detail view
+    - Wishlist visibility in Wepons Detail
+      - Show full existing God Roll entries between "Perk Matrix" and "Instances" (new UI, DIm doesn't have this I don't think, just "atomized" traits as thumbs up/down)
+      - On each owned instance, mimic DIM display as shown in screenshot /planning/DIM Perks Grid with wishlist annotations.png
+        - Visual grid of perks
+        - Owned perks highlighted
+        - Wishlist-matched perks have thumbs up/down
+        - Hovering over perk shows perk description (DIM standard) AND WIshlist name(s) the recommendation comes from
+  - Wishlist Tab: "waht you want" management
+    - Preset wishlists are mostly done
+    - User generated wishlists need work for CRUD aspects
+    - I'd like to re-use existing "Set Your God Rolls" → "God Roll Creator" UI if possible for user 
+    wishlist CRUD entries
+      - If no user wishlist exists = prompt to create; if multiple exist, have dropdown / choice for which wishist to add entry to
+    - Where to access this wishlist CRUD UI? 2 places?
+      - 1) Keep where it is now but save to a user generated, DIM-standard wishlist (Not "Saved God Rolls") as it is now
+      - 2) There should be an "Edit" button on each entry for a "custom" / user-generated wishlists (only have "Remove" now) 
+        - Clicking "edit" on each entry brings up the "God Roll Creator" UI to allow edits. Update brings back to main custom wishlist view
+        - change cards for each entry in wishlist to mimic DIM perk matrix
+
+
+
 
 
 

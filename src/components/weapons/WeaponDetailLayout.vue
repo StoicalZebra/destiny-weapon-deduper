@@ -57,6 +57,9 @@
 
     <!-- Weapon Content -->
     <div v-else>
+      <!-- Legacy Migration Banner -->
+      <LegacyMigrationBanner />
+
       <!-- Tabs -->
       <div class="mb-6 border-b border-gray-800">
         <nav class="-mb-px flex space-x-8" aria-label="Tabs">
@@ -78,24 +81,33 @@
 
       <!-- Tab Content -->
       <div v-if="activeTab === 'coverage'">
-        <WeaponsCoverage :weapon="weapon" />
+        <WeaponsCoverage
+          :weapon="weapon"
+          @load-wishlist-item="handleLoadWishlistItem"
+          @edit-wishlist-item="handleEditWishlistItem"
+        />
       </div>
 
       <div v-else-if="activeTab === 'godroll'">
-        <WeaponsGodRoll :weapon="weapon" />
+        <WeaponsGodRoll
+          ref="godRollRef"
+          :weapon="weapon"
+        />
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, nextTick } from 'vue'
 import WeaponsCoverage from '@/components/weapons/WeaponsCoverage.vue'
 import WeaponsGodRoll from '@/components/weapons/WeaponsGodRoll.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import ErrorMessage from '@/components/common/ErrorMessage.vue'
 import WeaponIcon from '@/components/common/WeaponIcon.vue'
+import LegacyMigrationBanner from '@/components/common/LegacyMigrationBanner.vue'
 import type { DedupedWeapon } from '@/models/deduped-weapon'
+import type { WishlistItem, Wishlist } from '@/models/wishlist'
 
 interface Props {
   weapon: DedupedWeapon | null
@@ -125,9 +137,24 @@ defineEmits<{
 }>()
 
 const activeTab = ref<'coverage' | 'godroll'>(props.initialTab)
+const godRollRef = ref<InstanceType<typeof WeaponsGodRoll> | null>(null)
 
 const tabs = [
   { id: 'coverage', label: 'Perk Coverage' },
   { id: 'godroll', label: 'Set your God Rolls' }
 ] as const
+
+// Handle loading a wishlist item into the God Roll Creator
+async function handleLoadWishlistItem(item: WishlistItem, _wishlist: Wishlist) {
+  activeTab.value = 'godroll'
+  await nextTick()
+  godRollRef.value?.loadWishlistItem(item)
+}
+
+// Handle editing a wishlist item in the God Roll Creator
+async function handleEditWishlistItem(item: WishlistItem, wishlist: Wishlist) {
+  activeTab.value = 'godroll'
+  await nextTick()
+  godRollRef.value?.editWishlistItem(item, wishlist)
+}
 </script>

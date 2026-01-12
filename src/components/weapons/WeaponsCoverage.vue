@@ -32,13 +32,18 @@
       </div>
     </div>
 
+    <!-- Wishlists Applied (compact toggle list) -->
+    <div class="bg-gray-800/30 rounded-lg p-4 border border-gray-700/50">
+      <WishlistsApplied :weapon-hash="weapon.weaponHash" />
+    </div>
+
     <!-- Unified Grid Layout for ALL Modes -->
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
-      
+
       <!-- Left: Perk Matrix (Punch Card) -->
       <div class="xl:col-span-2 space-y-4">
         <div class="flex items-center justify-between">
-          <h4 class="font-bold text-lg">Perk Matrix</h4>
+          <h4 class="font-bold text-lg">Perk Matrix (All Owned Rolls)</h4>
           <span class="text-xs uppercase tracking-wider text-gray-500">{{ weapon.weaponName }}</span>
         </div>
 
@@ -58,23 +63,23 @@
           </div>
 
           <!-- Matrix Content -->
-          <div class="flex">
-            <div 
-              v-for="column in matrixColumns" 
+          <div class="flex gap-2 p-2">
+            <div
+              v-for="column in matrixColumns"
               :key="column.columnIndex"
-              class="flex-1 border-r border-gray-800 last:border-r-0"
+              class="flex-1 flex flex-col gap-1"
             >
-              <div 
-                v-for="perk in column.availablePerks" 
+              <div
+                v-for="perk in getAvailablePerks(column)"
                 :key="perk.hash"
-                class="relative h-10 border-b border-gray-800 last:border-b-0 cursor-pointer group transition-colors duration-200"
-                :class="getPerkClasses(perk)"
+                class="relative px-2 py-1.5 rounded-lg border cursor-pointer group transition-all duration-200"
+                :class="getPerkRowClasses(perk)"
                 @mouseenter="hoveredPerkHash = perk.hash"
                 @mouseleave="hoveredPerkHash = null"
               >
                 <!-- Segmented Bars Background -->
-                <div v-if="visualMode === 'detailed'" class="absolute inset-0 flex h-full w-full opacity-30">
-                  <div 
+                <div v-if="visualMode === 'detailed'" class="absolute inset-0 flex h-full w-full opacity-30 rounded-lg overflow-hidden">
+                  <div
                     v-for="instanceId in getInstancesWithPerk(perk.hash, column.columnIndex)"
                     :key="instanceId"
                     class="h-full flex-grow"
@@ -85,21 +90,38 @@
                 <!-- Hover Overlay for Detailed -->
                 <div
                   v-if="visualMode === 'detailed' && hoveredInstanceId && doesInstanceHavePerk(hoveredInstanceId, perk.hash, column.columnIndex)"
-                  class="absolute inset-0 bg-white/10 border-2 border-white/50"
+                  class="absolute inset-0 bg-white/10 border-2 border-white/50 rounded-lg"
                 ></div>
-                
+
                 <!-- Content -->
                 <div
-                  class="relative z-10 flex items-center h-full px-2 gap-1.5 overflow-hidden"
-                  :title="perk.description || perk.name"
+                  class="relative z-10 flex items-center gap-1.5"
+                  :title="getPerkTooltip(perk)"
                 >
-                   <img
-                    v-if="perk.icon"
-                    :src="`https://www.bungie.net${perk.icon}`"
-                    class="w-5 h-5 rounded flex-shrink-0"
-                  />
-                  <div v-else class="w-5 h-5 rounded bg-gray-700 flex-shrink-0"></div>
-                  <span class="text-[10px] font-medium truncate select-none leading-tight">{{ perk.name }}</span>
+                   <div class="relative flex-shrink-0 ml-0.5">
+                     <!-- Perk icon with ring indicator -->
+                     <div
+                       class="w-6 h-6 rounded-full overflow-hidden"
+                       :class="getPerkIconClasses(perk)"
+                     >
+                       <img
+                         v-if="perk.icon"
+                         :src="`https://www.bungie.net${perk.icon}`"
+                         class="w-full h-full object-cover"
+                       />
+                       <div v-else class="w-full h-full bg-gray-700"></div>
+                     </div>
+                    <!-- Wishlist thumbs-up indicator -->
+                    <div
+                      v-if="isWishlistPerk(perk.hash)"
+                      class="absolute -top-1 -right-1 w-3 h-3 bg-green-600 rounded-full flex items-center justify-center"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-2 w-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
+                      </svg>
+                    </div>
+                   </div>
+                  <span class="text-[10px] font-medium truncate select-none leading-tight" :class="perk.isOwned ? 'text-gray-200' : 'text-gray-500'">{{ perk.name }}</span>
                 </div>
               </div>
             </div>
@@ -110,7 +132,7 @@
       <!-- Right: Instances List -->
       <div class="space-y-4">
         <div class="flex items-center justify-between flex-wrap gap-2">
-          <h4 class="font-bold text-lg">Instances ({{ filteredAndSortedInstances.length }})</h4>
+          <h4 class="font-bold text-lg">In Your Inventory ({{ filteredAndSortedInstances.length }})</h4>
           <div class="flex items-center gap-2">
             <!-- Sort toggle -->
             <button
@@ -139,45 +161,34 @@
                 :class="enabledTiers.has(null) ? 'bg-gray-600 text-white' : 'bg-gray-800 text-gray-600 hover:text-gray-400'"
                 title="Toggle No Tier"
               >
-                ?
+                0
               </button>
             </div>
           </div>
         </div>
 
-        <div class="space-y-2">
+        <div class="grid grid-cols-3 gap-2">
           <div
-            v-for="(instance, index) in filteredAndSortedInstances" 
+            v-for="(instance, index) in filteredAndSortedInstances"
             :key="instance.itemInstanceId"
-            class="p-3 rounded-lg border transition-all duration-200 cursor-pointer"
+            class="p-2 rounded-lg border transition-all duration-200 cursor-pointer"
             :class="getInstanceClasses(instance.itemInstanceId)"
             :style="getInstanceStyle(instance.itemInstanceId)"
             @mouseenter="hoveredInstanceId = instance.itemInstanceId"
             @mouseleave="hoveredInstanceId = null"
           >
-            <div class="flex items-center justify-between mb-2">
-              <span class="font-bold text-sm">Copy {{ index + 1 }}</span>
-              <span :class="getTierClass(instance.gearTier)" class="text-xs">{{ formatTier(instance.gearTier) }}</span>
-              <span class="text-[10px] text-gray-500 font-mono">{{ instance.itemInstanceId }}</span>
+            <div class="flex items-center justify-between mb-1.5 gap-1">
+              <span class="font-bold text-xs">Copy {{ index + 1 }}</span>
+              <span :class="getTierClass(instance.gearTier)" class="text-[10px]">{{ formatTier(instance.gearTier) }}</span>
             </div>
-            
-            <!-- Full Perk Matrix Tags for Instance -->
-            <div class="flex flex-wrap gap-1 min-w-0">
-               <template v-for="col in matrixColumns" :key="col.columnIndex">
-                  <span
-                    v-for="perkHash in getPerksForInstanceInColumn(instance, col.columnIndex)"
-                    :key="perkHash"
-                    class="text-[9px] px-1 py-0.5 bg-black/20 rounded text-gray-400 truncate text-center"
-                    :class="{
-                      'text-white bg-white/20 font-bold ring-1 ring-white/30': hoveredPerkHash && isPerkVariantMatch(hoveredPerkHash, perkHash),
-                      'text-gray-300': !hoveredPerkHash
-                    }"
-                    :title="getPerkName(perkHash)"
-                  >
-                    {{ getPerkName(perkHash) }}
-                  </span>
-               </template>
-            </div>
+
+            <!-- DIM-style Perk Grid for Instance -->
+            <InstancePerkGrid
+              :instance="instance"
+              :perk-matrix="weapon.perkMatrix"
+              :wishlist-perk-annotations="wishlistPerkAnnotations"
+              :highlighted-perks="hoveredPerkHash ? getHighlightedPerksForHover(hoveredPerkHash) : undefined"
+            />
           </div>
         </div>
       </div>
@@ -234,44 +245,29 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import type { DedupedWeapon } from '@/models/deduped-weapon'
-import type { WeaponInstance } from '@/models/weapon-instance'
+import { ref, computed, onMounted } from 'vue'
+import type { DedupedWeapon, PerkColumn } from '@/models/deduped-weapon'
 import type { Perk } from '@/models/perk'
-import { manifestService } from '@/services/manifest-service'
+import { useWishlistsStore } from '@/stores/wishlists'
+import { getWishlistPerkAnnotations } from '@/services/dim-wishlist-parser'
+import WishlistsApplied from './WishlistsApplied.vue'
+import InstancePerkGrid from './InstancePerkGrid.vue'
 
 const props = defineProps<{
   weapon: DedupedWeapon
 }>()
 
-const visualMode = ref<'simple' | 'detailed'>('simple')
-const hoveredPerkHash = ref<number | null>(null)
-const hoveredInstanceId = ref<string | null>(null)
+// Wishlists store for perk annotations
+const wishlistsStore = useWishlistsStore()
 
-// Instance sorting and filtering
-const sortOrder = ref<'desc' | 'asc' | 'none'>('desc')
-const enabledTiers = ref<Set<number | null>>(new Set([1, 2, 3, 4, 5, null]))
-
-const matrixColumns = computed(() => props.weapon.perkMatrix)
-
-// Filtered and sorted instances
-const filteredAndSortedInstances = computed(() => {
-  let instances = props.weapon.instances.filter(i =>
-    enabledTiers.value.has(i.gearTier ?? null)
-  )
-
-  if (sortOrder.value !== 'none') {
-    instances = [...instances].sort((a, b) => {
-      const tierA = a.gearTier ?? 0
-      const tierB = b.gearTier ?? 0
-      return sortOrder.value === 'desc' ? tierB - tierA : tierA - tierB
-    })
+// Initialize store on mount
+onMounted(async () => {
+  if (!wishlistsStore.initialized) {
+    await wishlistsStore.initialize(false)
   }
-
-  return instances
 })
 
-// Build a map from any perk hash to all its variants (for hover matching)
+// Build a map from any perk hash to all its variants (for matching)
 const perkVariantsMap = computed(() => {
   const map = new Map<number, number[]>()
   for (const col of props.weapon.perkMatrix) {
@@ -288,6 +284,86 @@ const perkVariantsMap = computed(() => {
   return map
 })
 
+// Get wishlist perk annotations for this weapon, expanded to include all variant hashes
+const wishlistPerkAnnotations = computed(() => {
+  const wishlistResults = wishlistsStore.getItemsForWeaponHash(props.weapon.weaponHash)
+  const baseAnnotations = getWishlistPerkAnnotations(wishlistResults)
+
+  // Expand annotations to include all variant hashes
+  const expandedAnnotations = new Map<number, string[]>()
+  for (const [perkHash, wishlistNames] of baseAnnotations) {
+    // Add the original hash
+    expandedAnnotations.set(perkHash, wishlistNames)
+    // Add all variants of this perk
+    const variants = perkVariantsMap.value.get(perkHash)
+    if (variants) {
+      for (const variantHash of variants) {
+        const existing = expandedAnnotations.get(variantHash) || []
+        for (const name of wishlistNames) {
+          if (!existing.includes(name)) {
+            existing.push(name)
+          }
+        }
+        expandedAnnotations.set(variantHash, existing)
+      }
+    }
+  }
+  return expandedAnnotations
+})
+
+// Check if a perk is recommended by wishlists
+const isWishlistPerk = (perkHash: number): boolean => {
+  return wishlistPerkAnnotations.value.has(perkHash)
+}
+
+// Get tooltip for wishlist-recommended perks
+const getWishlistTooltip = (perkHash: number): string => {
+  const wishlists = wishlistPerkAnnotations.value.get(perkHash)
+  if (!wishlists || wishlists.length === 0) return ''
+  return `\n\nRecommended by: ${wishlists.join(', ')}`
+}
+
+// Get full tooltip for a perk (description + wishlist info)
+const getPerkTooltip = (perk: Perk): string => {
+  let tooltip = perk.description || perk.name
+  tooltip += getWishlistTooltip(perk.hash)
+  return tooltip
+}
+
+const visualMode = ref<'simple' | 'detailed'>('simple')
+const hoveredPerkHash = ref<number | null>(null)
+const hoveredInstanceId = ref<string | null>(null)
+
+// Instance sorting and filtering
+const sortOrder = ref<'desc' | 'asc' | 'none'>('desc')
+const enabledTiers = ref<Set<number | null>>(new Set([1, 2, 3, 4, 5, null]))
+
+const matrixColumns = computed(() => props.weapon.perkMatrix)
+
+// Filter out retired perks that can no longer roll on current weapon versions
+const getAvailablePerks = (column: PerkColumn) => {
+  return column.availablePerks.filter(perk => !perk.cannotCurrentlyRoll)
+}
+
+// Filtered and sorted instances
+// Note: gearTier of 0, null, or undefined all mean "no tier" (unranked)
+const filteredAndSortedInstances = computed(() => {
+  let instances = props.weapon.instances.filter(i => {
+    const tier = i.gearTier || null // Treat 0 as null (no tier)
+    return enabledTiers.value.has(tier)
+  })
+
+  if (sortOrder.value !== 'none') {
+    instances = [...instances].sort((a, b) => {
+      const tierA = a.gearTier ?? 0
+      const tierB = b.gearTier ?? 0
+      return sortOrder.value === 'desc' ? tierB - tierA : tierA - tierB
+    })
+  }
+
+  return instances
+})
+
 // --- Color Palette ---
 const PALETTE = [
   '#EF4444', '#F97316', '#F59E0B', '#10B981', '#06B6D4', '#3B82F6', '#6366F1', '#8B5CF6', '#EC4899', '#F43F5E',
@@ -300,13 +376,6 @@ const getInstanceColor = (instId: string) => {
 }
 
 // --- Logic Helpers ---
-
-// Check if two perk hashes are variants of each other (e.g., enhanced vs non-enhanced)
-const isPerkVariantMatch = (hash1: number, hash2: number): boolean => {
-  if (hash1 === hash2) return true
-  const variants = perkVariantsMap.value.get(hash1)
-  return variants ? variants.includes(hash2) : false
-}
 
 // Check if an instance has a specific perk (by hash) in a specific column index
 // Also checks all variant hashes (e.g., enhanced + non-enhanced versions)
@@ -334,43 +403,11 @@ const getInstancesWithPerk = (perkHash: number, colIndex: number): string[] => {
     .map(inst => inst.itemInstanceId)
 }
 
-const getPerksForInstanceInColumn = (instance: WeaponInstance, colIndex: number): number[] => {
-   const perks = new Set<number>()
-   // Active
-   const active = instance.sockets.sockets[colIndex]?.plugHash
-   if (active) perks.add(active)
-   
-   // Selectable
-   const reusables = instance.socketPlugsByIndex?.[colIndex]
-   if (reusables) reusables.forEach(p => perks.add(p))
-   
-   return Array.from(perks)
+// Get highlighted perks set for hover (includes variants)
+const getHighlightedPerksForHover = (perkHash: number): Set<number> => {
+  const variants = perkVariantsMap.value.get(perkHash) || [perkHash]
+  return new Set(variants)
 }
-
-// Name lookup helper
-const perkNameCache = new Map<number, string>()
-const getPerkName = (hash: number) => {
-  if (perkNameCache.has(hash)) return perkNameCache.get(hash)
-
-  // Search in matrix first
-  for (const col of props.weapon.perkMatrix) {
-    const p = col.availablePerks.find(p => p.hash === hash)
-    if (p) {
-        perkNameCache.set(hash, p.name)
-        return p.name
-    }
-  }
-
-  // Fallback to manifest lookup for perks not in matrix
-  const perkDef = manifestService.getInventoryItem(hash)
-  if (perkDef?.displayProperties?.name) {
-    perkNameCache.set(hash, perkDef.displayProperties.name)
-    return perkDef.displayProperties.name
-  }
-
-  return 'Unknown'
-}
-
 
 // --- Styling ---
 
@@ -390,27 +427,32 @@ const isPerkHighlighted = (perkHash: number) => {
   return false
 }
 
-const getPerkClasses = (perk: Perk) => {
-  // Simple mode - show owned perks with green tint
-  if (visualMode.value === 'simple') {
-    if (hoveredPerkHash.value === perk.hash) return 'bg-green-600/40'
-    if (hoveredInstanceId.value) {
-      // Instance is hovered - highlight its perks, dim others
-      if (isPerkHighlighted(perk.hash)) return 'bg-green-600/30'
-      return 'bg-gray-800/50 opacity-40'
-    }
-    if (perk.isOwned) return 'bg-green-900/40'
-    return 'bg-gray-800'
-  }
-
-  // Detailed mode - ownership shown via colored bars
+// Row background and border classes (for hover states and ownership)
+const getPerkRowClasses = (perk: Perk) => {
+  // Hover states - match inventory card styling
+  if (hoveredPerkHash.value === perk.hash) return 'bg-gray-700 border-orange-400 ring-1 ring-orange-400'
   if (hoveredInstanceId.value) {
     // Instance is hovered - highlight its perks, dim others
-    if (isPerkHighlighted(perk.hash)) return 'bg-gray-600'
-    return 'bg-gray-800/50 opacity-40'
+    if (isPerkHighlighted(perk.hash)) return 'bg-gray-700/50 border-orange-400/50'
+    return 'bg-gray-800 border-gray-700 opacity-40'
   }
-  if (perk.isOwned) return 'bg-gray-700'
-  return 'bg-gray-800'
+  // Unowned perks are dimmed
+  if (!perk.isOwned) return 'bg-gray-800/30 border-gray-700/50'
+  return 'bg-gray-800 border-gray-700'
+}
+
+// Perk icon ring classes
+const getPerkIconClasses = (perk: Perk) => {
+  // Highlighted from hover
+  if (hoveredPerkHash.value === perk.hash) {
+    return 'ring-2 ring-orange-400 ring-offset-1 ring-offset-gray-900'
+  }
+  // Owned perk (white ring)
+  if (perk.isOwned) {
+    return 'ring-1 ring-white/80 ring-offset-1 ring-offset-gray-900'
+  }
+  // Not owned (dimmed with gray ring)
+  return 'ring-1 ring-gray-700 opacity-40'
 }
 
 const instanceHasPerk = (instId: string, perkHash: number): boolean => {
@@ -423,13 +465,13 @@ const instanceHasPerk = (instId: string, perkHash: number): boolean => {
 const getInstanceClasses = (instId: string) => {
   const base = 'bg-gray-800 border-gray-700'
 
-  // Simple mode - green highlights
+  // Simple mode
   if (visualMode.value === 'simple') {
-    if (hoveredInstanceId.value === instId) return 'bg-green-900 border-green-500 ring-1 ring-green-500'
+    if (hoveredInstanceId.value === instId) return 'bg-gray-700 border-orange-400 ring-1 ring-orange-400'
 
-    // Highlight if hovered perk is on this instance
+    // Highlight if hovered perk is on this instance (subtle orange border)
     if (hoveredPerkHash.value) {
-      if (instanceHasPerk(instId, hoveredPerkHash.value)) return 'bg-green-900/50 border-green-500/50'
+      if (instanceHasPerk(instId, hoveredPerkHash.value)) return 'bg-gray-700/50 border-orange-400/50'
       return 'opacity-50'
     }
 
@@ -446,7 +488,7 @@ const getInstanceClasses = (instId: string) => {
   }
 
   if (hoveredPerkHash.value) {
-    if (instanceHasPerk(instId, hoveredPerkHash.value)) return 'brightness-110 ring-1 ring-white/50'
+    if (instanceHasPerk(instId, hoveredPerkHash.value)) return 'bg-gray-700/50 border-orange-400/50'
     return 'opacity-40 grayscale-[0.5]'
   }
 
@@ -469,7 +511,7 @@ const getInstanceStyle = (instId: string) => {
 }
 
 function formatTier(tier: number | null | undefined): string {
-  if (tier == null) {
+  if (!tier) {
     return 'No Tier'
   }
   const stars = '★'.repeat(tier)
@@ -477,7 +519,7 @@ function formatTier(tier: number | null | undefined): string {
 }
 
 function getTierClass(tier: number | null | undefined): string {
-  if (tier == null) {
+  if (!tier) {
     return 'text-gray-600'
   }
   return 'text-gray-400'

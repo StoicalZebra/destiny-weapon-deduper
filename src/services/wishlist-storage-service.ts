@@ -8,7 +8,7 @@
  */
 
 import { indexedDBStorage } from '@/utils/storage'
-import { WISHLIST_USER_PREFIX, WISHLIST_VERSIONS_KEY } from '@/utils/constants'
+import { WISHLIST_USER_PREFIX, WISHLIST_VERSIONS_KEY, WISHLIST_ENABLED_STATES_KEY } from '@/utils/constants'
 import type { Wishlist, WishlistUpdateStatus } from '@/models/wishlist'
 
 // Threshold for storing in IndexedDB vs localStorage (number of items)
@@ -423,6 +423,58 @@ class WishlistStorageService {
     } else {
       this.deleteUserWishlist(wishlist.id)
     }
+  }
+
+  // ==================== Enabled States (Lightweight localStorage) ====================
+
+  /**
+   * Get all enabled states from localStorage
+   * Returns a map of wishlistId -> enabled (only stores false values to save space)
+   */
+  getEnabledStates(): Map<string, boolean> {
+    const raw = localStorage.getItem(WISHLIST_ENABLED_STATES_KEY)
+    if (!raw) return new Map()
+    try {
+      const obj = JSON.parse(raw) as Record<string, boolean>
+      return new Map(Object.entries(obj))
+    } catch {
+      return new Map()
+    }
+  }
+
+  /**
+   * Set the enabled state for a single wishlist (fast localStorage operation)
+   */
+  setEnabledState(wishlistId: string, enabled: boolean): void {
+    const states = this.getEnabledStates()
+    if (enabled) {
+      // Remove from map when enabled (default is true)
+      states.delete(wishlistId)
+    } else {
+      // Only store false values
+      states.set(wishlistId, false)
+    }
+    const obj = Object.fromEntries(states)
+    localStorage.setItem(WISHLIST_ENABLED_STATES_KEY, JSON.stringify(obj))
+  }
+
+  /**
+   * Get the enabled state for a single wishlist
+   */
+  getEnabledState(wishlistId: string): boolean {
+    const states = this.getEnabledStates()
+    // Default to true if not in map
+    return states.get(wishlistId) !== false
+  }
+
+  /**
+   * Remove enabled state for a wishlist (when wishlist is deleted)
+   */
+  removeEnabledState(wishlistId: string): void {
+    const states = this.getEnabledStates()
+    states.delete(wishlistId)
+    const obj = Object.fromEntries(states)
+    localStorage.setItem(WISHLIST_ENABLED_STATES_KEY, JSON.stringify(obj))
   }
 }
 

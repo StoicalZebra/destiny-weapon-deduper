@@ -1,6 +1,0 @@
-title:D3 DeDuper Picks
-description:Admin-curated god roll recommendations for D3 DeDuper users
-
-//notes:Test picks - replace with real curated rolls
-dimwishlist:item=3615748501&perks=2955427634,4196967425#notes:T2 - SZ (Test2)|tags:pve
-dimwishlist:item=3615748501&perks=2955427634,4042220767,4196967425#notes:T3 - SZ (Test3)|tags:pvp

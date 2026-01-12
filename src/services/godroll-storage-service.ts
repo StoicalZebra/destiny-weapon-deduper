@@ -1,3 +1,9 @@
+/**
+ * @deprecated This service is deprecated. Use the wishlists store instead.
+ * Legacy god rolls will be migrated to the new DIM-compatible wishlist format.
+ * See: src/stores/wishlists.ts
+ */
+
 import { manifestService } from './manifest-service'
 
 // Video source metadata for imported god rolls
@@ -31,7 +37,17 @@ export interface GodRollExport {
 
 const STORAGE_KEY_PREFIX = 'd3_godroll_'
 
+/**
+ * @deprecated Use the wishlists store instead.
+ */
 class GodRollStorageService {
+  constructor() {
+    console.warn(
+      '[DEPRECATED] GodRollStorageService is deprecated. ' +
+      'Use the wishlists store (useWishlistsStore) instead. ' +
+      'Legacy god rolls will be migrated to the new DIM-compatible format.'
+    )
+  }
   /**
    * Get all god roll keys from localStorage
    */

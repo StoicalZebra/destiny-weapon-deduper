@@ -15,8 +15,18 @@ import { wishlistStorageService } from './wishlist-storage-service'
  */
 export const PRESET_WISHLISTS: PresetWishlistConfig[] = [
   {
+    id: 'stoicalzebra',
+    name: 'StoicalZebra',
+    description:
+      'Personal god rolls curated from YouTube reviews. Compiled from Legoleflash, IFrostBolt, Maven, and other community creators.',
+    githubUrl:
+      'https://raw.githubusercontent.com/StoicalZebra/destiny-weapon-deduper/main/data/wishlists/StoicalZebra-wishlist.txt',
+    author: 'StoicalZebra',
+    isAdminCurated: true
+  },
+  {
     id: 'voltron',
-    name: 'Voltron (Community Aggregated)',
+    name: 'Voltron',
     description:
       'A master list curated by expert item reviewers (u/pandapaxxy, u/mercules904, and u/HavocsCall). This is the default wishlist used by DIM.',
     githubUrl:

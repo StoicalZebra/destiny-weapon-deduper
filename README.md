@@ -218,6 +218,60 @@ d3deduper/
 └── data/                   # Static data files
 ```
 
+## UI Styling Guide
+
+The weapon detail view uses consistent styling patterns across the Perk Matrix and Inventory sections.
+
+### Perk Matrix
+
+Each perk is displayed as a rounded rectangle card with the following states:
+
+| State | Background | Border | Icon Ring |
+|-------|-----------|--------|-----------|
+| **Owned (default)** | `bg-gray-800` | `border-gray-700` | `ring-1 ring-white/80` |
+| **Not owned** | `bg-gray-800/30` | `border-gray-700/50` | `ring-1 ring-gray-700 opacity-40` |
+| **Hovered** | `bg-gray-700` | `border-orange-400 ring-1 ring-orange-400` | `ring-2 ring-orange-400` |
+| **Instance highlighted** | `bg-gray-700/50` | `border-orange-400/50` | — |
+| **Dimmed (other instance hovered)** | `bg-gray-800` | `border-gray-700 opacity-40` | — |
+
+### Inventory Cards
+
+Each weapon instance card follows the same pattern:
+
+| State | Classes |
+|-------|---------|
+| **Default** | `bg-gray-800 border-gray-700` |
+| **Hovered** | `bg-gray-700 border-orange-400 ring-1 ring-orange-400` |
+| **Perk highlighted** | `bg-gray-700/50 border-orange-400/50` |
+| **Dimmed** | `opacity-50` |
+
+### Wishlist Indicators
+
+- **Thumbs-up badge**: Green circle (`bg-green-600`) positioned at `-top-1 -right-1` on perk icons
+- Appears on perks recommended by enabled wishlists
+
+### Source Type Badges
+
+Pill-shaped badges indicating wishlist source (consistent across all views):
+
+| Type | Classes |
+|------|---------|
+| **Preset** | `bg-green-900/50 text-green-300 border border-green-700/50 rounded-full` |
+| **Custom** | `bg-blue-900/50 text-blue-300 border border-blue-700/50 rounded-full` |
+
+Used in:
+- `WishlistCard.vue` - Full size (`px-2 py-0.5 text-xs`)
+- `WishlistsApplied.vue` - Compact size (`px-1.5 py-0.5 text-[9px]`)
+
+### Color System
+
+- **Base backgrounds**: `gray-800` (darker), `gray-700` (lighter/hover)
+- **Accent color**: `orange-400` for hover states and highlights
+- **Dimming**: `opacity-40` or `opacity-50` for non-focused elements
+- **Wishlist badge**: `green-600`
+
+---
+
 ## Security Notes
 
 **Never commit these files:**
@@ -227,3 +281,47 @@ d3deduper/
 - `scripts/youtube-agent/perk_names.json` - Generated data
 
 All are listed in `.gitignore`.
+
+---
+
+## Wishlist Performance Architecture
+
+The wishlist system handles large datasets (Voltron wishlists contain 100k+ items). Several optimizations ensure responsive UI when toggling wishlists on/off:
+
+### Storage Strategy
+
+| Data | Storage | Reason |
+|------|---------|--------|
+| Preset wishlists (full data) | IndexedDB | Large files (~10MB for Voltron) |
+| User wishlists (<1000 items) | localStorage | Fast synchronous access |
+| User wishlists (≥1000 items) | IndexedDB | Avoid localStorage limits |
+| Enabled states | localStorage | Lightweight, instant toggle |
+
+### Optimizations Applied
+
+1. **Separate enabled state storage** (`wishlist-storage-service.ts`)
+   - Enabled/disabled states stored separately in localStorage
+   - Toggling a wishlist writes ~50 bytes instead of 10MB
+   - Key: `d3_wishlist_enabled_states`
+
+2. **Separate reactive Map** (`stores/wishlists.ts`)
+   - `enabledStates` is a separate `ref<Map>` from wishlist objects
+   - Toggling doesn't trigger Vue reactivity on `allWishlists` computed
+   - Prevents cascading re-renders of components watching wishlist data
+
+3. **Pre-built weapon indexes** (`stores/wishlists.ts`)
+   - `weaponIndexes`: `Map<wishlistId, Map<weaponHash, WishlistItem[]>>`
+   - Built once on initialization, provides O(1) lookups
+   - `getItemsForWeaponHash()` no longer scans 100k+ items per toggle
+
+### Key Files
+
+- `src/stores/wishlists.ts` - State management with `enabledStates` and `weaponIndexes`
+- `src/services/wishlist-storage-service.ts` - `getEnabledStates()`, `setEnabledState()`
+- `src/components/weapons/WishlistsApplied.vue` - Toggle UI component
+
+---
+
+## TODO / Future Improvements
+
+- [ ] **Wishlist toggle performance**: Toggle response is ~200-300ms. Goal is instant (<50ms). All obvious optimizations applied; further profiling needed to identify remaining bottleneck.
