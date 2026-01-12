@@ -833,11 +833,28 @@ if __name__ == "__main__":
 
     # --- FINAL SUMMARY ---
 
+    # Extract weapon name from first roll for title
+    first_weapon = "Unknown"
+    if all_raw_rolls and all_raw_rolls[0].get('rolls'):
+        first_weapon = all_raw_rolls[0]['rolls'][0].get('weapon', 'Unknown')
+
+    # Get video title for description
+    video_title_for_desc = ""
+    if all_raw_rolls and all_raw_rolls[0].get('video_info'):
+        video_title_for_desc = all_raw_rolls[0]['video_info'].get('title', '')
+
+    # Build title and description
+    wishlist_title = f"{first_weapon}"  # Just weapon name; type added later if available
+    if video_title_for_desc:
+        wishlist_desc = f'Extracted from: "{video_title_for_desc}" at {video_link}'
+    else:
+        wishlist_desc = f"Extracted from: {video_link}"
+
     # Generate DIM wishlist format
     dim_content, dim_uncertain = convert_to_dim_format(
         all_raw_rolls,
-        wishlist_name="YouTube God Rolls",
-        description=f"Extracted from: {video_link}"
+        wishlist_name=wishlist_title,
+        description=wishlist_desc
     )
     all_uncertain.extend(dim_uncertain)
 
