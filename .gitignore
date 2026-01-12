@@ -32,5 +32,7 @@ scripts/youtube-agent/.env
 scripts/youtube-agent/*.md
 scripts/youtube-agent/venv/
 scripts/youtube-agent/output/
+scripts/youtube-agent/weapon_perk_pools.json
+scripts/youtube-agent/perk_names.json
 __pycache__/
 *.pyc

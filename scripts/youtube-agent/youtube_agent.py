@@ -48,6 +48,8 @@ def load_lookup(filename):
 
 PERK_LOOKUP = load_lookup('perk_lookup.json')
 WEAPON_LOOKUP = load_lookup('weapon_lookup.json')
+WEAPON_PERK_POOLS = load_lookup('weapon_perk_pools.json')
+PERK_NAMES = load_lookup('perk_names.json')
 
 # --- PROMPT ---
 GOD_ROLL_PROMPT = """
@@ -112,6 +114,118 @@ EXAMPLE OUTPUT:
 
 TRANSCRIPT:
 """
+
+# --- TWO-PASS PROMPTS ---
+WEAPON_EXTRACT_PROMPT = """
+You are a Destiny 2 expert. Analyze this video transcript and extract ONLY the weapon names being recommended.
+
+RULES:
+1. Extract only the PRIMARY weapon(s) being recommended, NOT comparison weapons
+2. Creators often say "this is better than X" - ignore X, extract only the main weapon
+3. Include "The" prefix if the weapon has it (e.g., "The Martlet")
+4. Use the EXACT weapon name as spoken
+5. Return weapon names and their recommended mode (PvE/PvP/Both)
+
+OUTPUT FORMAT - Return ONLY valid JSON:
+[
+  {"weapon": "Exact Weapon Name", "mode": "PvE" | "PvP" | "Both"}
+]
+
+If no weapons are recommended, return: []
+
+TRANSCRIPT:
+"""
+
+CONSTRAINED_ROLL_PROMPT = """
+You are a Destiny 2 expert analyzing a video transcript for god roll recommendations.
+
+WEAPON: {weapon_name}
+MODE: {mode}
+
+VALID PERKS FOR THIS WEAPON (only use perks from these lists):
+- Barrels: {barrels}
+- Magazines: {magazines}
+- Trait 1: {trait1}
+- Trait 2: {trait2}
+
+OUTPUT FORMAT - Return ONLY valid JSON, no markdown:
+{{
+  "weapon": "{weapon_name}",
+  "mode": "{mode}",
+  "barrel": ["Perk Name"] or null,
+  "magazine": ["Perk Name"] or null,
+  "trait1": ["Perk Name", "Alternative"],
+  "trait2": ["Perk Name"],
+  "masterwork": "Stat Name" or null,
+  "originTrait": "Perk Name" or null,
+  "reasoning": "Why these perks synergize",
+  "timestamp": "MM:SS"
+}}
+
+RULES:
+1. ONLY use perks from the VALID PERKS lists above
+2. If a perk mentioned in the video is NOT in the valid list, skip it
+3. If creator says "X or Y", include both if they're in the valid list
+4. Extract the timestamp where this roll is discussed
+5. Explain WHY these perks work together in the reasoning field
+
+TRANSCRIPT:
+"""
+
+
+def get_valid_perks_for_weapon(weapon_name):
+    """Get valid perk names for a weapon from the perk pool data."""
+    if not WEAPON_PERK_POOLS or not PERK_NAMES:
+        return None
+
+    # Find weapon in perk pools by name (case-insensitive)
+    weapon_name_lower = weapon_name.lower().strip()
+
+    for weapon_hash, pool in WEAPON_PERK_POOLS.items():
+        if pool.get('name', '').lower() == weapon_name_lower:
+            # Convert perk hashes to names
+            def hashes_to_names(hash_list):
+                names = []
+                for h in hash_list:
+                    name = PERK_NAMES.get(str(h)) or PERK_NAMES.get(h)
+                    if name:
+                        names.append(name)
+                return names
+
+            return {
+                'barrels': hashes_to_names(pool.get('barrels', [])),
+                'magazines': hashes_to_names(pool.get('magazines', [])),
+                'trait1': hashes_to_names(pool.get('trait1', [])),
+                'trait2': hashes_to_names(pool.get('trait2', [])),
+                'origin': hashes_to_names(pool.get('origin', []))
+            }
+
+    # Try fuzzy match if exact match fails
+    if HAS_FUZZY:
+        pool_names = {pool['name'].lower(): (h, pool) for h, pool in WEAPON_PERK_POOLS.items()}
+        result = process.extractOne(weapon_name_lower, pool_names.keys(), scorer=fuzz.token_sort_ratio)
+        if result and result[1] >= 75:
+            matched_name = result[0]
+            weapon_hash, pool = pool_names[matched_name]
+
+            def hashes_to_names(hash_list):
+                names = []
+                for h in hash_list:
+                    name = PERK_NAMES.get(str(h)) or PERK_NAMES.get(h)
+                    if name:
+                        names.append(name)
+                return names
+
+            return {
+                'barrels': hashes_to_names(pool.get('barrels', [])),
+                'magazines': hashes_to_names(pool.get('magazines', [])),
+                'trait1': hashes_to_names(pool.get('trait1', [])),
+                'trait2': hashes_to_names(pool.get('trait2', [])),
+                'origin': hashes_to_names(pool.get('origin', []))
+            }
+
+    return None
+
 
 def is_playlist_url(url):
     """Check if URL is a playlist or single video."""
@@ -276,15 +390,8 @@ def get_transcript_with_ytdlp(video_url):
     except Exception:
         return None
 
-def analyze_transcript(text_content, video_title):
-    """Use Gemini to extract god rolls from transcript."""
-    print(f"   🧠 Analyzing: {video_title}...")
-
-    prompt = GOD_ROLL_PROMPT + text_content[:30000]
-
-    max_retries = 5
-    base_wait = 15
-
+def call_gemini(prompt, max_retries=5, base_wait=15):
+    """Call Gemini API with retry logic."""
     for attempt in range(max_retries):
         try:
             response = client.models.generate_content(
@@ -292,7 +399,6 @@ def analyze_transcript(text_content, video_title):
                 contents=prompt
             )
             return response.text
-
         except Exception as e:
             error_str = str(e)
             if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str:
@@ -303,8 +409,89 @@ def analyze_transcript(text_content, video_title):
                 return f"❌ Model '{MODEL_NAME}' not found. Check model name."
             else:
                 return f"⚠️ Error: {e}"
-
     return "❌ Failed after multiple retries."
+
+
+def analyze_transcript(text_content, video_title):
+    """Use Gemini to extract god rolls from transcript using two-pass validation."""
+    print(f"   🧠 Analyzing: {video_title}...")
+
+    transcript = text_content[:30000]
+
+    # Check if we have perk pool data for two-pass validation
+    if not WEAPON_PERK_POOLS or not PERK_NAMES:
+        print("      ℹ️  No perk pool data - using single-pass extraction")
+        prompt = GOD_ROLL_PROMPT + transcript
+        return call_gemini(prompt)
+
+    # === PASS 1: Extract weapon names ===
+    print("      📋 Pass 1: Extracting weapons...")
+    pass1_prompt = WEAPON_EXTRACT_PROMPT + transcript
+    pass1_response = call_gemini(pass1_prompt)
+    weapons = parse_gemini_response(pass1_response)
+
+    if not weapons:
+        print("      ⚠️  No weapons found in pass 1, falling back to single-pass")
+        prompt = GOD_ROLL_PROMPT + transcript
+        return call_gemini(prompt)
+
+    print(f"      ✅ Found {len(weapons)} weapon(s): {', '.join(w.get('weapon', '?') for w in weapons)}")
+
+    # === PASS 2: Extract constrained rolls for each weapon ===
+    all_rolls = []
+
+    for weapon_info in weapons:
+        weapon_name = weapon_info.get('weapon', '')
+        mode = weapon_info.get('mode', 'Both')
+
+        if not weapon_name:
+            continue
+
+        # Get valid perks for this weapon
+        valid_perks = get_valid_perks_for_weapon(weapon_name)
+
+        if not valid_perks:
+            print(f"      ⚠️  No perk pool for '{weapon_name}', using unconstrained extraction")
+            # Fall back to original prompt for this weapon
+            prompt = GOD_ROLL_PROMPT + transcript
+            response = call_gemini(prompt)
+            rolls = parse_gemini_response(response)
+            if rolls:
+                # Filter to just this weapon
+                for roll in rolls:
+                    if roll.get('weapon', '').lower() == weapon_name.lower():
+                        all_rolls.append(roll)
+            continue
+
+        print(f"      🎯 Pass 2: Extracting {weapon_name} ({mode}) with {len(valid_perks['trait1'])} trait1, {len(valid_perks['trait2'])} trait2 options...")
+
+        # Build constrained prompt
+        pass2_prompt = CONSTRAINED_ROLL_PROMPT.format(
+            weapon_name=weapon_name,
+            mode=mode,
+            barrels=', '.join(valid_perks['barrels'][:20]) if valid_perks['barrels'] else 'N/A',
+            magazines=', '.join(valid_perks['magazines'][:20]) if valid_perks['magazines'] else 'N/A',
+            trait1=', '.join(valid_perks['trait1'][:20]) if valid_perks['trait1'] else 'N/A',
+            trait2=', '.join(valid_perks['trait2'][:20]) if valid_perks['trait2'] else 'N/A'
+        ) + transcript
+
+        pass2_response = call_gemini(pass2_prompt)
+        roll = parse_gemini_response(pass2_response)
+
+        if roll:
+            # Handle both single roll (dict) and multiple rolls (list)
+            if isinstance(roll, dict):
+                all_rolls.append(roll)
+            elif isinstance(roll, list):
+                all_rolls.extend(roll)
+
+    if all_rolls:
+        return json.dumps(all_rolls)
+    else:
+        # Fall back to original single-pass if two-pass yielded nothing
+        print("      ⚠️  Two-pass yielded no results, falling back to single-pass")
+        prompt = GOD_ROLL_PROMPT + transcript
+        return call_gemini(prompt)
 
 def parse_gemini_response(response_text):
     """Parse JSON from Gemini response, handling markdown code blocks."""
@@ -547,6 +734,10 @@ if __name__ == "__main__":
         exit(1)
 
     print(f"\n📚 Loaded {len(PERK_LOOKUP)} perks, {len(WEAPON_LOOKUP)} weapons")
+    if WEAPON_PERK_POOLS:
+        print(f"✅ Two-pass validation enabled ({len(WEAPON_PERK_POOLS)} weapon perk pools)")
+    else:
+        print("⚠️  Two-pass validation disabled (run fetch_weapon_perks.py to enable)")
     if HAS_FUZZY:
         print("✅ Fuzzy matching enabled (rapidfuzz)")
     else:
