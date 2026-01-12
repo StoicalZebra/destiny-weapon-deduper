@@ -837,15 +837,19 @@ if __name__ == "__main__":
     # Sanitize weapon name for filename (remove special chars)
     safe_weapon_name = re.sub(r'[^\w\s-]', '', first_weapon).strip().replace(' ', '_')
 
-    # Get video title for description
+    # Get video title and channel for description
     video_title_for_desc = ""
+    video_channel = ""
     if all_raw_rolls and all_raw_rolls[0].get('video_info'):
         video_title_for_desc = all_raw_rolls[0]['video_info'].get('title', '')
+        video_channel = all_raw_rolls[0]['video_info'].get('channel', '')
 
     # Build title and description
     wishlist_title = f"{first_weapon}"  # Just weapon name; type added later if available
     if video_title_for_desc:
         wishlist_desc = f'Extracted from: "{video_title_for_desc}" at {video_link}'
+        if video_channel:
+            wishlist_desc += f' by {video_channel}'
     else:
         wishlist_desc = f"Extracted from: {video_link}"
 

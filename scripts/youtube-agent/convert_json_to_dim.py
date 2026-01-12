@@ -60,7 +60,7 @@ def get_weapon_type(hash_val):
 
 
 def extract_video_info_from_md(json_path):
-    """Extract video title and URL from accompanying markdown file."""
+    """Extract video title, URL, and author from accompanying markdown file."""
     # Find matching .md file (same timestamp prefix)
     base = os.path.basename(json_path).replace('.json', '')
     md_pattern = os.path.join(OUTPUT_DIR, f"{base}_*.md")
@@ -68,17 +68,25 @@ def extract_video_info_from_md(json_path):
 
     video_title = None
     video_url = None
+    video_author = None
 
     if md_files:
         with open(md_files[0], 'r') as f:
             content = f.read()
-            # Extract video title from markdown link: [Title](URL)
-            match = re.search(r'\*\*Source:\*\* \[([^\]]+)\]\(([^)]+)\)', content)
+            # Extract video title from markdown link: [Title](URL) by Author
+            match = re.search(r'\*\*Source:\*\* \[([^\]]+)\]\(([^)]+)\) by ([^\n@]+)', content)
             if match:
                 video_title = match.group(1)
                 video_url = match.group(2).split('&t=')[0]  # Remove timestamp
+                video_author = match.group(3).strip()
+            else:
+                # Fallback: try without author
+                match = re.search(r'\*\*Source:\*\* \[([^\]]+)\]\(([^)]+)\)', content)
+                if match:
+                    video_title = match.group(1)
+                    video_url = match.group(2).split('&t=')[0]
 
-    return video_title, video_url
+    return video_title, video_url, video_author
 
 
 def convert_json_to_dim(json_path):
@@ -95,15 +103,17 @@ def convert_json_to_dim(json_path):
     weapon_type = get_weapon_type(weapon_hash) if weapon_hash else 'Weapon'
 
     # Extract video info from markdown file
-    video_title, video_url = extract_video_info_from_md(json_path)
+    video_title, video_url, video_author = extract_video_info_from_md(json_path)
 
     # Build title: "Weapon Name (Type)"
     title = f"{weapon_name} ({weapon_type})"
 
-    # Build description: extracted from: "Video Title" at URL
+    # Build description: extracted from: "Video Title" at URL by Author
     original_desc = data.get('description', '')
     if video_title and video_url:
         description = f'Extracted from: "{video_title}" at {video_url}'
+        if video_author:
+            description += f' by {video_author}'
     elif video_url:
         description = f'Extracted from: {video_url}'
     else:
