@@ -89,6 +89,10 @@ RULES:
    (e.g., "vorpal" not "vorp all", "Kill Clip" not "kill clip")
 8. If a column isn't mentioned, use null (don't guess)
 9. If no god rolls are discussed, return: []
+10. IMPORTANT: Extract only the PRIMARY weapon being recommended, NOT comparison weapons.
+    Creators often say "this is better than X" or "unlike Y" - ignore X and Y, focus on the main subject.
+11. Use the EXACT weapon name as spoken in the transcript. Do not substitute similar-sounding names.
+    For example, if they say "Modified B7 Pistol", use that exact name - not "Exigent B7".
 
 EXAMPLE OUTPUT:
 [
@@ -329,7 +333,7 @@ def lookup_hash(name, lookup_dict, threshold=75):
 
     # Fuzzy match if available
     if HAS_FUZZY and lookup_dict:
-        result = process.extractOne(name_lower, lookup_dict.keys(), scorer=fuzz.ratio)
+        result = process.extractOne(name_lower, lookup_dict.keys(), scorer=fuzz.token_sort_ratio)
         if result and result[1] >= threshold:
             matched_name = result[0]
             return lookup_dict[matched_name], False  # False = fuzzy match
@@ -492,20 +496,34 @@ def convert_to_littlelight_format(all_raw_rolls, wishlist_name, description):
                     else:
                         uncertain.append(f"❓ Unknown perk: '{perk}'")
 
-            # Build tags from mode
+            # Build tags from mode (uppercase per LittleLight format)
             mode = roll.get('mode', 'Both')
             tags = []
             if mode in ['PvE', 'Both']:
-                tags.append('PvE')
+                tags.append('PVE')
             if mode in ['PvP', 'Both']:
-                tags.append('PvP')
+                tags.append('PVP')
+
+            # Build description from reasoning
+            reasoning = roll.get('reasoning', '')
+            video_info = item.get('video_info', {})
+            video_title = video_info.get('title', '')
+            timestamp = roll.get('timestamp', '')
+            description_text = reasoning
+            if video_title:
+                source_note = f" (from: {video_title}"
+                if timestamp:
+                    source_note += f" @ {timestamp}"
+                source_note += ")"
+                description_text += source_note
 
             # Only add if we have at least one perk
             if any(plugs):
                 data.append({
                     "hash": weapon_hash,
                     "plugs": plugs,
-                    "tags": tags
+                    "tags": tags,
+                    "description": description_text
                 })
 
     return {
