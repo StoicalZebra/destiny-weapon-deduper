@@ -627,8 +627,6 @@ def convert_to_dim_format(all_raw_rolls, wishlist_name, description):
     Returns:
         tuple: (dim_text_content, uncertain_items_list)
     """
-    from itertools import product
-
     lines = []
     uncertain = []
 
@@ -690,16 +688,18 @@ def convert_to_dim_format(all_raw_rolls, wishlist_name, description):
                 block_comment += f" @ {timestamp}"
             lines.append(block_comment)
 
-            # Generate cartesian product of all perk combinations
-            for combo in product(*columns):
-                # Filter out None entries and collect hashes
-                perk_hashes = [str(h) for h, name in combo if h is not None]
+            # Build perks string with OR syntax (pipe-separated within column, comma between columns)
+            perk_columns = []
+            for col_perks in columns:
+                # Filter out None entries
+                valid_hashes = [str(h) for h, name in col_perks if h is not None]
+                if valid_hashes:
+                    # Join multiple perks in same column with | (OR)
+                    perk_columns.append("|".join(valid_hashes))
 
-                if not perk_hashes:
-                    continue
-
-                # Build the dimwishlist line
-                perks_str = ",".join(perk_hashes)
+            if perk_columns:
+                # Join columns with , (AND)
+                perks_str = ",".join(perk_columns)
                 tags_str = ",".join(tags) if tags else "pve"
 
                 line = f"dimwishlist:item={weapon_hash}&perks={perks_str}#notes:{short_note}|tags:{tags_str}"

@@ -30,6 +30,30 @@ describe('parseDimWishlist', () => {
       expect(result.items[0].perkHashes).toEqual([])
     })
 
+    it('parses pipe-separated alternative perks', () => {
+      const content = 'dimwishlist:item=877384&perks=460017080|3619207468,1015611457'
+      const result = parseDimWishlist(content)
+
+      expect(result.items).toHaveLength(1)
+      expect(result.items[0].perkHashes).toEqual([460017080, 3619207468, 1015611457])
+    })
+
+    it('parses complex perks with multiple pipes and commas', () => {
+      const content =
+        'dimwishlist:item=1323862250&perks=1482024992|3250034553|4090651448,2680121939,1820235745|3300816228'
+      const result = parseDimWishlist(content)
+
+      expect(result.items).toHaveLength(1)
+      expect(result.items[0].perkHashes).toEqual([
+        1482024992,
+        3250034553,
+        4090651448,
+        2680121939,
+        1820235745,
+        3300816228
+      ])
+    })
+
     it('parses multiple items', () => {
       const content = `dimwishlist:item=111&perks=1,2,3
 dimwishlist:item=222&perks=4,5,6

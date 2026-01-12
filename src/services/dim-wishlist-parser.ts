@@ -19,7 +19,7 @@ const DESCRIPTION_PATTERN = /^description:(.+)$/i
 const BLOCK_NOTES_PATTERN = /^\/\/notes:(.+)$/i
 const COMMENT_PATTERN = /^\/\//
 const DIMWISHLIST_PATTERN =
-  /^dimwishlist:item=(-?\d+)(?:&perks=([0-9,]+))?(?:#notes:([^|]+))?(?:\|tags:(.+))?$/i
+  /^dimwishlist:item=(-?\d+)(?:&perks=([0-9,|]+))?(?:#notes:([^|]+))?(?:\|tags:(.+))?$/i
 
 // Valid DIM tags
 const VALID_TAGS: WishlistTag[] = ['godroll', 'pvp', 'pve', 'mkb', 'controller', 'trash']
@@ -40,13 +40,16 @@ function parseTags(tagsString: string): WishlistTag[] {
 }
 
 /**
- * Parse a comma-separated perks string into an array of numbers
+ * Parse a perks string into an array of numbers
+ * DIM format uses commas to separate perks and pipes (|) for alternatives in the same column
+ * Both are flattened into a single array of perk hashes
  */
 function parsePerks(perksString: string): number[] {
   if (!perksString) return []
 
+  // Split on both commas and pipes (DIM uses | for "OR" alternatives)
   return perksString
-    .split(',')
+    .split(/[,|]/)
     .map((p) => parseInt(p.trim(), 10))
     .filter((p) => !isNaN(p))
 }
