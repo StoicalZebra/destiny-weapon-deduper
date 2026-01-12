@@ -9,7 +9,6 @@ import os
 import time
 import glob
 import json
-import uuid
 import re
 from datetime import datetime
 from dotenv import load_dotenv
@@ -423,103 +422,103 @@ def generate_readable_markdown(all_raw_rolls):
     return "\n".join(lines)
 
 
-def convert_to_d3_format(god_rolls, video_info):
-    """Convert parsed god rolls to D3 import format.
+def convert_to_littlelight_format(all_raw_rolls, wishlist_name, description):
+    """Convert raw god rolls to LittleLight wishlist format.
 
     Args:
-        god_rolls: List of god roll dicts from Gemini (new structured format)
-        video_info: Dict with 'title', 'id', 'channel', 'url' keys
+        all_raw_rolls: List of {'video_info': {...}, 'rolls': [...]} dicts
+        wishlist_name: Name for the wishlist
+        description: Description for the wishlist
     """
-    results = []
+    data = []
     uncertain = []
 
-    video_title = video_info.get('title', 'Unknown Video')
-    video_id = video_info.get('id', '')
-    video_channel = video_info.get('channel', 'Unknown')
-    video_url = video_info.get('url', '')
+    for item in all_raw_rolls:
+        for roll in item['rolls']:
+            weapon_name = roll.get('weapon', '')
+            weapon_hash, exact_weapon = lookup_hash(weapon_name, WEAPON_LOOKUP)
 
-    # Perk columns to process (in order)
-    perk_columns = ['barrel', 'magazine', 'trait1', 'trait2', 'originTrait', 'masterwork']
-
-    for roll in god_rolls:
-        weapon_name = roll.get('weapon', '')
-        weapon_hash, exact_weapon = lookup_hash(weapon_name, WEAPON_LOOKUP)
-
-        if not weapon_hash:
-            uncertain.append(f"❓ Unknown weapon: '{weapon_name}'")
-            continue
-
-        if not exact_weapon:
-            uncertain.append(f"⚠️ Fuzzy weapon match: '{weapon_name}'")
-
-        # Build perk selection from all columns
-        selection = {}
-
-        for column in perk_columns:
-            column_value = roll.get(column)
-            if not column_value:
+            if not weapon_hash:
+                uncertain.append(f"❓ Unknown weapon: '{weapon_name}'")
                 continue
 
-            # Handle both array and string values
-            perks_list = column_value if isinstance(column_value, list) else [column_value]
+            if not exact_weapon:
+                uncertain.append(f"⚠️ Fuzzy weapon match: '{weapon_name}'")
 
-            for perk_name in perks_list:
-                if not perk_name or perk_name == 'null':
-                    continue
-                perk_hash, exact_perk = lookup_hash(perk_name, PERK_LOOKUP)
-                if perk_hash:
-                    selection[str(perk_hash)] = "OR"
-                    if not exact_perk:
-                        uncertain.append(f"⚠️ Fuzzy perk match: '{perk_name}'")
-                else:
-                    uncertain.append(f"❓ Unknown perk: '{perk_name}'")
+            # Build 4-column plugs array: [barrel, magazine, trait1, trait2]
+            plugs = [[], [], [], []]
 
-        if selection:  # Only add if we found at least one perk
-            mode = roll.get('mode', 'Unknown')
-            reasoning = roll.get('reasoning', '')
-            timestamp = roll.get('timestamp', '')
+            # Column 0: Barrel
+            for perk in (roll.get('barrel') or []):
+                if perk and perk != 'null':
+                    h, exact = lookup_hash(perk, PERK_LOOKUP)
+                    if h:
+                        plugs[0].append(h)
+                        if not exact:
+                            uncertain.append(f"⚠️ Fuzzy perk match: '{perk}'")
+                    else:
+                        uncertain.append(f"❓ Unknown perk: '{perk}'")
 
-            # Build URLs
-            timestamped_url = build_timestamped_url(video_id, timestamp) if video_id else video_url
-            base_url = f"https://www.youtube.com/watch?v={video_id}" if video_id else video_url
+            # Column 1: Magazine
+            for perk in (roll.get('magazine') or []):
+                if perk and perk != 'null':
+                    h, exact = lookup_hash(perk, PERK_LOOKUP)
+                    if h:
+                        plugs[1].append(h)
+                        if not exact:
+                            uncertain.append(f"⚠️ Fuzzy perk match: '{perk}'")
+                    else:
+                        uncertain.append(f"❓ Unknown perk: '{perk}'")
 
-            # Build notes with reasoning and source attribution
-            notes = reasoning
-            if notes and video_title:
-                notes = f"{reasoning} (from: {video_title} @ {timestamp})" if timestamp else f"{reasoning} (from: {video_title})"
+            # Column 2: Trait 1
+            for perk in (roll.get('trait1') or []):
+                if perk and perk != 'null':
+                    h, exact = lookup_hash(perk, PERK_LOOKUP)
+                    if h:
+                        plugs[2].append(h)
+                        if not exact:
+                            uncertain.append(f"⚠️ Fuzzy perk match: '{perk}'")
+                    else:
+                        uncertain.append(f"❓ Unknown perk: '{perk}'")
 
-            profile = {
-                "id": str(uuid.uuid4()),
-                "name": f"{mode} Roll",
-                "notes": notes,
-                "selection": selection,
-                # Video source metadata
-                "source": {
-                    "author": video_channel,
-                    "videoTitle": video_title,
-                    "timestamp": timestamp,
-                    "timestampUrl": timestamped_url,
-                    "videoUrl": base_url,
-                }
-            }
+            # Column 3: Trait 2
+            for perk in (roll.get('trait2') or []):
+                if perk and perk != 'null':
+                    h, exact = lookup_hash(perk, PERK_LOOKUP)
+                    if h:
+                        plugs[3].append(h)
+                        if not exact:
+                            uncertain.append(f"⚠️ Fuzzy perk match: '{perk}'")
+                    else:
+                        uncertain.append(f"❓ Unknown perk: '{perk}'")
 
-            # Check if weapon already exists in results
-            existing = next((r for r in results if r['weaponHash'] == weapon_hash), None)
-            if existing:
-                existing['profiles'].append(profile)
-            else:
-                results.append({
-                    "weaponHash": weapon_hash,
-                    "weaponName": weapon_name,
-                    "profiles": [profile]
+            # Build tags from mode
+            mode = roll.get('mode', 'Both')
+            tags = []
+            if mode in ['PvE', 'Both']:
+                tags.append('PvE')
+            if mode in ['PvP', 'Both']:
+                tags.append('PvP')
+
+            # Only add if we have at least one perk
+            if any(plugs):
+                data.append({
+                    "hash": weapon_hash,
+                    "plugs": plugs,
+                    "tags": tags
                 })
 
-    return results, uncertain
+    return {
+        "name": wishlist_name,
+        "description": description,
+        "data": data
+    }, uncertain
+
 
 # --- MAIN EXECUTION ---
 if __name__ == "__main__":
     print("=" * 50)
-    print("YouTube God Roll Agent → D3 Import")
+    print("YouTube God Roll Agent → LittleLight Import")
     print("=" * 50)
 
     # Check for lookup files
@@ -558,14 +557,13 @@ if __name__ == "__main__":
     markdown_filename = os.path.join(OUTPUT_DIR, f"God_Rolls_{timestamp}.md")
 
     print(f"\n📝 Output files:")
-    print(f"   • {json_filename} (D3 import)")
+    print(f"   • {json_filename} (LittleLight import)")
     print(f"   • {markdown_filename} (human readable)")
     print(f"🤖 Model: {MODEL_NAME}")
     print("-" * 50)
 
-    all_results = []
     all_uncertain = []
-    all_raw_rolls = []  # For readable markdown
+    all_raw_rolls = []  # For markdown and LittleLight export
 
     for i, video in enumerate(videos):
         if i < start_index:
@@ -617,7 +615,7 @@ if __name__ == "__main__":
 
         print(f"   ✅ Found {len(god_rolls)} god roll(s)")
 
-        # Build video info for D3 export
+        # Build video info
         video_info = {
             'title': title,
             'id': video_id,
@@ -625,33 +623,29 @@ if __name__ == "__main__":
             'url': url,
         }
 
-        # Store raw rolls for readable markdown
+        # Store raw rolls for markdown and LittleLight export
         all_raw_rolls.append({
             'video_info': video_info,
             'rolls': god_rolls
         })
 
-        results, uncertain = convert_to_d3_format(god_rolls, video_info)
-        all_results.extend(results)
-
-        if uncertain:
-            all_uncertain.append(f"\n## {title}")
-            all_uncertain.extend(uncertain)
-
-        # Progressive save after each video
-        d3_export = {
-            "version": "1.0",
-            "exportedAt": datetime.now().isoformat(),
-            "godRolls": all_results
-        }
-        with open(json_filename, 'w', encoding='utf-8') as f:
-            json.dump(d3_export, f, indent=2)
-
         # Rate limit protection
         time.sleep(10)
 
     # --- FINAL SUMMARY ---
-    print(f"\n✅ Saved {len(all_results)} weapons to {json_filename}")
+
+    # Generate LittleLight format JSON
+    ll_export, ll_uncertain = convert_to_littlelight_format(
+        all_raw_rolls,
+        wishlist_name="YouTube God Rolls",
+        description=f"Extracted from: {video_link}"
+    )
+    all_uncertain.extend(ll_uncertain)
+
+    with open(json_filename, 'w', encoding='utf-8') as f:
+        json.dump(ll_export, f, indent=2)
+
+    print(f"\n✅ Saved {len(ll_export['data'])} god rolls to {json_filename}")
 
     # Human-readable markdown (with review section at bottom)
     with open(markdown_filename, 'w', encoding='utf-8') as f:
@@ -670,4 +664,4 @@ if __name__ == "__main__":
             f.write("## ✅ All items matched successfully!\n")
 
     print(f"📖 Markdown: {markdown_filename}")
-    print(f"\n🎉 Done! Import {json_filename} into D3.")
+    print(f"\n🎉 Done! Import {json_filename} into LittleLight.")
