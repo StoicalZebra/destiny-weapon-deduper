@@ -752,12 +752,8 @@ if __name__ == "__main__":
 
     # Create output directory
     os.makedirs(OUTPUT_DIR, exist_ok=True)
-    dim_filename = os.path.join(OUTPUT_DIR, f"God_Rolls_{timestamp}.txt")
-    markdown_filename = os.path.join(OUTPUT_DIR, f"God_Rolls_{timestamp}.md")
 
-    print(f"\n📝 Output files:")
-    print(f"   • {dim_filename} (DIM wishlist format)")
-    print(f"   • {markdown_filename} (human readable)")
+    print(f"\n📝 Output directory: {OUTPUT_DIR}")
     print(f"🤖 Model: {MODEL_NAME}")
     print("-" * 50)
 
@@ -833,10 +829,13 @@ if __name__ == "__main__":
 
     # --- FINAL SUMMARY ---
 
-    # Extract weapon name from first roll for title
+    # Extract weapon name from first roll for title and filename
     first_weapon = "Unknown"
     if all_raw_rolls and all_raw_rolls[0].get('rolls'):
         first_weapon = all_raw_rolls[0]['rolls'][0].get('weapon', 'Unknown')
+
+    # Sanitize weapon name for filename (remove special chars)
+    safe_weapon_name = re.sub(r'[^\w\s-]', '', first_weapon).strip().replace(' ', '_')
 
     # Get video title for description
     video_title_for_desc = ""
@@ -849,6 +848,10 @@ if __name__ == "__main__":
         wishlist_desc = f'Extracted from: "{video_title_for_desc}" at {video_link}'
     else:
         wishlist_desc = f"Extracted from: {video_link}"
+
+    # Generate output filenames with weapon name
+    dim_filename = os.path.join(OUTPUT_DIR, f"God_Rolls_{timestamp}_{safe_weapon_name}.txt")
+    markdown_filename = os.path.join(OUTPUT_DIR, f"God_Rolls_{timestamp}_{safe_weapon_name}.md")
 
     # Generate DIM wishlist format
     dim_content, dim_uncertain = convert_to_dim_format(
@@ -863,7 +866,7 @@ if __name__ == "__main__":
 
     # Count dimwishlist lines
     dim_line_count = sum(1 for line in dim_content.split('\n') if line.startswith('dimwishlist:'))
-    print(f"\n✅ Saved {dim_line_count} wishlist entries to {dim_filename}")
+    print(f"\n✅ Saved {dim_line_count} wishlist entries to {os.path.basename(dim_filename)}")
 
     # Human-readable markdown (with review section at bottom)
     with open(markdown_filename, 'w', encoding='utf-8') as f:
@@ -881,5 +884,5 @@ if __name__ == "__main__":
         else:
             f.write("## ✅ All items matched successfully!\n")
 
-    print(f"📖 Markdown: {markdown_filename}")
-    print(f"\n🎉 Done! Import {dim_filename} into DIM or D3 app.")
+    print(f"📖 Markdown: {os.path.basename(markdown_filename)}")
+    print(f"\n🎉 Done! Import {os.path.basename(dim_filename)} into DIM or D3 app.")
