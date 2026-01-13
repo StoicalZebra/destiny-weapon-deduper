@@ -28,6 +28,27 @@
     </div>
 
     <template v-else>
+      <!-- Admin: Unsaved Changes Banner -->
+      <div
+        v-if="isEditable && hasUnsavedChanges"
+        class="mb-4 rounded-lg bg-amber-900/30 border border-amber-700/50 p-4 flex items-center justify-between"
+      >
+        <div class="flex items-center gap-3">
+          <svg class="h-5 w-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <span class="text-sm text-amber-200">
+            You have local changes. Export to update GitHub.
+          </span>
+        </div>
+        <button
+          @click="handleExportAndMarkSaved"
+          class="inline-flex items-center gap-2 text-sm bg-amber-600 hover:bg-amber-500 text-white px-3 py-1.5 rounded-lg"
+        >
+          Export to File
+        </button>
+      </div>
+
       <!-- Header -->
       <div class="rounded-xl border border-gray-700 bg-gray-800 p-6 mb-6">
         <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
@@ -148,8 +169,8 @@
                 {{ item.notes }}
               </p>
 
-              <!-- Action buttons for user wishlists -->
-              <div v-if="wishlist.sourceType === 'user'" class="mt-2 flex gap-3">
+              <!-- Action buttons for editable wishlists (user OR admin-editable presets) -->
+              <div v-if="isEditable" class="mt-2 flex gap-3">
                 <button
                   @click="handleEditItem(item, weaponHash)"
                   class="text-xs text-blue-400 hover:text-blue-300"
@@ -189,6 +210,7 @@ import { manifestService } from '@/services/manifest-service'
 import { getWishlistStats } from '@/services/dim-wishlist-parser'
 import WishlistPerkMatrix from '@/components/wishlists/WishlistPerkMatrix.vue'
 import type { WishlistItem, WishlistTag } from '@/models/wishlist'
+import { isWishlistEditable } from '@/utils/admin'
 
 const route = useRoute()
 const router = useRouter()
@@ -207,6 +229,18 @@ const wishlist = computed(() => {
 const stats = computed(() => {
   if (!wishlist.value) return { itemCount: 0, weaponCount: 0 }
   return getWishlistStats(wishlist.value.items)
+})
+
+// Admin mode - check if this wishlist is editable
+const isEditable = computed(() => {
+  if (!wishlist.value) return false
+  return isWishlistEditable(wishlist.value)
+})
+
+// Check if there are unsaved local changes (for admin-edited presets)
+const hasUnsavedChanges = computed(() => {
+  if (!wishlist.value) return false
+  return wishlistsStore.hasLocalChanges(wishlist.value.id)
 })
 
 // Group items by weapon
@@ -306,7 +340,34 @@ function handleExport() {
 
 function handleDeleteItem(itemId: string) {
   if (!wishlist.value) return
-  wishlistsStore.removeItemFromWishlist(wishlist.value.id, itemId)
+
+  if (wishlist.value.sourceType === 'user') {
+    wishlistsStore.removeItemFromWishlist(wishlist.value.id, itemId)
+  } else if (wishlist.value.sourceType === 'preset') {
+    // Admin mode - remove from preset
+    wishlistsStore.removeItemFromPreset(wishlist.value.id, itemId)
+  }
+}
+
+function handleExportAndMarkSaved() {
+  if (!wishlist.value) return
+
+  const content = wishlistsStore.exportToDimFormat(wishlist.value.id)
+  if (!content) return
+
+  // Download file
+  const blob = new Blob([content], { type: 'text/plain' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `${wishlist.value.name.replace(/[^a-z0-9]/gi, '_')}.txt`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+
+  // Mark changes as saved
+  wishlistsStore.markChangesSaved(wishlist.value.id)
 }
 
 function handleEditItem(item: WishlistItem, weaponHash: number) {

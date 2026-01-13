@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="flex items-start justify-between gap-4">
       <div class="min-w-0 flex-1">
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 flex-wrap">
           <h3 class="text-lg font-semibold truncate">{{ wishlist.name }}</h3>
           <span
             :class="[
@@ -16,7 +16,19 @@
             {{ wishlist.sourceType === 'preset' ? 'Preset' : 'Custom' }}
           </span>
           <span
-            v-if="hasUpdate"
+            v-if="isAdminEditable"
+            class="inline-flex items-center rounded-full bg-purple-900/50 text-purple-300 border border-purple-700/50 px-2 py-0.5 text-xs font-medium"
+          >
+            Admin Editable
+          </span>
+          <span
+            v-if="hasLocalChanges"
+            class="inline-flex items-center rounded-full bg-amber-900/50 text-amber-300 border border-amber-700/50 px-2 py-0.5 text-xs font-medium"
+          >
+            Unsaved Changes
+          </span>
+          <span
+            v-if="hasUpdate && !hasLocalChanges"
             class="inline-flex items-center rounded-full bg-amber-900/50 text-amber-300 border border-amber-700/50 px-2 py-0.5 text-xs font-medium"
           >
             Update Available
@@ -25,9 +37,10 @@
         <p v-if="wishlist.description" class="mt-1 text-sm text-gray-400 line-clamp-2">
           {{ wishlist.description }}
         </p>
-        <p v-if="wishlist.author" class="mt-1 text-xs text-gray-500">
-          by {{ wishlist.author }}
-        </p>
+      </div>
+      <!-- Author in upper right -->
+      <div v-if="wishlist.author" class="text-sm text-gray-400 whitespace-nowrap">
+        by {{ wishlist.author }}
       </div>
     </div>
 
@@ -95,11 +108,15 @@
 import { computed } from 'vue'
 import type { Wishlist, WishlistUpdateStatus } from '@/models/wishlist'
 import { getWishlistStats } from '@/services/dim-wishlist-parser'
+import { isWishlistEditable } from '@/utils/admin'
+import { useWishlistsStore } from '@/stores/wishlists'
 
 const props = defineProps<{
   wishlist: Wishlist
   updateStatus?: WishlistUpdateStatus
 }>()
+
+const wishlistsStore = useWishlistsStore()
 
 defineEmits<{
   (e: 'fork', wishlist: Wishlist): void
@@ -113,6 +130,16 @@ const stats = computed(() => getWishlistStats(props.wishlist.items))
 const hasUpdate = computed(
   () => props.updateStatus?.hasUpdate ?? false
 )
+
+// Admin mode - check if this is an admin-editable preset
+const isAdminEditable = computed(() => {
+  return props.wishlist.sourceType === 'preset' && isWishlistEditable(props.wishlist)
+})
+
+// Check if there are unsaved local changes
+const hasLocalChanges = computed(() => {
+  return wishlistsStore.hasLocalChanges(props.wishlist.id)
+})
 
 function formatDate(isoString?: string): string {
   if (!isoString) return 'Unknown'

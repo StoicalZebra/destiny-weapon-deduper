@@ -163,13 +163,19 @@
                     rows="2"
                     class="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-600 resize-none"
                  />
-                 <p v-if="saveError" class="text-xs text-red-400 mt-1">{{ saveError }}</p>
                  <p class="text-xs text-gray-500 mt-1">
                     {{ saveTargetText }}
                  </p>
               </div>
 
-              <div class="flex justify-end">
+              <div class="flex justify-end items-center gap-3">
+                 <p v-if="saveMessage" :class="['text-xs', saveMessage.type === 'error' ? 'text-red-400' : 'text-gray-400']">{{ saveMessage.text }}</p>
+                 <button
+                    @click="handleCancel"
+                    class="px-4 py-2 rounded text-sm font-medium transition-colors bg-gray-700 hover:bg-gray-600 text-gray-200 border border-gray-600"
+                 >
+                    Cancel
+                 </button>
                  <button
                     @click="handleSave"
                     class="px-4 py-2 rounded text-sm font-medium transition-colors"
@@ -223,6 +229,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import type { DedupedWeapon, PerkColumn } from '@/models/deduped-weapon'
 import type { WeaponInstance } from '@/models/weapon-instance'
 import type { Perk } from '@/models/perk'
@@ -237,8 +244,9 @@ const props = defineProps<{
   weapon: DedupedWeapon
 }>()
 
-// Initialize wishlists store
+// Initialize wishlists store and router
 const wishlistsStore = useWishlistsStore()
+const router = useRouter()
 
 const matrixColumns = computed(() => props.weapon.perkMatrix)
 
@@ -288,6 +296,17 @@ const clearSelection = () => {
   currentProfileId.value = null
   sourceWishlistId.value = null
   profileNotesInput.value = ''
+  saveMessage.value = null
+}
+
+const handleCancel = () => {
+  // If editing from a wishlist, navigate back to it
+  if (sourceWishlistId.value) {
+    router.push({ name: 'wishlist-detail', params: { id: sourceWishlistId.value } })
+  } else {
+    // Just clear the selection
+    clearSelection()
+  }
 }
 
 // --- Matching Logic ---
@@ -362,7 +381,7 @@ const displayProfiles = ref<DisplayProfile[]>([])
 const currentProfileId = ref<string | null>(null)
 const sourceWishlistId = ref<string | null>(null) // Track which wishlist we're editing from
 const profileNotesInput = ref('')
-const saveError = ref<string | null>(null)
+const saveMessage = ref<{ text: string; type: 'error' | 'info' } | null>(null)
 
 // Load wishlist items for this weapon from the store
 const loadProfilesFromStore = async () => {
@@ -381,37 +400,70 @@ const loadProfilesFromStore = async () => {
     }))
 }
 
-const handleSave = () => {
+const handleSave = async () => {
     const trimmedNotes = profileNotesInput.value.trim()
 
     // Must have at least one perk selected
     if (!hasSelection.value) {
-        saveError.value = 'Select at least one perk before saving'
+        saveMessage.value = { text: 'Select at least one perk before saving', type: 'error' }
         return
     }
 
-    saveError.value = null
+    saveMessage.value = null
+
+    // Convert selection to perk hashes using the helper that creates a full item
+    const tempItem = selectionToWishlistItem(
+        selection.value,
+        props.weapon.weaponHash,
+        perkColumnsForStore.value
+    )
+    const perkHashes = tempItem.perkHashes
+
+    // If updating an existing item, check if anything actually changed
+    if (currentProfileId.value) {
+        const existingProfile = displayProfiles.value.find(p => p.id === currentProfileId.value)
+        if (existingProfile) {
+            const existingPerks = new Set(existingProfile.item.perkHashes)
+            const newPerks = new Set(perkHashes)
+            const perksMatch = existingPerks.size === newPerks.size &&
+                [...existingPerks].every(h => newPerks.has(h))
+            const notesMatch = (existingProfile.item.notes || '') === trimmedNotes
+
+            if (perksMatch && notesMatch) {
+                // No changes - show message instead of saving
+                saveMessage.value = { text: 'No changes detected', type: 'info' }
+                return
+            }
+        }
+    }
 
     let savedItem: WishlistItem
 
     // If editing from a specific wishlist, update there instead of "My God Rolls"
     if (sourceWishlistId.value && currentProfileId.value) {
-        // Convert selection to perk hashes using the helper that creates a full item
-        const tempItem = selectionToWishlistItem(
-            selection.value,
-            props.weapon.weaponHash,
-            perkColumnsForStore.value
-        )
-        const perkHashes = tempItem.perkHashes
+        const wishlist = wishlistsStore.getWishlistById(sourceWishlistId.value)
 
-        wishlistsStore.updateItemInWishlist(
-            sourceWishlistId.value,
-            currentProfileId.value,
-            {
-                perkHashes,
-                notes: trimmedNotes || undefined
-            }
-        )
+        if (wishlist?.sourceType === 'preset') {
+            // Admin mode - update preset wishlist
+            await wishlistsStore.updateItemInPreset(
+                sourceWishlistId.value,
+                currentProfileId.value,
+                {
+                    perkHashes,
+                    notes: trimmedNotes || undefined
+                }
+            )
+        } else {
+            // Regular user wishlist
+            wishlistsStore.updateItemInWishlist(
+                sourceWishlistId.value,
+                currentProfileId.value,
+                {
+                    perkHashes,
+                    notes: trimmedNotes || undefined
+                }
+            )
+        }
 
         // Build the updated item for local state
         savedItem = {
@@ -475,9 +527,9 @@ const deleteProfile = (id: string) => {
     }
 }
 
-// Clear error when user types
+// Clear message when user types
 watch(profileNotesInput, () => {
-    if (saveError.value) saveError.value = null
+    if (saveMessage.value) saveMessage.value = null
 })
 
 // Check if a profile's perks match the current selection

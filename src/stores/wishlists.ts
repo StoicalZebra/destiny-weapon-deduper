@@ -25,6 +25,7 @@ import {
   selectionToWishlistItem,
   wishlistItemToSelection
 } from '@/services/dim-wishlist-parser'
+import { isAdminMode, isWishlistEditable } from '@/utils/admin'
 
 export const useWishlistsStore = defineStore('wishlists', () => {
   // ==================== State ====================
@@ -43,6 +44,10 @@ export const useWishlistsStore = defineStore('wishlists', () => {
   // Pre-computed weapon index for O(1) lookups instead of scanning all items
   // Structure: Map<wishlistId, Map<weaponHash, WishlistItem[]>>
   const weaponIndexes = ref<Map<string, Map<number, WishlistItem[]>>>(new Map())
+
+  // Track local edits to preset wishlists (for admin mode)
+  // When a preset is edited locally, we need to know so we can show "unsaved changes"
+  const hasUnsavedPresetChanges = ref<Map<string, boolean>>(new Map())
 
   // ==================== Computed ====================
 
@@ -340,6 +345,102 @@ export const useWishlistsStore = defineStore('wishlists', () => {
       wishlist.lastUpdated = new Date().toISOString()
       wishlistStorageService.saveUserWishlist(wishlist)
     }
+  }
+
+  // ==================== Admin Mode Editing ====================
+
+  /**
+   * Check if admin mode is enabled
+   */
+  function isAdmin(): boolean {
+    return isAdminMode()
+  }
+
+  /**
+   * Check if a preset has unsaved local changes
+   */
+  function hasLocalChanges(wishlistId: string): boolean {
+    return hasUnsavedPresetChanges.value.get(wishlistId) ?? false
+  }
+
+  /**
+   * Mark a preset's changes as saved (call after export)
+   */
+  function markChangesSaved(wishlistId: string): void {
+    hasUnsavedPresetChanges.value.set(wishlistId, false)
+  }
+
+  /**
+   * Add an item to a preset wishlist (admin mode only)
+   */
+  async function addItemToPreset(wishlistId: string, item: WishlistItem): Promise<boolean> {
+    if (!isAdminMode()) return false
+
+    const wishlist = presetWishlists.value.find((w) => w.id === wishlistId)
+    if (!wishlist || !isWishlistEditable(wishlist)) return false
+
+    // Add to wishlist
+    wishlist.items.push(item)
+    wishlist.lastUpdated = new Date().toISOString()
+
+    // Mark as having unsaved changes
+    hasUnsavedPresetChanges.value.set(wishlistId, true)
+
+    // Rebuild weapon index for this wishlist
+    weaponIndexes.value.set(wishlistId, buildWeaponIndex(wishlist))
+
+    // Persist locally (don't sync to GitHub - that's manual export)
+    await wishlistStorageService.savePreset(wishlist)
+
+    return true
+  }
+
+  /**
+   * Remove an item from a preset wishlist (admin mode only)
+   */
+  async function removeItemFromPreset(wishlistId: string, itemId: string): Promise<boolean> {
+    if (!isAdminMode()) return false
+
+    const wishlist = presetWishlists.value.find((w) => w.id === wishlistId)
+    if (!wishlist || !isWishlistEditable(wishlist)) return false
+
+    const index = wishlist.items.findIndex((i) => i.id === itemId)
+    if (index < 0) return false
+
+    wishlist.items.splice(index, 1)
+    wishlist.lastUpdated = new Date().toISOString()
+
+    hasUnsavedPresetChanges.value.set(wishlistId, true)
+    weaponIndexes.value.set(wishlistId, buildWeaponIndex(wishlist))
+    await wishlistStorageService.savePreset(wishlist)
+
+    return true
+  }
+
+  /**
+   * Update an item in a preset wishlist (admin mode only)
+   */
+  async function updateItemInPreset(
+    wishlistId: string,
+    itemId: string,
+    updates: Partial<WishlistItem>
+  ): Promise<boolean> {
+    if (!isAdminMode()) return false
+
+    const wishlist = presetWishlists.value.find((w) => w.id === wishlistId)
+    if (!wishlist || !isWishlistEditable(wishlist)) return false
+
+    const item = wishlist.items.find((i) => i.id === itemId)
+    if (!item) return false
+
+    Object.assign(item, updates)
+    wishlist.lastUpdated = new Date().toISOString()
+
+    hasUnsavedPresetChanges.value.set(wishlistId, true)
+    weaponIndexes.value.set(wishlistId, buildWeaponIndex(wishlist))
+    await wishlistStorageService.savePreset(wishlist)
+
+    return true
   }
 
   /**
@@ -701,6 +802,14 @@ export const useWishlistsStore = defineStore('wishlists', () => {
     hasLegacyGodRolls,
     getLegacyGodRollStats,
     migrateLegacyGodRolls,
-    clearLegacyGodRolls
+    clearLegacyGodRolls,
+
+    // Admin mode
+    isAdmin,
+    hasLocalChanges,
+    markChangesSaved,
+    addItemToPreset,
+    removeItemFromPreset,
+    updateItemInPreset
   }
 })
