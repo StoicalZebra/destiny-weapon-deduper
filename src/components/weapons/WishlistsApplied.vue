@@ -40,8 +40,8 @@
             :class="[
               'inline-flex items-center rounded-full px-1.5 py-0.5 text-xs font-medium border',
               wishlist.sourceType === 'preset'
-                ? 'bg-green-900/50 text-green-300 border-green-700/50'
-                : 'bg-blue-900/50 text-blue-300 border-blue-700/50'
+                ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 border-green-300 dark:border-green-700/50'
+                : 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700/50'
             ]"
           >
             {{ wishlist.sourceType === 'preset' ? 'Preset' : 'Custom' }}

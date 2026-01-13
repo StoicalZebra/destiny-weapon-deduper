@@ -1,14 +1,14 @@
 <template>
   <div
     v-if="showBanner"
-    class="bg-amber-900/50 border border-amber-700/50 rounded-lg p-4 mb-6"
+    class="bg-amber-100 dark:bg-amber-900/50 border border-amber-300 dark:border-amber-700/50 rounded-lg p-4 mb-6"
   >
     <div class="flex items-start justify-between gap-4">
       <div class="flex items-start gap-3">
         <!-- Warning icon -->
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          class="h-5 w-5 text-amber-400 flex-shrink-0 mt-0.5"
+          class="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -21,8 +21,8 @@
           />
         </svg>
         <div>
-          <h4 class="font-semibold text-amber-200">Legacy Rolls Found</h4>
-          <p class="text-sm text-amber-300/80 mt-1">
+          <h4 class="font-semibold text-amber-800 dark:text-amber-200">Legacy Rolls Found</h4>
+          <p class="text-sm text-amber-700 dark:text-amber-300/80 mt-1">
             You have {{ stats.rollCount }} roll{{ stats.rollCount === 1 ? '' : 's' }}
             across {{ stats.weaponCount }} weapon{{ stats.weaponCount === 1 ? '' : 's' }}
             stored in the old format. Migrate them to your personal wishlist for
@@ -43,27 +43,27 @@
         <button
           v-if="!migrating"
           @click="handleDismiss"
-          class="px-3 py-1.5 text-sm text-amber-300 hover:text-amber-100 transition-colors"
+          class="px-3 py-1.5 text-sm text-amber-700 dark:text-amber-300 hover:text-amber-900 dark:hover:text-amber-100 transition-colors"
           title="Dismiss for this session"
         >
           Later
         </button>
-        <span v-if="migrating" class="text-sm text-amber-300">Migrating...</span>
+        <span v-if="migrating" class="text-sm text-amber-700 dark:text-amber-300">Migrating...</span>
       </div>
     </div>
 
     <!-- Migration result -->
     <div
       v-if="migrationResult"
-      class="mt-3 pt-3 border-t border-amber-700/50"
-      :class="migrationResult.errors.length > 0 ? 'text-amber-300' : 'text-green-300'"
+      class="mt-3 pt-3 border-t border-amber-300 dark:border-amber-700/50"
+      :class="migrationResult.errors.length > 0 ? 'text-amber-700 dark:text-amber-300' : 'text-green-700 dark:text-green-300'"
     >
       <p class="text-sm">
         <span v-if="migrationResult.migrated > 0">
           Successfully migrated {{ migrationResult.migrated }} roll{{ migrationResult.migrated === 1 ? '' : 's' }}.
         </span>
         <span v-else>No new rolls to migrate.</span>
-        <span v-if="migrationResult.errors.length > 0" class="text-amber-400">
+        <span v-if="migrationResult.errors.length > 0" class="text-amber-600 dark:text-amber-400">
           {{ migrationResult.errors.length }} error{{ migrationResult.errors.length === 1 ? '' : 's' }} occurred.
         </span>
       </p>

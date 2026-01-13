@@ -9,27 +9,27 @@
             :class="[
               'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
               wishlist.sourceType === 'preset'
-                ? 'bg-green-900/50 text-green-300 border border-green-700/50'
-                : 'bg-blue-900/50 text-blue-300 border border-blue-700/50'
+                ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 border border-green-300 dark:border-green-700/50'
+                : 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-700/50'
             ]"
           >
             {{ wishlist.sourceType === 'preset' ? 'Preset' : 'Custom' }}
           </span>
           <span
             v-if="isAdminEditable"
-            class="inline-flex items-center rounded-full bg-purple-900/50 text-purple-300 border border-purple-700/50 px-2 py-0.5 text-xs font-medium"
+            class="inline-flex items-center rounded-full bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-700/50 px-2 py-0.5 text-xs font-medium"
           >
             Admin Editable
           </span>
           <span
             v-if="hasLocalChanges"
-            class="inline-flex items-center rounded-full bg-amber-900/50 text-amber-300 border border-amber-700/50 px-2 py-0.5 text-xs font-medium"
+            class="inline-flex items-center rounded-full bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-700/50 px-2 py-0.5 text-xs font-medium"
           >
             Unsaved Changes
           </span>
           <span
             v-if="hasUpdate && !hasLocalChanges"
-            class="inline-flex items-center rounded-full bg-amber-900/50 text-amber-300 border border-amber-700/50 px-2 py-0.5 text-xs font-medium"
+            class="inline-flex items-center rounded-full bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-700/50 px-2 py-0.5 text-xs font-medium"
           >
             Update Available
           </span>
@@ -98,7 +98,7 @@
       <button
         v-if="wishlist.sourceType === 'preset' && hasUpdate"
         @click="$emit('refresh', wishlist)"
-        class="inline-flex items-center rounded-lg bg-amber-600/30 px-3 py-1.5 text-sm font-medium text-amber-300 hover:bg-amber-600/40 transition-colors"
+        class="inline-flex items-center rounded-lg bg-amber-100 dark:bg-amber-600/30 px-3 py-1.5 text-sm font-medium text-amber-700 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-600/40 transition-colors"
       >
         Update
       </button>
@@ -115,7 +115,7 @@
       <button
         v-if="wishlist.sourceType === 'user'"
         @click="$emit('delete', wishlist)"
-        class="inline-flex items-center rounded-lg bg-red-600/30 px-3 py-1.5 text-sm font-medium text-red-300 hover:bg-red-600/40 transition-colors"
+        class="inline-flex items-center rounded-lg bg-red-100 dark:bg-red-600/30 px-3 py-1.5 text-sm font-medium text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-600/40 transition-colors"
       >
         Delete
       </button>

@@ -31,13 +31,13 @@
       <!-- Admin: Unsaved Changes Banner -->
       <div
         v-if="isEditable && hasUnsavedChanges"
-        class="mb-4 rounded-lg bg-amber-900/30 border border-amber-700/50 p-4 flex items-center justify-between"
+        class="mb-4 rounded-lg bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700/50 p-4 flex items-center justify-between"
       >
         <div class="flex items-center gap-3">
-          <svg class="h-5 w-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg class="h-5 w-5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
-          <span class="text-sm text-amber-200">
+          <span class="text-sm text-amber-800 dark:text-amber-200">
             You have local changes. Export to update GitHub.
           </span>
         </div>
@@ -59,8 +59,8 @@
                 :class="[
                   'text-xs px-2 py-0.5 rounded-full',
                   wishlist.sourceType === 'preset'
-                    ? 'bg-green-900/50 text-green-300 border border-green-700/50'
-                    : 'bg-blue-900/50 text-blue-300 border border-blue-700/50'
+                    ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 border border-green-300 dark:border-green-700/50'
+                    : 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-700/50'
                 ]"
               >
                 {{ wishlist.sourceType === 'preset' ? 'Preset' : 'Custom' }}
@@ -338,19 +338,19 @@ function formatDate(isoString?: string): string {
 function getTagClasses(tag: WishlistTag): string {
   switch (tag) {
     case 'pvp':
-      return 'bg-red-900/50 text-red-300 border border-red-700/50'
+      return 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-700/50'
     case 'pve':
-      return 'bg-green-900/50 text-green-300 border border-green-700/50'
+      return 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 border border-green-300 dark:border-green-700/50'
     case 'godroll':
-      return 'bg-amber-900/50 text-amber-300 border border-amber-700/50'
+      return 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-700/50'
     case 'mkb':
-      return 'bg-purple-900/50 text-purple-300 border border-purple-700/50'
+      return 'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-700/50'
     case 'controller':
-      return 'bg-blue-900/50 text-blue-300 border border-blue-700/50'
+      return 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-700/50'
     case 'trash':
-      return 'bg-gray-900/50 text-gray-400 border border-gray-700/50'
+      return 'bg-gray-100 dark:bg-gray-900/50 text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-700/50'
     default:
-      return 'bg-gray-900/50 text-gray-400 border border-gray-700/50'
+      return 'bg-gray-100 dark:bg-gray-900/50 text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-700/50'
   }
 }
 

@@ -45,18 +45,18 @@
     <!-- Update Available Banner -->
     <div
       v-if="store.hasUpdatesAvailable"
-      class="mb-6 rounded-lg bg-amber-900/30 border border-amber-700/50 p-4 flex items-center justify-between"
+      class="mb-6 rounded-lg bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700/50 p-4 flex items-center justify-between"
     >
       <div class="flex items-center gap-3">
-        <svg class="h-5 w-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg class="h-5 w-5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-        <span class="text-sm text-amber-200">Updates available for some preset wishlists</span>
+        <span class="text-sm text-amber-800 dark:text-amber-200">Updates available for some preset wishlists</span>
       </div>
       <button
         @click="handleRefreshAll"
         :disabled="store.loading"
-        class="inline-flex items-center gap-2 text-sm text-amber-300 hover:text-amber-200 font-medium disabled:opacity-50"
+        class="inline-flex items-center gap-2 text-sm text-amber-700 dark:text-amber-300 hover:text-amber-800 dark:hover:text-amber-200 font-medium disabled:opacity-50"
       >
         <svg
           v-if="store.loading"
@@ -74,9 +74,9 @@
     <!-- Error Banner -->
     <div
       v-if="store.error"
-      class="mb-6 rounded-lg bg-red-900/30 border border-red-700/50 p-4"
+      class="mb-6 rounded-lg bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700/50 p-4"
     >
-      <p class="text-sm text-red-300">{{ store.error }}</p>
+      <p class="text-sm text-red-700 dark:text-red-300">{{ store.error }}</p>
     </div>
 
     <!-- Loading State -->
