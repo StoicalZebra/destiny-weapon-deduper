@@ -8,6 +8,13 @@
 
       <nav class="flex items-center gap-6">
         <RouterLink
+          to="/"
+          class="text-gray-300 hover:text-white transition"
+        >
+          Weapons
+        </RouterLink>
+
+        <RouterLink
           to="/wishlists"
           class="text-gray-300 hover:text-white transition"
         >
