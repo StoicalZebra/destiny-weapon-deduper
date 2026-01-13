@@ -95,7 +95,6 @@
           :key="wishlist.id"
           :wishlist="wishlist"
           :update-status="store.updateStatuses.get(wishlist.id)"
-          @fork="handleFork"
           @refresh="handleRefresh"
           @export="handleExport"
           @delete="handleDelete"
@@ -175,46 +174,6 @@
       </div>
     </div>
 
-    <!-- Fork Modal -->
-    <div
-      v-if="forkingWishlist"
-      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
-      @click.self="forkingWishlist = null"
-    >
-      <div class="w-full max-w-md rounded-xl bg-gray-800 border border-gray-700 p-6">
-        <h2 class="text-xl font-semibold mb-4">Fork Wishlist</h2>
-        <p class="text-sm text-gray-400 mb-4">
-          Create a copy of "{{ forkingWishlist.name }}" that you can edit
-        </p>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-300 mb-1">New Name</label>
-          <input
-            v-model="forkName"
-            type="text"
-            :placeholder="`${forkingWishlist.name} (Copy)`"
-            class="w-full px-3 py-2 rounded-lg bg-gray-700 border border-gray-600 text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500"
-          />
-        </div>
-
-        <div class="flex justify-end gap-2 mt-6">
-          <button
-            @click="forkingWishlist = null"
-            class="px-4 py-2 rounded-lg bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            @click="confirmFork"
-            :disabled="!forkName.trim()"
-            class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-50 transition-colors"
-          >
-            Fork
-          </button>
-        </div>
-      </div>
-    </div>
-
     <!-- Delete Confirmation Modal -->
     <div
       v-if="deletingWishlist"
@@ -258,8 +217,6 @@ const store = useWishlistsStore()
 const showCreateModal = ref(false)
 const newWishlistName = ref('')
 const newWishlistDescription = ref('')
-const forkingWishlist = ref<Wishlist | null>(null)
-const forkName = ref('')
 const deletingWishlist = ref<Wishlist | null>(null)
 
 // Initialize on mount
@@ -290,19 +247,6 @@ function handleCreate() {
   newWishlistName.value = ''
   newWishlistDescription.value = ''
   showCreateModal.value = false
-}
-
-function handleFork(wishlist: Wishlist) {
-  forkingWishlist.value = wishlist
-  forkName.value = `${wishlist.name} (Copy)`
-}
-
-async function confirmFork() {
-  if (!forkingWishlist.value || !forkName.value.trim()) return
-
-  await store.forkPreset(forkingWishlist.value.id, forkName.value.trim())
-  forkingWishlist.value = null
-  forkName.value = ''
 }
 
 async function handleRefresh(wishlist: Wishlist) {

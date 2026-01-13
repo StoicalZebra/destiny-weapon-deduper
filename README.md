@@ -322,6 +322,64 @@ The wishlist system handles large datasets (Voltron wishlists contain 100k+ item
 
 ---
 
+## Wishlist Types & Permissions
+
+| Type | Can Edit | Card Buttons | Notes |
+|------|----------|--------------|-------|
+| **Regular Presets** (Voltron, etc.) | No | View on GitHub, Update | Read-only for all users |
+| **Admin-Editable Preset** (StoicalZebra) | Yes (admin only) | Edit, View on GitHub, Export | Editable by configured admin user |
+| **Custom/User Wishlists** | Yes | View, Export, Delete | User-created, stored locally |
+
+### Design Philosophy
+
+Users can create and edit their own custom wishlists - no need for external tools like LittleLight.
+
+What we intentionally removed:
+- **Fork/copy preset wishlists** - Voltron has 240K+ items; forking creates massive local copies
+- **In-app viewing of preset contents** - Rendering 240K items crashed browsers
+
+If you want to see what's in a preset like Voltron, click "View on GitHub" to see the raw file. If you want your own wishlist, create a custom one from scratch or import a DIM-format file.
+
+This matches DIM's model: presets are "subscribe and use" not "fork and customize."
+
+### Admin Wishlist Editing (StoicalZebra)
+
+The StoicalZebra preset wishlist is admin-editable, allowing in-app editing with a manual sync workflow.
+
+### Storage Locations
+
+| Location | Purpose |
+|----------|---------|
+| `data/wishlists/StoicalZebra-wishlist.txt` | **Source of truth** - the file in Git that others link to |
+| Browser localStorage | **Working copy** - where in-app edits are saved temporarily |
+| GitHub raw URL | **Public share link** - what DIM users import |
+
+### Update Workflow
+
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│  Edit in App    │ ──► │  Click Export   │ ──► │ Download .txt   │
+│  (localStorage) │     │                 │     │ (to Downloads)  │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+                                                        │
+                                                        ▼
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│  Push to GitHub │ ◄── │ Copy/move file  │ ◄── │ Replace old     │
+│                 │     │ to data/        │     │ .txt in repo    │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+```
+
+### Steps to Update
+
+1. **Edit in app** → Navigate to Wishlists, click "Edit" on StoicalZebra preset
+2. **Export** → Click "Export" button, downloads `StoicalZebra.txt` to `~/Downloads/`
+3. **Replace file** → Copy downloaded file to `data/wishlists/StoicalZebra-wishlist.txt`
+4. **Commit & push** → Updates the GitHub raw URL for everyone
+
+**Note:** Browsers cannot write directly to the filesystem for security reasons, hence the manual copy step.
+
+---
+
 ## TODO / Future Improvements
 
 - [ ] **Wishlist toggle performance**: Toggle response is ~200-300ms. Goal is instant (<50ms). All obvious optimizations applied; further profiling needed to identify remaining bottleneck.

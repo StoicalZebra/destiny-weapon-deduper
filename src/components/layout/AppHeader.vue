@@ -3,7 +3,7 @@
     <div class="container mx-auto px-4 py-4 flex items-center justify-between">
       <RouterLink to="/" class="flex items-center gap-3 text-2xl font-bold text-white hover:text-gray-300 transition">
         <img src="/images/icon.webp" alt="D3 Icon" class="w-8 h-8 rounded" />
-        Destiny DeDuper (D3)
+        Destiny Weapon Deduper
       </RouterLink>
 
       <nav class="flex items-center gap-6">

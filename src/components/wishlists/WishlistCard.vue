@@ -63,20 +63,37 @@
 
     <!-- Actions -->
     <div class="mt-4 flex flex-wrap gap-2">
+      <!-- Admin-editable presets: Edit button (internal link) -->
       <router-link
+        v-if="isAdminEditable"
+        :to="{ name: 'wishlist-detail', params: { id: wishlist.id } }"
+        class="inline-flex items-center rounded-lg bg-purple-600/30 px-3 py-1.5 text-sm font-medium text-purple-300 hover:bg-purple-600/40 transition-colors"
+      >
+        Edit
+      </router-link>
+
+      <!-- Preset wishlists: View on GitHub (external link) -->
+      <a
+        v-if="wishlist.sourceType === 'preset' && wishlist.sourceUrl"
+        :href="wishlist.sourceUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex items-center gap-1.5 rounded-lg bg-gray-700 px-3 py-1.5 text-sm font-medium text-gray-200 hover:bg-gray-600 transition-colors"
+      >
+        View on GitHub
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+        </svg>
+      </a>
+
+      <!-- User wishlists: View (internal link) -->
+      <router-link
+        v-if="wishlist.sourceType === 'user'"
         :to="{ name: 'wishlist-detail', params: { id: wishlist.id } }"
         class="inline-flex items-center rounded-lg bg-gray-700 px-3 py-1.5 text-sm font-medium text-gray-200 hover:bg-gray-600 transition-colors"
       >
         View
       </router-link>
-
-      <button
-        v-if="wishlist.sourceType === 'preset'"
-        @click="$emit('fork', wishlist)"
-        class="inline-flex items-center rounded-lg bg-blue-600/30 px-3 py-1.5 text-sm font-medium text-blue-300 hover:bg-blue-600/40 transition-colors"
-      >
-        Fork
-      </button>
 
       <button
         v-if="wishlist.sourceType === 'preset' && hasUpdate"
@@ -86,7 +103,9 @@
         Update
       </button>
 
+      <!-- Export for user wishlists and admin-editable presets -->
       <button
+        v-if="wishlist.sourceType === 'user' || isAdminEditable"
         @click="$emit('export', wishlist)"
         class="inline-flex items-center rounded-lg bg-gray-700 px-3 py-1.5 text-sm font-medium text-gray-200 hover:bg-gray-600 transition-colors"
       >
@@ -119,7 +138,6 @@ const props = defineProps<{
 const wishlistsStore = useWishlistsStore()
 
 defineEmits<{
-  (e: 'fork', wishlist: Wishlist): void
   (e: 'refresh', wishlist: Wishlist): void
   (e: 'export', wishlist: Wishlist): void
   (e: 'delete', wishlist: Wishlist): void
