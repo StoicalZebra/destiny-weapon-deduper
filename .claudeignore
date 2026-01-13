@@ -1,0 +1,14 @@
+# Large data files
+data/mock-inventory.json
+
+# Build outputs
+dist/
+*.map
+
+# Test artifacts
+test-results/
+playwright-report/
+.vitest/
+
+# Dependencies
+node_modules/

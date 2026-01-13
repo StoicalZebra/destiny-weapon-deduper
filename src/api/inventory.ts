@@ -1,6 +1,6 @@
 import { BUNGIE_API_BASE, DestinyComponentType } from '@/utils/constants'
 import type { BungieResponse } from './types'
-import mockInventory from './mock-inventory.json'
+import mockInventory from '../../data/mock-inventory.json'
 
 /**
  * Profile response from Bungie API
