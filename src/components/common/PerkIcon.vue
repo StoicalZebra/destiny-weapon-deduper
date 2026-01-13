@@ -1,6 +1,6 @@
 <template>
   <div
-    class="relative group"
+    class="relative group inline-block"
     :title="tooltip"
   >
     <!-- Perk icon with ring indicator -->

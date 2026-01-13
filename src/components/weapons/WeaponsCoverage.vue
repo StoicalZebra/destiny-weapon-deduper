@@ -38,10 +38,10 @@
     </div>
 
     <!-- Unified Grid Layout for ALL Modes -->
-    <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+    <div class="space-y-8">
 
-      <!-- Left: Perk Matrix (Punch Card) -->
-      <div class="xl:col-span-2 space-y-4">
+      <!-- Perk Matrix (Punch Card) -->
+      <div class="space-y-4">
         <div class="flex items-center justify-between">
           <h4 class="font-bold text-lg">Perk Matrix (All Owned Rolls)</h4>
           <span class="text-xs uppercase tracking-wider text-gray-500">{{ weapon.weaponName }}</span>
@@ -98,7 +98,7 @@
                   class="relative z-10 flex items-center gap-1.5"
                   :title="getPerkTooltip(perk)"
                 >
-                   <div class="relative flex-shrink-0 ml-0.5">
+                   <div class="relative flex-shrink-0 ml-0.5 w-6 h-6">
                      <!-- Perk icon with ring indicator -->
                      <div
                        class="w-6 h-6 rounded-full overflow-hidden"
@@ -114,9 +114,9 @@
                     <!-- Wishlist thumbs-up indicator -->
                     <div
                       v-if="isWishlistPerk(perk.hash)"
-                      class="absolute -top-1 -right-1 w-3 h-3 bg-green-600 rounded-full flex items-center justify-center"
+                      class="absolute top-0 right-0 w-2.5 h-2.5 bg-green-600 rounded-full flex items-center justify-center shadow-lg"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-2 w-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-1.5 w-1.5 text-white" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
                       </svg>
                     </div>
@@ -129,7 +129,7 @@
         </div>
       </div>
 
-      <!-- Right: Instances List -->
+      <!-- Instances List (Below Matrix) -->
       <div class="space-y-4">
         <div class="flex items-center justify-between flex-wrap gap-2">
           <h4 class="font-bold text-lg">In Your Inventory ({{ filteredAndSortedInstances.length }})</h4>
@@ -167,17 +167,17 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-3 gap-2">
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
           <div
             v-for="(instance, index) in filteredAndSortedInstances"
             :key="instance.itemInstanceId"
-            class="p-2 rounded-lg border transition-all duration-200 cursor-pointer"
+            class="p-3 rounded-lg border transition-all duration-200 cursor-pointer overflow-hidden"
             :class="getInstanceClasses(instance.itemInstanceId)"
             :style="getInstanceStyle(instance.itemInstanceId)"
             @mouseenter="hoveredInstanceId = instance.itemInstanceId"
             @mouseleave="hoveredInstanceId = null"
           >
-            <div class="flex items-center justify-between mb-1.5 gap-1">
+            <div class="flex items-center justify-between mb-2 gap-1">
               <span class="font-bold text-xs">Copy {{ index + 1 }}</span>
               <span :class="getTierClass(instance.gearTier)" class="text-[10px]">{{ formatTier(instance.gearTier) }}</span>
             </div>

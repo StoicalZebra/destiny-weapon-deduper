@@ -1,12 +1,12 @@
 <template>
   <div class="instance-perk-grid">
     <!-- Perk grid - DIM-style columns layout -->
-    <div class="flex gap-2">
+    <div class="flex gap-1">
       <!-- Each column is a vertical stack -->
       <div
         v-for="(column, colIdx) in organizedPerks"
         :key="colIdx"
-        class="flex flex-col gap-1"
+        class="flex flex-col items-center gap-1 min-w-0 flex-1"
       >
         <PerkIcon
           v-for="perkHash in column"
@@ -19,10 +19,10 @@
           <!-- Wishlist thumbs-up indicator badge -->
           <template #badge v-if="isWishlistPerk(perkHash)">
             <div
-              class="absolute -top-0.5 -right-0.5 w-3 h-3 bg-green-600 rounded-full flex items-center justify-center shadow-lg"
+              class="absolute top-0 right-0 w-2.5 h-2.5 bg-green-600 rounded-full flex items-center justify-center shadow-lg"
               :title="getWishlistTooltip(perkHash)"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-2 w-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-1.5 w-1.5 text-white" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
               </svg>
             </div>
