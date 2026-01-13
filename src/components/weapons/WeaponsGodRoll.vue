@@ -27,7 +27,7 @@
                     <!-- Actions -->
                     <div class="flex items-center gap-2" @click.stop>
                        <template v-if="profile.showDeleteConfirm">
-                          <span class="text-xs text-red-400 font-bold">Sure?</span>
+                          <span class="text-xs text-red-600 dark:text-red-400 font-bold">Sure?</span>
                           <button
                              @click="deleteProfile(profile.id)"
                              class="text-xs px-2 py-0.5 bg-red-900/50 hover:bg-red-900 text-red-200 border border-red-800 rounded"
@@ -44,7 +44,7 @@
                        <template v-else>
                           <button
                              @click="profile.showDeleteConfirm = true"
-                             class="p-1 text-text-subtle hover:text-red-400 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                             class="p-1 text-text-subtle hover:text-red-600 dark:hover:text-red-400 rounded opacity-0 group-hover:opacity-100 transition-opacity"
                              title="Delete"
                           >
                              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -169,7 +169,7 @@
               </div>
 
               <div class="flex justify-end items-center gap-3">
-                 <p v-if="saveMessage" :class="['text-xs', saveMessage.type === 'error' ? 'text-red-400' : 'text-text-muted']">{{ saveMessage.text }}</p>
+                 <p v-if="saveMessage" :class="['text-xs', saveMessage.type === 'error' ? 'text-red-600 dark:text-red-400' : 'text-text-muted']">{{ saveMessage.text }}</p>
                  <button
                     @click="handleCancel"
                     class="px-4 py-2 rounded text-sm font-medium transition-colors bg-surface-overlay hover:bg-surface-elevated text-text border border-border"
@@ -204,7 +204,7 @@
               <div class="flex items-center gap-1">
                 <span
                   v-if="isMatch(instance.itemInstanceId)"
-                  class="text-xs font-bold px-1.5 py-0.5 bg-green-900 text-green-300 rounded uppercase tracking-wide"
+                  class="text-xs font-bold px-1.5 py-0.5 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded uppercase tracking-wide"
                 >
                   Match
                 </span>

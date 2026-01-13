@@ -25,12 +25,12 @@
   <!-- Manifest Error Screen -->
   <div v-else-if="manifestStore.error" class="min-h-screen flex items-center justify-center bg-surface">
     <div class="text-center max-w-md mx-auto px-4">
-      <div class="text-red-400 text-5xl mb-4">⚠️</div>
+      <div class="text-red-600 dark:text-red-400 text-5xl mb-4">⚠️</div>
       <h2 class="text-2xl font-bold mb-2">Failed to Load Database</h2>
       <p class="text-text-muted mb-6">{{ manifestStore.error }}</p>
       <button
         @click="retryManifest"
-        class="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition"
+        class="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition"
       >
         Retry
       </button>

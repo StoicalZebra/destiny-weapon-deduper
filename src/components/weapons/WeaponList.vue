@@ -31,7 +31,7 @@
           >
             <span>{{ search }}</span>
             <span
-              class="text-text-subtle hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+              class="text-text-subtle hover:text-red-600 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
               @mousedown.prevent.stop="removeRecentSearch(search)"
             >
               ×
@@ -39,7 +39,7 @@
           </button>
           <button
             v-if="recentSearches.length > 0"
-            class="w-full px-4 py-2 text-xs uppercase tracking-wider text-text-subtle hover:text-red-400 hover:bg-surface-overlay transition-colors border-t border-border"
+            class="w-full px-4 py-2 text-xs uppercase tracking-wider text-text-subtle hover:text-red-600 dark:hover:text-red-400 hover:bg-surface-overlay transition-colors border-t border-border"
             @mousedown.prevent="clearRecentSearches"
           >
             Clear All

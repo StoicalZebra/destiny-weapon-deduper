@@ -182,7 +182,7 @@
       @click.self="deletingWishlist = null"
     >
       <div class="w-full max-w-md rounded-xl bg-surface-elevated border border-border p-6">
-        <h2 class="text-xl font-semibold mb-4 text-red-400">Delete Wishlist</h2>
+        <h2 class="text-xl font-semibold mb-4 text-red-600 dark:text-red-400">Delete Wishlist</h2>
         <p class="text-sm text-text-muted">
           Are you sure you want to delete "{{ deletingWishlist.name }}"? This cannot be undone.
         </p>

@@ -67,7 +67,7 @@
       <router-link
         v-if="isAdminEditable"
         :to="{ name: 'wishlist-detail', params: { id: wishlist.id } }"
-        class="inline-flex items-center rounded-lg bg-purple-600/30 px-3 py-1.5 text-sm font-medium text-purple-300 hover:bg-purple-600/40 transition-colors"
+        class="inline-flex items-center rounded-lg bg-purple-100 dark:bg-purple-600/30 px-3 py-1.5 text-sm font-medium text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-600/40 transition-colors"
       >
         Edit
       </router-link>
