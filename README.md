@@ -201,7 +201,7 @@ npm run test:watch # Run tests in watch mode
 ## Project Structure
 
 ```
-d3deduper/
+destiny_deduper/
 ├── src/                    # Main Vue application
 │   ├── api/                # Bungie API integration
 │   ├── components/         # Vue components
