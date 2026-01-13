@@ -1,0 +1,21 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "src/main.ts",
+    "src/**/*.test.ts"
+  ],
+  "project": ["src/**/*.{ts,vue}"],
+  "ignore": [
+    "dump_perks.ts",
+    "src/components/playground/**",
+    "src/services/playground-mock-service.ts"
+  ],
+  "ignoreDependencies": [
+    "@vue/test-utils",
+    "@vitest/coverage-v8"
+  ],
+  "ignoreExportsUsedInFile": true,
+  "rules": {
+    "enumMembers": "off"
+  }
+}

@@ -205,7 +205,7 @@ Workflow
 - Mark dupes as junk / keep in DIM (possible?)
 - Go into Destiny 2 to purge vault of junk
 
-- [ ] Flow change: separate management for "what you have" vs "what you want"
+- [x] Flow change: separate management for "what you have" vs "what you want"
   - Home page: "what you have" management
     - Shows overview of inventory
     - Click into specific weapon: see "Perk Coverage" on Weapons Detail view
@@ -227,6 +227,8 @@ Workflow
       - 2) There should be an "Edit" button on each entry for a "custom" / user-generated wishlists (only have "Remove" now) 
         - Clicking "edit" on each entry brings up the "God Roll Creator" UI to allow edits. Update brings back to main custom wishlist view
         - change cards for each entry in wishlist to mimic DIM perk matrix
+
+- [x] Rethink mental model of inventory coverage vs wishlist CRUD
 
 - [ ] DIM markings: mark as junk in DIM
 

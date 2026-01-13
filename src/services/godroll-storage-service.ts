@@ -21,7 +21,6 @@ export interface SavedProfile {
   name: string
   notes?: string
   selection: Record<number, 'OR' | 'AND'>
-  isFromCommunityPick?: boolean
   source?: VideoSource  // YouTube video source info
 }
 
@@ -125,8 +124,7 @@ class GodRollStorageService {
         id: p.id,
         name: p.name,
         notes: p.notes,
-        selection: p.selection,
-        isFromCommunityPick: p.isFromCommunityPick
+        selection: p.selection
       }))
 
       godRolls.push({

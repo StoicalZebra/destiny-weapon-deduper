@@ -8,14 +8,6 @@ export interface BungieOAuthTokens {
   membership_id: string
 }
 
-export interface BungieMembershipData {
-  membershipType: number
-  membershipId: string
-  displayName: string
-  bungieGlobalDisplayName: string
-  bungieGlobalDisplayNameCode: number
-}
-
 export interface BungieUser {
   membershipId: string
   uniqueName: string

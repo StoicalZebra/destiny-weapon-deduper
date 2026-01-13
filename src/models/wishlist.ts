@@ -67,14 +67,6 @@ export interface WishlistUpdateStatus {
 }
 
 /**
- * Computed stats for a wishlist (for display)
- */
-export interface WishlistStats {
-  itemCount: number // Total rolls
-  weaponCount: number // Unique weapons covered
-}
-
-/**
  * Result of parsing a DIM wishlist file
  */
 export interface ParsedWishlist {

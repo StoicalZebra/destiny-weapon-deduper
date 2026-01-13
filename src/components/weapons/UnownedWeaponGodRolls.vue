@@ -113,7 +113,6 @@ interface SavedProfile {
   name: string
   notes?: string
   selection: Record<number, 'OR' | 'AND'>
-  isFromCommunityPick?: boolean
   source?: VideoSource
 }
 

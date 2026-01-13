@@ -1,18 +1,74 @@
 <template>
   <div class="space-y-6 text-gray-200">
-    <!-- Community Picks Section -->
-    <CommunityPicks
-      :weapon="weapon"
-      :currentSelection="selection"
-      :savedProfileNames="savedProfileNamesSet"
-      @save-to-my-rolls="handleSaveCommunityPick"
-      @load-pick="handleLoadCommunityPick"
-    />
-
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
 
       <!-- Left: Selection Grid -->
       <div class="xl:col-span-2 space-y-4">
+
+        <!-- Saved Profiles List -->
+        <div v-if="displayProfiles.length > 0" class="space-y-3">
+           <h4 class="font-bold text-sm text-gray-400 uppercase tracking-wider">Saved on Your Custom Wishlist</h4>
+           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div
+                 v-for="profile in displayProfiles"
+                 :key="profile.id"
+                 class="group bg-gray-800 border border-gray-700 hover:border-gray-500 rounded-lg p-3 transition-colors cursor-pointer relative"
+                 :class="{ 'ring-2 ring-blue-500/50 border-blue-500/50 bg-blue-900/10': isProfileActive(profile) }"
+                 @click="loadProfile(profile)"
+              >
+                 <!-- Header row with actions -->
+                 <div class="flex justify-between items-start mb-2">
+                    <div class="flex items-center gap-1.5">
+                       <span class="text-[10px] text-gray-500">
+                          {{ profile.item.perkHashes.length }} perks
+                       </span>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex items-center gap-2" @click.stop>
+                       <template v-if="profile.showDeleteConfirm">
+                          <span class="text-[10px] text-red-400 font-bold">Sure?</span>
+                          <button
+                             @click="deleteProfile(profile.id)"
+                             class="text-xs px-2 py-0.5 bg-red-900/50 hover:bg-red-900 text-red-200 border border-red-800 rounded"
+                          >
+                             Yes
+                          </button>
+                          <button
+                             @click="profile.showDeleteConfirm = false"
+                             class="text-xs px-2 py-0.5 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded"
+                          >
+                             Cancel
+                          </button>
+                       </template>
+                       <template v-else>
+                          <button
+                             @click="profile.showDeleteConfirm = true"
+                             class="p-1 text-gray-500 hover:text-red-400 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                             title="Delete"
+                          >
+                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                             </svg>
+                          </button>
+                       </template>
+                    </div>
+                 </div>
+
+                 <!-- DIM-style perk matrix -->
+                 <WishlistPerkMatrix
+                    :weapon-hash="weapon.weaponHash"
+                    :perk-hashes="profile.item.perkHashes"
+                 />
+
+                 <!-- Notes (if any) -->
+                 <p v-if="profile.item.notes" class="text-xs text-gray-400 mt-2 line-clamp-2">
+                    {{ profile.item.notes }}
+                 </p>
+              </div>
+           </div>
+        </div>
+
         <!-- Header -->
         <div class="flex items-center justify-between">
           <h4 class="font-bold text-lg">Wishlist Roll Editor</h4>
@@ -124,73 +180,6 @@
               </div>
            </div>
         </div>
-        
-        <!-- Saved Profiles List -->
-        <div v-if="displayProfiles.length > 0" class="space-y-3 pt-4 border-t border-gray-700/50">
-           <h4 class="font-bold text-sm text-gray-400 uppercase tracking-wider">Saved to Wishlist</h4>
-           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              <div
-                 v-for="profile in displayProfiles"
-                 :key="profile.id"
-                 class="group bg-gray-800 border border-gray-700 hover:border-gray-500 rounded-lg p-3 transition-colors cursor-pointer relative"
-                 :class="{ 'ring-2 ring-blue-500/50 border-blue-500/50 bg-blue-900/10': isProfileActive(profile) }"
-                 @click="loadProfile(profile)"
-              >
-                 <!-- Header row with community pick icon and actions -->
-                 <div class="flex justify-between items-start mb-2">
-                    <div class="flex items-center gap-1.5">
-                       <svg v-if="profile.isFromCommunityPick" xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-purple-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" title="Community Pick">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                       </svg>
-                       <span class="text-[10px] text-gray-500">
-                          {{ profile.item.perkHashes.length }} perks
-                       </span>
-                    </div>
-
-                    <!-- Actions -->
-                    <div class="flex items-center gap-2" @click.stop>
-                       <template v-if="profile.showDeleteConfirm">
-                          <span class="text-[10px] text-red-400 font-bold">Sure?</span>
-                          <button
-                             @click="deleteProfile(profile.id)"
-                             class="text-xs px-2 py-0.5 bg-red-900/50 hover:bg-red-900 text-red-200 border border-red-800 rounded"
-                          >
-                             Yes
-                          </button>
-                          <button
-                             @click="profile.showDeleteConfirm = false"
-                             class="text-xs px-2 py-0.5 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded"
-                          >
-                             Cancel
-                          </button>
-                       </template>
-                       <template v-else>
-                          <button
-                             @click="profile.showDeleteConfirm = true"
-                             class="p-1 text-gray-500 hover:text-red-400 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                             title="Delete"
-                          >
-                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                             </svg>
-                          </button>
-                       </template>
-                    </div>
-                 </div>
-
-                 <!-- DIM-style perk matrix -->
-                 <WishlistPerkMatrix
-                    :weapon-hash="weapon.weaponHash"
-                    :perk-hashes="profile.item.perkHashes"
-                 />
-
-                 <!-- Notes (if any) -->
-                 <p v-if="profile.item.notes" class="text-xs text-gray-400 mt-2 line-clamp-2">
-                    {{ profile.item.notes }}
-                 </p>
-              </div>
-           </div>
-        </div>
 
       </div>
 
@@ -237,12 +226,10 @@ import { ref, computed, onMounted, watch } from 'vue'
 import type { DedupedWeapon, PerkColumn } from '@/models/deduped-weapon'
 import type { WeaponInstance } from '@/models/weapon-instance'
 import type { Perk } from '@/models/perk'
-import type { CommunityPick } from '@/models/community-pick'
 import type { WishlistItem, Wishlist } from '@/models/wishlist'
 import { useWishlistsStore } from '@/stores/wishlists'
 import type { GodRollSelection, PerkColumnInfo } from '@/services/dim-wishlist-parser'
 import { getWishlistPerkAnnotations, selectionToWishlistItem } from '@/services/dim-wishlist-parser'
-import CommunityPicks from './CommunityPicks.vue'
 import InstancePerkGrid from './InstancePerkGrid.vue'
 import WishlistPerkMatrix from '@/components/wishlists/WishlistPerkMatrix.vue'
 
@@ -368,7 +355,6 @@ const isMatch = (instId: string) => {
 interface DisplayProfile {
   id: string
   item: WishlistItem
-  isFromCommunityPick?: boolean
   showDeleteConfirm?: boolean
 }
 
@@ -391,7 +377,6 @@ const loadProfilesFromStore = async () => {
     displayProfiles.value = items.map(item => ({
         id: item.id,
         item,
-        isFromCommunityPick: false, // TODO: track community picks separately
         showDeleteConfirm: false
     }))
 }
@@ -465,7 +450,6 @@ const handleSave = () => {
             displayProfiles.value.push({
                 id: savedItem.id,
                 item: savedItem,
-                isFromCommunityPick: false,
                 showDeleteConfirm: false
             })
             currentProfileId.value = savedItem.id
@@ -496,34 +480,6 @@ watch(profileNotesInput, () => {
     if (saveError.value) saveError.value = null
 })
 
-// When selection changes on a locked community pick, unlock it for "Save as New"
-watch(selection, (newSelection) => {
-    if (!isCurrentProfileLocked.value) return
-
-    const profile = displayProfiles.value.find(p => p.id === currentProfileId.value)
-    if (!profile) return
-
-    // Check if selection differs from the saved profile's perks
-    const currentPerkHashes = new Set(Object.keys(newSelection).map(Number))
-    const profilePerkHashes = new Set(profile.item.perkHashes)
-
-    let isDifferent = currentPerkHashes.size !== profilePerkHashes.size
-    if (!isDifferent) {
-        for (const hash of currentPerkHashes) {
-            if (!profilePerkHashes.has(hash)) {
-                isDifferent = true
-                break
-            }
-        }
-    }
-
-    if (isDifferent) {
-        // Unlock: clear the profile reference so user must "Save as New"
-        currentProfileId.value = null
-        profileNotesInput.value = ''
-    }
-}, { deep: true })
-
 // Check if a profile's perks match the current selection
 const isProfileActive = (profile: DisplayProfile): boolean => {
     const currentPerkHashes = new Set(Object.keys(selection.value).map(Number))
@@ -539,20 +495,6 @@ const isProfileActive = (profile: DisplayProfile): boolean => {
 
     return true
 }
-
-// Set of saved profile perk combinations for CommunityPicks to check duplicates
-// Use a hash of sorted perk hashes as the key
-const savedProfileNamesSet = computed(() => {
-    // For backwards compatibility, return empty set (community picks will need updating)
-    return new Set<string>()
-})
-
-// Check if current profile is a locked community pick
-const isCurrentProfileLocked = computed(() => {
-    if (!currentProfileId.value) return false
-    const profile = displayProfiles.value.find(p => p.id === currentProfileId.value)
-    return profile?.isFromCommunityPick === true
-})
 
 // Button state computed properties (simplified - no names in DIM format)
 const buttonLabel = computed(() => {
@@ -586,42 +528,6 @@ watch(() => props.weapon.weaponHash, () => {
     clearSelection()
 })
 
-// --- Community Picks Integration ---
-const handleSaveCommunityPick = (pick: CommunityPick) => {
-    // Save to wishlists store
-    const savedItem = wishlistsStore.saveGodRollSelection(
-        pick.selection,
-        props.weapon.weaponHash,
-        perkColumnsForStore.value,
-        {
-            notes: pick.notes
-        }
-    )
-
-    // Add to display profiles
-    const newProfile: DisplayProfile = {
-        id: savedItem.id,
-        item: savedItem,
-        isFromCommunityPick: true,
-        showDeleteConfirm: false
-    }
-
-    displayProfiles.value.push(newProfile)
-
-    // Load into current selection so user sees the pick applied
-    selection.value = { ...pick.selection }
-    currentProfileId.value = newProfile.id
-    profileNotesInput.value = pick.notes || ''
-}
-
-// Load a community pick into the God Roll Creator (preview only, doesn't save)
-const handleLoadCommunityPick = (pick: CommunityPick) => {
-    // Just load the selection for preview (no profile association)
-    selection.value = { ...pick.selection }
-    currentProfileId.value = null
-    profileNotesInput.value = pick.notes || ''
-}
-
 // --- Public Methods (exposed for parent components) ---
 
 // Load a wishlist item into the Creator (preview only, doesn't save)
@@ -651,7 +557,6 @@ const editWishlistItem = (item: WishlistItem, wishlist: Wishlist) => {
         displayProfiles.value.push({
             id: item.id,
             item,
-            isFromCommunityPick: false,
             showDeleteConfirm: false
         })
     }

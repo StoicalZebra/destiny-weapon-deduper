@@ -590,7 +590,6 @@ export const useWishlistsStore = defineStore('wishlists', () => {
           name: string
           notes?: string
           selection: Record<number, 'OR' | 'AND'>
-          isFromCommunityPick?: boolean
         }
 
         const profiles = JSON.parse(raw) as LegacyProfile[]
@@ -609,9 +608,6 @@ export const useWishlistsStore = defineStore('wishlists', () => {
           }
           if (profile.notes) {
             notes = notes ? `${notes}: ${profile.notes}` : profile.notes
-          }
-          if (profile.isFromCommunityPick) {
-            notes = notes ? `${notes} (from Community Pick)` : '(from Community Pick)'
           }
 
           const item: WishlistItem = {

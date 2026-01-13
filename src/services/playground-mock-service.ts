@@ -17,7 +17,7 @@ import type { DedupedWeapon } from '@/models/deduped-weapon'
  * These are popular weapons with good perk variety
  */
 export const SHOWCASE_WEAPONS = [
-  { hash: 3615748501, name: 'Elsie\'s Rifle' },      // From community picks
+  { hash: 3615748501, name: 'Elsie\'s Rifle' },      // Popular pulse rifle
   { hash: 1399109800, name: 'Luna\'s Howl' },        // Iconic hand cannon
   { hash: 3628991658, name: 'Falling Guillotine' },  // Popular sword
   { hash: 3849444474, name: 'Austringer' },          // Classic hand cannon

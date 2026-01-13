@@ -352,83 +352,6 @@ export function selectionToWishlistItem(
 }
 
 /**
- * Serialize a God Roll selection to DIM format string with pipe-separated OR perks
- *
- * This creates a properly formatted DIM wishlist line where:
- * - AND perks are comma-separated
- * - OR perks in the same column are pipe-separated
- *
- * Example: dimwishlist:item=877384&perks=123,456|789,1011
- * (123 required, 456 OR 789 alternatives in one column, 1011 required)
- */
-export function selectionToDimLine(
-  selection: GodRollSelection,
-  weaponHash: number,
-  perkColumns: PerkColumnInfo[],
-  options?: {
-    notes?: string
-    tags?: WishlistTag[]
-  }
-): string {
-  // Group selected perks by column, maintaining column order
-  const columnPerkStrings: string[] = []
-
-  for (const col of perkColumns) {
-    const andPerks: number[] = []
-    const orPerks: number[] = []
-
-    for (const perk of col.availablePerks) {
-      const selType = selection[perk.hash]
-      if (selType === 'AND') {
-        andPerks.push(perk.hash)
-      } else if (selType === 'OR') {
-        orPerks.push(perk.hash)
-      }
-    }
-
-    // Skip columns with no selections
-    if (andPerks.length === 0 && orPerks.length === 0) continue
-
-    // Build column string: AND perks comma-separated, OR perks pipe-separated
-    // If we have both AND and OR in same column, AND perks take precedence
-    // Actually for DIM: we want "any of these" so pipe-separate OR perks
-    if (andPerks.length > 0 && orPerks.length > 0) {
-      // Mix: AND perks first, then OR alternatives
-      // Format: and1,and2|or1|or2 means "need and1 AND and2, plus one of or1/or2"
-      // But DIM doesn't support this complex logic per-column
-      // Simplify: all selected perks are pipe-separated (any match)
-      columnPerkStrings.push([...andPerks, ...orPerks].join('|'))
-    } else if (andPerks.length > 0) {
-      // Only AND perks - all required, but DIM matches any
-      // For strict AND across columns, we comma-separate between columns
-      columnPerkStrings.push(andPerks.join('|'))
-    } else if (orPerks.length > 0) {
-      // Only OR perks - pipe-separate for alternatives
-      columnPerkStrings.push(orPerks.join('|'))
-    }
-  }
-
-  // Build DIM line
-  let line = `dimwishlist:item=${weaponHash}`
-
-  if (columnPerkStrings.length > 0) {
-    // Columns separated by comma (cross-column), perks within column by pipe
-    line += `&perks=${columnPerkStrings.join(',')}`
-  }
-
-  if (options?.notes) {
-    line += `#notes:${options.notes}`
-  }
-
-  const tagsToInclude = options?.tags?.filter((t) => t !== 'trash') || []
-  if (tagsToInclude.length > 0) {
-    line += `|tags:${tagsToInclude.join(',')}`
-  }
-
-  return line
-}
-
-/**
  * Convert a WishlistItem back to God Roll Creator selection format
  *
  * Since DIM format loses AND vs OR distinction, we treat all perks as AND (required)
@@ -460,21 +383,6 @@ export function wishlistItemToSelection(
   }
 
   return selection
-}
-
-/**
- * Check if a weapon instance matches a wishlist item
- *
- * @param instancePerkHashes - All perk hashes on the instance (active + reusable)
- * @param wishlistPerkHashes - Required perk hashes from wishlist item
- * @returns true if instance has ALL the required perks
- */
-export function doesInstanceMatchWishlistItem(
-  instancePerkHashes: Set<number>,
-  wishlistPerkHashes: number[]
-): boolean {
-  // Instance matches if it has ALL the wishlist perks
-  return wishlistPerkHashes.every((hash) => instancePerkHashes.has(hash))
 }
 
 /**
