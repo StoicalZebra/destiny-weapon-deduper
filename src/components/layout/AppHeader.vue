@@ -28,6 +28,7 @@
           About
         </RouterLink>
 
+        <!-- Logged in: Platform icon + Logout -->
         <div v-if="authStore.isAuthenticated" class="flex items-center gap-3">
           <!-- Platform icon with tooltip -->
           <div class="relative group">
@@ -60,6 +61,15 @@
             Logout
           </button>
         </div>
+
+        <!-- Logged out: Login button -->
+        <button
+          v-else
+          @click="login"
+          class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg transition-colors"
+        >
+          Login
+        </button>
       </nav>
     </div>
   </header>
@@ -87,6 +97,10 @@ const displayName = computed(() => {
   }
   return membership.displayName || authStore.user?.displayName || 'Guardian'
 })
+
+const login = () => {
+  authStore.initiateLogin()
+}
 
 const logout = () => {
   authStore.clearAuth()
