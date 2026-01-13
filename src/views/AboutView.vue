@@ -2,10 +2,6 @@
   <div class="text-center max-w-4xl mx-auto">
     <h1 class="text-5xl font-bold mb-8">Destiny Weapon Deduper</h1>
 
-    <div class="mb-12">
-      <LoginButton class="!px-12 !py-4 !text-lg" />
-    </div>
-
     <div class="p-8 bg-gray-800 rounded-lg flex gap-8 items-center">
       <div class="flex-1">
         <h2 class="text-2xl font-semibold mb-4 text-left">What is Destiny Weapon Deduper?</h2>
@@ -40,5 +36,4 @@
 </template>
 
 <script setup lang="ts">
-import LoginButton from '@/components/auth/LoginButton.vue'
 </script>

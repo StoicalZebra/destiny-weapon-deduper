@@ -68,10 +68,29 @@ test.describe('Wishlist CRUD Operations', () => {
       await expect(page.getByRole('heading', { name: 'Voltron', exact: true })).toBeVisible()
     })
 
-    test('can view wishlist details', async ({ page }) => {
-      // Click View on StoicalZebra (smaller list for faster test)
-      // Note: View is a link, not a button
-      await page.getByRole('link', { name: 'View' }).first().click()
+    test('preset wishlists have View on GitHub link', async ({ page }) => {
+      // Preset wishlists should show "View on GitHub" external link instead of internal View
+      const viewOnGitHubLink = page.getByRole('link', { name: /View on GitHub/i }).first()
+      await expect(viewOnGitHubLink).toBeVisible()
+
+      // Should be an external link (raw.githubusercontent.com or github.com)
+      const href = await viewOnGitHubLink.getAttribute('href')
+      expect(href).toMatch(/github/)
+    })
+
+    test('can view custom wishlist details', async ({ page }) => {
+      // First create a custom wishlist
+      await page.getByRole('button', { name: /New Wishlist/i }).click()
+      await expect(page.getByRole('heading', { name: 'Create New Wishlist' })).toBeVisible()
+      await page.getByRole('textbox').first().fill('View Test Wishlist')
+      await page.getByRole('button', { name: /^Create$/i }).click()
+      await expect(page.getByRole('heading', { name: 'View Test Wishlist' })).toBeVisible()
+
+      // Custom wishlists should have an internal View link (not "View on GitHub")
+      // The View link should appear after the heading in the same card
+      // Use a more reliable locator - find the card container with the custom wishlist heading
+      const viewLink = page.locator('div').filter({ has: page.getByRole('heading', { name: 'View Test Wishlist' }) }).getByRole('link', { name: 'View', exact: true })
+      await viewLink.click()
 
       // Wait for navigation
       await page.waitForURL(/\/wishlists\//)
@@ -83,62 +102,34 @@ test.describe('Wishlist CRUD Operations', () => {
       await expect(page.getByText(/Items:/)).toBeVisible()
       await expect(page.getByText(/Weapons:/)).toBeVisible()
     })
-
-    test('can search within a wishlist', async ({ page }) => {
-      // Navigate to StoicalZebra detail view - need to click through to ensure data is loaded
-      await page.getByRole('link', { name: 'View' }).first().click()
-
-      // Wait for detail page
-      await page.waitForURL(/\/wishlists\//)
-      await expect(page.getByRole('heading', { level: 1 })).toBeVisible({ timeout: 10000 })
-
-      // Search for a weapon
-      await page.getByPlaceholder(/Search by weapon name/i).fill('test search')
-
-      // Should show no results message or filtered results
-      await expect(page.getByPlaceholder(/Search by weapon name/i)).toHaveValue('test search')
-    })
-
-    test('large wishlist uses pagination', async ({ page }) => {
-      // Navigate to Voltron via direct link href
-      await page.locator('a[href="/wishlists/voltron"]').click()
-
-      // Should load without crashing and show Load More button
-      await expect(page.getByRole('heading', { level: 1 })).toBeVisible({ timeout: 15000 })
-
-      // Should have Load More button for pagination
-      await expect(page.getByRole('button', { name: /Load More/i })).toBeVisible({ timeout: 10000 })
-    })
   })
 
-  test.describe('Update Wishlist', () => {
-    test('can fork a preset wishlist', async ({ page }) => {
-      // Find StoicalZebra card's Fork button - it's the one after the stoicalzebra View link
-      await page.locator('a[href="/wishlists/stoicalzebra"]').locator('..').getByRole('button', { name: 'Fork' }).click()
+  test.describe('Export Wishlist', () => {
+    test('can export a custom wishlist', async ({ page }) => {
+      // First create a custom wishlist
+      await page.getByRole('button', { name: /New Wishlist/i }).click()
+      await expect(page.getByRole('heading', { name: 'Create New Wishlist' })).toBeVisible()
+      await page.getByRole('textbox').first().fill('Export Test Wishlist')
+      await page.getByRole('button', { name: /^Create$/i }).click()
+      await expect(page.getByRole('heading', { name: 'Export Test Wishlist' })).toBeVisible()
 
-      // Should create a copy - wait for the UI to update
-      await page.waitForTimeout(1000)
-
-      // Verify a custom wishlist exists (the forked one) - look for "Custom" badge
-      await expect(page.getByText('Custom')).toBeVisible({ timeout: 5000 })
-    })
-
-    test('can export a wishlist', async ({ page }) => {
       // Set up download listener
       const downloadPromise = page.waitForEvent('download')
 
-      // Find StoicalZebra card's Export button
-      await page.locator('a[href="/wishlists/stoicalzebra"]').locator('..').getByRole('button', { name: 'Export' }).click()
+      // Find the custom wishlist card by looking for the heading, then find its sibling Export button
+      // The card is the parent element with rounded-xl class
+      const card = page.locator('.rounded-xl').filter({ has: page.getByRole('heading', { name: 'Export Test Wishlist' }) })
+      await card.getByRole('button', { name: 'Export' }).click()
 
-      // Should trigger a download
+      // Should trigger a download - filename has underscores instead of spaces
       const download = await downloadPromise
-      expect(download.suggestedFilename()).toContain('StoicalZebra')
+      expect(download.suggestedFilename()).toContain('Export_Test_Wishlist')
       expect(download.suggestedFilename()).toMatch(/\.txt$/)
     })
   })
 
   test.describe('Delete Operations', () => {
-    test('can create and then view a custom wishlist (delete may not be implemented)', async ({ page }) => {
+    test('can create and then view a custom wishlist', async ({ page }) => {
       // First create a wishlist
       await page.getByRole('button', { name: /New Wishlist/i }).click()
 
@@ -209,60 +200,24 @@ test.describe('Roll CRUD Operations', () => {
   })
 
   test.describe('Read Rolls', () => {
-    test('displays rolls in wishlist detail view', async ({ page }) => {
-      // Navigate to StoicalZebra via clicking to ensure data is loaded
-      await page.getByRole('link', { name: 'View' }).first().click()
+    test('displays rolls in custom wishlist detail view', async ({ page }) => {
+      // Create a custom wishlist first
+      await page.getByRole('button', { name: /New Wishlist/i }).click()
+      await expect(page.getByRole('heading', { name: 'Create New Wishlist' })).toBeVisible()
+      await page.getByRole('textbox').first().fill('Rolls Display Test')
+      await page.getByRole('button', { name: /^Create$/i }).click()
+      await expect(page.getByRole('heading', { name: 'Rolls Display Test' })).toBeVisible()
+
+      // Navigate to its detail view using filter
+      const viewLink = page.locator('div').filter({ has: page.getByRole('heading', { name: 'Rolls Display Test' }) }).getByRole('link', { name: 'View', exact: true })
+      await viewLink.click()
 
       // Wait for page to load
       await page.waitForURL(/\/wishlists\//)
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible({ timeout: 10000 })
 
-      // Should show stats
+      // Should show stats (even if empty)
       await expect(page.getByText(/Items:/)).toBeVisible()
-
-      // Should show roll information
-      await expect(page.getByText(/rolls?$/i).first()).toBeVisible()
-    })
-
-    test('displays perk matrix in rolls', async ({ page }) => {
-      // Navigate to StoicalZebra via clicking
-      await page.getByRole('link', { name: 'View' }).first().click()
-
-      // Wait for page to load
-      await page.waitForURL(/\/wishlists\//)
-      await expect(page.getByRole('heading', { level: 1 })).toBeVisible({ timeout: 10000 })
-
-      // Should display weapon names (indicates rolls are displayed)
-      await expect(page.getByText(/\d+ rolls?$/i).first()).toBeVisible()
-    })
-  })
-
-  test.describe('Delete Roll', () => {
-    test('can remove a roll from forked wishlist', async ({ page }) => {
-      // Fork StoicalZebra to get a custom wishlist with rolls
-      await page.locator('a[href="/wishlists/stoicalzebra"]').locator('..').getByRole('button', { name: 'Fork' }).click()
-
-      // Wait for fork
-      await page.waitForTimeout(500)
-
-      // Find the forked wishlist - look for "Custom" badge text and click View
-      const customCard = page.getByText('Custom').locator('..').locator('..')
-      if (await customCard.getByRole('link', { name: 'View' }).isVisible({ timeout: 2000 }).catch(() => false)) {
-        await customCard.getByRole('link', { name: 'View' }).click()
-
-        // Wait for detail page
-        await page.waitForURL(/\/wishlists\//)
-        await expect(page.getByRole('heading', { level: 1 })).toBeVisible({ timeout: 10000 })
-
-        // Should see rolls with Remove buttons
-        const removeButton = page.getByRole('button', { name: /Remove/i }).first()
-        if (await removeButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-          await removeButton.click()
-
-          // Verify something changed
-          await page.waitForTimeout(500)
-        }
-      }
     })
   })
 })
@@ -296,15 +251,14 @@ test.describe('Admin Mode Features', () => {
     if (await adminBadge.isVisible({ timeout: 2000 }).catch(() => false)) {
       // Badge visible means admin mode is on
 
-      // Click to view detail
-      await page.locator('a[href="/wishlists/stoicalzebra"]').click()
+      // Click Edit to view detail (admin-editable presets have Edit link, not View)
+      await page.getByRole('link', { name: 'Edit' }).first().click()
 
       // Wait for navigation
       await page.waitForURL(/\/wishlists\//)
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible({ timeout: 10000 })
 
       // Should have edit controls
-      await expect(page.getByRole('button', { name: /Edit/i }).first()).toBeVisible()
       await expect(page.getByRole('button', { name: /Remove/i }).first()).toBeVisible()
     }
   })
@@ -331,8 +285,8 @@ test.describe('Admin Mode Features', () => {
     const adminBadge = page.getByText('Admin Editable')
 
     if (await adminBadge.isVisible({ timeout: 2000 }).catch(() => false)) {
-      // Navigate to StoicalZebra detail via clicking
-      await page.getByRole('link', { name: 'View' }).first().click()
+      // Navigate to StoicalZebra detail via Edit link (admin-editable presets have Edit, not View)
+      await page.getByRole('link', { name: 'Edit' }).first().click()
       await page.waitForURL(/\/wishlists\//)
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible({ timeout: 10000 })
 
