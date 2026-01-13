@@ -5,7 +5,6 @@ import WeaponsView from '@/views/WeaponsView.vue'
 import CallbackView from '@/views/CallbackView.vue'
 import WeaponDetailView from '@/views/WeaponDetailView.vue'
 import PlaygroundView from '@/views/PlaygroundView.vue'
-import SettingsView from '@/views/SettingsView.vue'
 import WishlistsView from '@/views/WishlistsView.vue'
 import WishlistDetailView from '@/views/WishlistDetailView.vue'
 
@@ -38,11 +37,6 @@ const router = createRouter({
       path: '/callback',
       name: 'callback',
       component: CallbackView
-    },
-    {
-      path: '/settings',
-      name: 'settings',
-      component: SettingsView
     },
     {
       path: '/wishlists',

@@ -21,13 +21,6 @@
           Wishlists
         </RouterLink>
 
-        <RouterLink
-          to="/settings"
-          class="text-gray-300 hover:text-white transition"
-        >
-          Settings
-        </RouterLink>
-
         <div v-if="authStore.isAuthenticated" class="flex items-center gap-4">
           <span class="text-sm text-gray-400">
             {{ authStore.user?.displayName || 'Guardian' }}
