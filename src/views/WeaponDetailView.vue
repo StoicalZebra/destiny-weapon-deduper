@@ -23,22 +23,22 @@
 
   <!-- Loading state -->
   <div v-else-if="weaponsStore.loading" class="text-center py-12">
-    <div class="inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-    <p class="mt-4 text-gray-400">Loading your arsenal...</p>
+    <div class="inline-block w-8 h-8 border-4 border-accent-primary border-t-transparent rounded-full animate-spin"></div>
+    <p class="mt-4 text-text-muted">Loading your arsenal...</p>
   </div>
 
   <!-- Error state -->
   <div v-else-if="weaponsStore.error" class="text-center py-12">
-    <p class="text-red-400">{{ weaponsStore.error }}</p>
+    <p class="text-red-600 dark:text-red-400">{{ weaponsStore.error }}</p>
   </div>
 
   <!-- Not found state -->
   <div v-else class="text-center py-12">
-    <h1 class="text-3xl font-bold mb-4">Weapon Details</h1>
-    <p class="text-gray-500">Weapon not found. Try returning to the list.</p>
+    <h1 class="text-3xl font-bold mb-4 text-text">Weapon Details</h1>
+    <p class="text-text-subtle">Weapon not found. Try returning to the list.</p>
     <button
       @click="router.push('/')"
-      class="mt-4 text-sm text-blue-400 hover:text-blue-300"
+      class="mt-4 text-sm text-accent-primary hover:text-accent-primary/80"
     >
       &larr; Back to all weapons
     </button>

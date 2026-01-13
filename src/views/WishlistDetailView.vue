@@ -3,7 +3,7 @@
     <!-- Back Link -->
     <router-link
       to="/wishlists"
-      class="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-gray-300 mb-4"
+      class="inline-flex items-center gap-1 text-sm text-text-muted hover:text-text mb-4"
     >
       <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -21,8 +21,8 @@
 
     <!-- Not Found -->
     <div v-else-if="!wishlist" class="text-center py-12">
-      <p class="text-gray-400">Wishlist not found</p>
-      <router-link to="/wishlists" class="text-blue-400 hover:text-blue-300 text-sm mt-2 inline-block">
+      <p class="text-text-muted">Wishlist not found</p>
+      <router-link to="/wishlists" class="text-accent-primary hover:text-accent-primary/80 text-sm mt-2 inline-block">
         View all wishlists
       </router-link>
     </div>
@@ -50,7 +50,7 @@
       </div>
 
       <!-- Header -->
-      <div class="rounded-xl border border-gray-700 bg-gray-800 p-6 mb-6">
+      <div class="rounded-xl border border-border bg-surface-elevated p-6 mb-6">
         <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div>
             <div class="flex items-center gap-3">
@@ -66,10 +66,10 @@
                 {{ wishlist.sourceType === 'preset' ? 'Preset' : 'Custom' }}
               </span>
             </div>
-            <p v-if="wishlist.description" class="mt-2 text-gray-400">
+            <p v-if="wishlist.description" class="mt-2 text-text-muted">
               {{ wishlist.description }}
             </p>
-            <p v-if="wishlist.author" class="mt-1 text-sm text-gray-500">
+            <p v-if="wishlist.author" class="mt-1 text-sm text-text-subtle">
               by {{ wishlist.author }}
             </p>
           </div>
@@ -77,7 +77,7 @@
           <div class="flex gap-2">
             <button
               @click="handleExport"
-              class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-700 text-gray-200 hover:bg-gray-600 transition-colors text-sm"
+              class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-overlay text-text hover:bg-surface-elevated transition-colors text-sm"
             >
               <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -90,16 +90,16 @@
         <!-- Stats -->
         <div class="mt-4 flex gap-6 text-sm">
           <div>
-            <span class="text-gray-500">Items:</span>
-            <span class="ml-1 font-medium">{{ stats.itemCount.toLocaleString() }}</span>
+            <span class="text-text-subtle">Items:</span>
+            <span class="ml-1 font-medium text-text">{{ stats.itemCount.toLocaleString() }}</span>
           </div>
           <div>
-            <span class="text-gray-500">Weapons:</span>
-            <span class="ml-1 font-medium">{{ stats.weaponCount.toLocaleString() }}</span>
+            <span class="text-text-subtle">Weapons:</span>
+            <span class="ml-1 font-medium text-text">{{ stats.weaponCount.toLocaleString() }}</span>
           </div>
           <div v-if="wishlist.lastUpdated">
-            <span class="text-gray-500">Updated:</span>
-            <span class="ml-1 font-medium">{{ formatDate(wishlist.lastUpdated) }}</span>
+            <span class="text-text-subtle">Updated:</span>
+            <span class="ml-1 font-medium text-text">{{ formatDate(wishlist.lastUpdated) }}</span>
           </div>
         </div>
       </div>
@@ -110,7 +110,7 @@
           v-model="searchQuery"
           type="text"
           placeholder="Search by weapon name or notes..."
-          class="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+          class="w-full px-4 py-2 bg-surface-elevated border border-border rounded-lg text-text placeholder-text-subtle focus:outline-none focus:border-accent-primary"
         />
       </div>
 
@@ -119,7 +119,7 @@
         <div
           v-for="[weaponHash, items] in filteredGroups"
           :key="weaponHash"
-          class="rounded-xl border border-gray-700 bg-gray-800 p-4"
+          class="rounded-xl border border-border bg-surface-elevated p-4"
         >
           <!-- Weapon Header -->
           <div class="flex items-center gap-3 mb-3">
@@ -129,12 +129,12 @@
               :alt="getWeaponName(weaponHash)"
               class="w-10 h-10 rounded"
             />
-            <div v-else class="w-10 h-10 rounded bg-gray-700 flex items-center justify-center">
-              <span class="text-gray-500 text-xs">?</span>
+            <div v-else class="w-10 h-10 rounded bg-surface-overlay flex items-center justify-center">
+              <span class="text-text-subtle text-xs">?</span>
             </div>
             <div>
-              <h3 class="font-semibold">{{ getWeaponName(weaponHash) }}</h3>
-              <p class="text-xs text-gray-500">{{ items.length }} {{ items.length === 1 ? 'roll' : 'rolls' }}</p>
+              <h3 class="font-semibold text-text">{{ getWeaponName(weaponHash) }}</h3>
+              <p class="text-xs text-text-subtle">{{ items.length }} {{ items.length === 1 ? 'roll' : 'rolls' }}</p>
             </div>
           </div>
 
@@ -143,7 +143,7 @@
             <div
               v-for="item in items"
               :key="item.id"
-              class="bg-gray-900/50 rounded-lg p-3 border border-gray-700/50"
+              class="bg-surface/50 rounded-lg p-3 border border-border/50"
             >
               <!-- Tags -->
               <div class="flex flex-wrap gap-1 mb-2">
@@ -165,7 +165,7 @@
               />
 
               <!-- Notes -->
-              <p v-if="item.notes" class="text-xs text-gray-500 line-clamp-3">
+              <p v-if="item.notes" class="text-xs text-text-subtle line-clamp-3">
                 {{ item.notes }}
               </p>
 
@@ -173,13 +173,13 @@
               <div v-if="isEditable" class="mt-2 flex gap-3">
                 <button
                   @click="handleEditItem(item, weaponHash)"
-                  class="text-xs text-blue-400 hover:text-blue-300"
+                  class="text-xs text-accent-primary hover:text-accent-primary/80"
                 >
                   Edit
                 </button>
                 <button
                   @click="handleDeleteItem(item.id)"
-                  class="text-xs text-red-400 hover:text-red-300"
+                  class="text-xs text-red-600 dark:text-red-400 hover:text-red-500 dark:hover:text-red-300"
                 >
                   Remove
                 </button>
@@ -201,12 +201,12 @@
 
       <!-- Empty search results -->
       <div v-if="filteredGroups.length === 0 && searchQuery" class="text-center py-12">
-        <p class="text-gray-400">No items match "{{ searchQuery }}"</p>
+        <p class="text-text-muted">No items match "{{ searchQuery }}"</p>
       </div>
 
       <!-- Empty wishlist -->
       <div v-if="wishlist.items.length === 0" class="text-center py-12">
-        <p class="text-gray-400">This wishlist is empty.</p>
+        <p class="text-text-muted">This wishlist is empty.</p>
       </div>
     </template>
   </div>

@@ -9,28 +9,28 @@
           :alt="weaponName"
           class="w-16 h-16 rounded"
         />
-        <div v-else class="w-16 h-16 rounded bg-gray-700 flex items-center justify-center">
-          <span class="text-gray-500 text-xl">?</span>
+        <div v-else class="w-16 h-16 rounded bg-surface-overlay flex items-center justify-center">
+          <span class="text-text-subtle text-xl">?</span>
         </div>
         <div>
-          <h1 class="text-2xl font-bold">{{ weaponName }}</h1>
-          <p class="text-xs text-gray-500">Hash: {{ weaponHash }}</p>
-          <span class="inline-block mt-1 text-xs px-2 py-0.5 rounded bg-amber-900/50 text-amber-300 border border-amber-700/50">
+          <h1 class="text-2xl font-bold text-text">{{ weaponName }}</h1>
+          <p class="text-xs text-text-subtle">Hash: {{ weaponHash }}</p>
+          <span class="inline-block mt-1 text-xs px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-700/50">
             Not in your inventory
           </span>
         </div>
       </div>
       <button
         @click="$emit('back')"
-        class="text-sm text-blue-400 hover:text-blue-300"
+        class="text-sm text-accent-primary hover:text-accent-primary/80"
       >
         &larr; Back to Weapons
       </button>
     </div>
 
     <!-- Info Banner -->
-    <div class="mb-6 p-4 bg-gray-800/50 rounded-lg border border-gray-700">
-      <p class="text-sm text-gray-400">
+    <div class="mb-6 p-4 bg-surface-elevated/50 rounded-lg border border-border">
+      <p class="text-sm text-text-muted">
         You have saved wishlist rolls for this weapon, but it's not currently in your inventory.
         The perk selection grid is only available for weapons you own.
       </p>
@@ -38,9 +38,9 @@
 
     <!-- Saved Wishlist Rolls -->
     <div class="space-y-4">
-      <h2 class="text-lg font-bold text-gray-200">Saved Wishlist Rolls</h2>
+      <h2 class="text-lg font-bold text-text">Saved Wishlist Rolls</h2>
 
-      <div v-if="profiles.length === 0" class="text-center py-8 text-gray-500">
+      <div v-if="profiles.length === 0" class="text-center py-8 text-text-subtle">
         No saved wishlist rolls found.
       </div>
 
@@ -48,19 +48,19 @@
         <div
           v-for="profile in profiles"
           :key="profile.id"
-          class="bg-gray-800 border border-gray-700 rounded-lg p-4"
+          class="bg-surface-elevated border border-border rounded-lg p-4"
         >
-          <h3 class="font-bold text-gray-200 mb-2">{{ profile.name }}</h3>
+          <h3 class="font-bold text-text mb-2">{{ profile.name }}</h3>
 
           <!-- Source Info -->
-          <div v-if="profile.source" class="text-xs text-gray-500 mb-2">
-            <span class="text-purple-400">{{ profile.source.author }}</span>
+          <div v-if="profile.source" class="text-xs text-text-subtle mb-2">
+            <span class="text-purple-600 dark:text-purple-400">{{ profile.source.author }}</span>
             <span v-if="profile.source.videoTitle"> · {{ profile.source.videoTitle }}</span>
             <a
               v-if="profile.source.timestampUrl"
               :href="profile.source.timestampUrl"
               target="_blank"
-              class="ml-2 text-blue-400 hover:text-blue-300"
+              class="ml-2 text-accent-primary hover:text-accent-primary/80"
               @click.stop
             >
               Watch ↗
@@ -68,7 +68,7 @@
           </div>
 
           <!-- Notes -->
-          <p v-if="profile.notes" class="text-xs text-gray-400 mb-3 line-clamp-3">
+          <p v-if="profile.notes" class="text-xs text-text-muted mb-3 line-clamp-3">
             {{ profile.notes }}
           </p>
 
@@ -79,15 +79,15 @@
               :key="hash"
               class="text-xs px-1.5 py-0.5 rounded"
               :class="type === 'OR'
-                ? 'bg-blue-900/50 text-blue-200 border border-blue-500/30'
-                : 'bg-orange-900/50 text-orange-200 border border-orange-500/30'"
+                ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-200 border border-blue-300 dark:border-blue-500/30'
+                : 'bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-200 border border-orange-300 dark:border-orange-500/30'"
               :title="type === 'OR' ? 'Nice to have' : 'Required'"
             >
               {{ getPerkName(Number(hash)) }}
             </span>
           </div>
 
-          <p class="text-xs text-gray-500 mt-2">
+          <p class="text-xs text-text-subtle mt-2">
             {{ Object.keys(profile.selection).length }} perks selected
           </p>
         </div>

@@ -8,7 +8,7 @@
       class="rounded"
       :class="sizeClass"
     />
-    <div v-else class="bg-gray-700 rounded" :class="sizeClass"></div>
+    <div v-else class="bg-surface-overlay rounded" :class="sizeClass"></div>
 
     <!-- Season/version watermark overlay -->
     <img

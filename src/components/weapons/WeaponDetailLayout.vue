@@ -12,20 +12,20 @@
           />
           <div>
             <h1 class="text-2xl font-bold">{{ weapon.weaponName }}</h1>
-            <p class="text-xs text-gray-500">Hash: {{ weapon.weaponHash }}</p>
-            <p class="text-xs text-gray-500">
+            <p class="text-xs text-text-subtle">Hash: {{ weapon.weaponHash }}</p>
+            <p class="text-xs text-text-subtle">
               {{ weapon.instances.length }} {{ weapon.instances.length === 1 ? 'Copy' : 'Copies' }}<span v-if="subtitle"> {{ subtitle }}</span>
             </p>
           </div>
           <!-- Stats -->
-          <div class="hidden sm:flex items-center gap-6 ml-6 pl-6 border-l border-gray-700">
+          <div class="hidden sm:flex items-center gap-6 ml-6 pl-6 border-l border-border">
             <div class="text-center">
-              <p class="text-lg font-semibold text-gray-300">{{ weapon.totalPerksPossible }}</p>
-              <p class="text-xs text-gray-500 uppercase tracking-wide">Perks Possible</p>
+              <p class="text-lg font-semibold text-text-muted">{{ weapon.totalPerksPossible }}</p>
+              <p class="text-xs text-text-subtle uppercase tracking-wide">Perks Possible</p>
             </div>
             <div class="text-center">
-              <p class="text-lg font-semibold text-green-300">{{ weapon.totalPerksOwned }}</p>
-              <p class="text-xs text-gray-500 uppercase tracking-wide">Perks Owned</p>
+              <p class="text-lg font-semibold text-green-600 dark:text-green-300">{{ weapon.totalPerksOwned }}</p>
+              <p class="text-xs text-text-subtle uppercase tracking-wide">Perks Owned</p>
             </div>
           </div>
         </template>
@@ -34,7 +34,7 @@
       <button
         v-if="weapon"
         @click="$emit('back')"
-        class="text-sm text-blue-400 hover:text-blue-300"
+        class="text-sm text-accent-primary hover:text-accent-primary/80"
       >
         &larr; {{ backLabel }}
       </button>
@@ -43,7 +43,7 @@
     <!-- Loading State -->
     <div v-if="loading" class="text-center py-12">
       <LoadingSpinner />
-      <p class="mt-4 text-gray-400">{{ loadingMessage }}</p>
+      <p class="mt-4 text-text-muted">{{ loadingMessage }}</p>
       <slot name="loading-extra"></slot>
     </div>
 
@@ -51,7 +51,7 @@
     <ErrorMessage v-else-if="error" :message="error" />
 
     <!-- Not Found State -->
-    <div v-else-if="!weapon" class="text-center py-12 text-gray-500">
+    <div v-else-if="!weapon" class="text-center py-12 text-text-subtle">
       <p>{{ notFoundMessage }}</p>
     </div>
 
@@ -61,7 +61,7 @@
       <LegacyMigrationBanner />
 
       <!-- Tabs -->
-      <div class="mb-6 border-b border-gray-800">
+      <div class="mb-6 border-b border-border">
         <nav class="-mb-px flex space-x-8" aria-label="Tabs">
           <button
             v-for="tab in tabs"
@@ -70,8 +70,8 @@
             class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors"
             :class="[
               activeTab === tab.id
-                ? 'border-blue-500 text-blue-400'
-                : 'border-transparent text-gray-500 hover:text-gray-300 hover:border-gray-700'
+                ? 'border-accent-primary text-accent-primary'
+                : 'border-transparent text-text-subtle hover:text-text-muted hover:border-border-subtle'
             ]"
           >
             {{ tab.label }}

@@ -1,8 +1,8 @@
 <template>
   <div class="text-center py-12">
     <LoadingSpinner />
-    <p class="mt-4 text-gray-400">{{ status }}</p>
-    <p v-if="error" class="mt-4 text-red-400">{{ error }}</p>
+    <p class="mt-4 text-text-muted">{{ status }}</p>
+    <p v-if="error" class="mt-4 text-red-600 dark:text-red-400">{{ error }}</p>
   </div>
 </template>
 
