@@ -101,7 +101,7 @@
                    <div class="relative flex-shrink-0 ml-0.5 w-8 h-8">
                      <!-- Perk icon with ring indicator -->
                      <div
-                       class="w-8 h-8 rounded-full overflow-hidden"
+                       class="w-8 h-8 rounded-full overflow-hidden bg-slate-800"
                        :class="getPerkIconClasses(perk)"
                      >
                        <img
@@ -212,7 +212,7 @@
                 v-if="perk.icon"
                 :src="`https://www.bungie.net${perk.icon}`"
                 :alt="perk.name"
-                class="h-4 w-4 rounded"
+                class="h-4 w-4 rounded bg-slate-800"
               />
               <span>{{ perk.name }}</span>
             </span>
@@ -232,7 +232,7 @@
                 v-if="perk.icon"
                 :src="`https://www.bungie.net${perk.icon}`"
                 :alt="perk.name"
-                class="h-4 w-4 rounded"
+                class="h-4 w-4 rounded bg-slate-800"
               />
               <span>{{ perk.name }}</span>
             </span>
@@ -445,14 +445,14 @@ const getPerkRowClasses = (perk: Perk) => {
 const getPerkIconClasses = (perk: Perk) => {
   // Highlighted from hover
   if (hoveredPerkHash.value === perk.hash) {
-    return 'ring-2 ring-orange-400 ring-offset-1 ring-offset-surface'
+    return 'ring-2 ring-orange-500 ring-offset-1 ring-offset-surface'
   }
-  // Owned perk (white ring)
+  // Owned perk (visible ring in both light and dark modes)
   if (perk.isOwned) {
-    return 'ring-1 ring-white/80 ring-offset-1 ring-offset-surface'
+    return 'ring-2 ring-emerald-500 ring-offset-1 ring-offset-surface'
   }
   // Not owned (dimmed with gray ring)
-  return 'ring-1 ring-border opacity-40'
+  return 'ring-1 ring-slate-300 dark:ring-slate-600 opacity-40'
 }
 
 const instanceHasPerk = (instId: string, perkHash: number): boolean => {

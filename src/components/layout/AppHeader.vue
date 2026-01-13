@@ -1,10 +1,9 @@
 <template>
   <header class="bg-surface-elevated border-b border-border">
     <div class="container mx-auto px-4 py-4 flex items-center justify-between">
-      <RouterLink to="/" class="flex items-center gap-3 text-xl sm:text-2xl font-bold text-text hover:text-text-muted transition">
-        <img src="/images/icon.webp" alt="Destiny Weapon Deduper" class="w-8 h-8 rounded" />
-        <span class="hidden xs:inline">Destiny Weapon Deduper</span>
-        <span class="xs:hidden">DWD</span>
+      <RouterLink to="/" class="flex items-center gap-2 sm:gap-3 text-base sm:text-xl md:text-2xl font-bold text-text hover:text-text-muted transition">
+        <img src="/images/icon.webp" alt="Destiny Weapon Deduper" class="w-7 h-7 sm:w-8 sm:h-8 rounded flex-shrink-0" />
+        <span class="truncate">Destiny Weapon Deduper</span>
       </RouterLink>
 
       <!-- Desktop Nav -->

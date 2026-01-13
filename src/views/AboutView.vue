@@ -1,23 +1,23 @@
 <template>
   <div class="text-center max-w-4xl mx-auto">
-    <div class="p-8 bg-gray-800 rounded-lg flex gap-8 items-center">
+    <div class="p-8 bg-surface-elevated border border-border rounded-lg flex gap-8 items-center">
       <div class="flex-1">
-        <h2 class="text-2xl font-semibold mb-4 text-left">What is Destiny Weapon Deduper?</h2>
-        <ul class="text-left space-y-3 text-gray-300">
+        <h2 class="text-2xl font-semibold mb-4 text-left text-text">What is Destiny Weapon Deduper?</h2>
+        <ul class="text-left space-y-3 text-text-muted">
           <li class="flex items-start">
-            <span class="text-green-400 mr-2">✓</span>
+            <span class="text-green-500 dark:text-green-400 mr-2">✓</span>
             <span>Consolidate duplicate weapons into a single "punch-card" matrix view</span>
           </li>
           <li class="flex items-start">
-            <span class="text-green-400 mr-2">✓</span>
+            <span class="text-green-500 dark:text-green-400 mr-2">✓</span>
             <span>Track your wishlist progress for each weapon</span>
           </li>
           <li class="flex items-start">
-            <span class="text-green-400 mr-2">✓</span>
+            <span class="text-green-500 dark:text-green-400 mr-2">✓</span>
             <span>Know exactly which duplicate weapons you can safely dismantle</span>
           </li>
           <li class="flex items-start">
-            <span class="text-green-400 mr-2">✓</span>
+            <span class="text-green-500 dark:text-green-400 mr-2">✓</span>
             <span>See all perk combinations you've earned across all instances</span>
           </li>
         </ul>

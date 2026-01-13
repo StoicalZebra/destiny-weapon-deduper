@@ -5,7 +5,7 @@
   >
     <!-- Perk icon with ring indicator -->
     <div
-      class="rounded-full overflow-hidden"
+      class="rounded-full overflow-hidden bg-slate-800"
       :class="[sizeClasses, ringClasses]"
     >
       <img
@@ -76,15 +76,15 @@ const placeholderTextClass = computed(() => {
 const ringClasses = computed(() => {
   switch (props.variant) {
     case 'highlighted':
-      return 'ring-2 ring-orange-400 ring-offset-1 ring-offset-surface'
+      return 'ring-2 ring-orange-500 ring-offset-1 ring-offset-surface'
     case 'wishlist':
-      return 'ring-1 ring-yellow-500/70 ring-offset-1 ring-offset-surface'
+      return 'ring-2 ring-yellow-500 ring-offset-1 ring-offset-surface'
     case 'owned':
-      return 'ring-1 ring-white/80 ring-offset-1 ring-offset-surface'
+      return 'ring-2 ring-emerald-500 ring-offset-1 ring-offset-surface'
     case 'none':
       return ''
     default:
-      return 'ring-1 ring-border ring-offset-1 ring-offset-surface'
+      return 'ring-1 ring-slate-400 dark:ring-slate-500 ring-offset-1 ring-offset-surface'
   }
 })
 
