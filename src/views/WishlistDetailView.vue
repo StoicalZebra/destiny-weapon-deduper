@@ -151,7 +151,7 @@
                   v-for="tag in item.tags || []"
                   :key="tag"
                   :class="getTagClasses(tag)"
-                  class="text-[9px] font-bold px-1.5 py-0.5 rounded uppercase"
+                  class="text-xs font-bold px-1.5 py-0.5 rounded uppercase"
                 >
                   {{ tag }}
                 </span>

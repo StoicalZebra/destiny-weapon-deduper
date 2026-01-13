@@ -34,11 +34,11 @@
         </div>
 
         <!-- Bottom row: roll count + source type badge -->
-        <div class="flex items-center justify-between text-[10px]">
+        <div class="flex items-center justify-between text-xs">
           <span class="text-gray-500">{{ itemCount }} {{ itemCount === 1 ? 'roll' : 'rolls' }}</span>
           <span
             :class="[
-              'inline-flex items-center rounded-full px-1.5 py-0.5 text-[9px] font-medium border',
+              'inline-flex items-center rounded-full px-1.5 py-0.5 text-xs font-medium border',
               wishlist.sourceType === 'preset'
                 ? 'bg-green-900/50 text-green-300 border-green-700/50'
                 : 'bg-blue-900/50 text-blue-300 border-blue-700/50'

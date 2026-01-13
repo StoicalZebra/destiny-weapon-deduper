@@ -1,6 +1,9 @@
 # Large data files
 data/mock-inventory.json
 
+# Planning/reference materials
+planning/
+
 # Build outputs
 dist/
 *.map

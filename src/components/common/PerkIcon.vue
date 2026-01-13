@@ -58,21 +58,18 @@ const tooltip = computed(() => {
   return description.value ? `${name.value}\n${description.value}` : name.value
 })
 
-// Size classes
+// Size classes - increased minimums for better visibility
 const sizeClasses = computed(() => {
   switch (props.size) {
-    case 'sm': return 'w-5 h-5'
-    case 'lg': return 'w-8 h-8'
-    default: return 'w-6 h-6'
+    case 'sm': return 'w-6 h-6'   // 24px (was 20px)
+    case 'lg': return 'w-10 h-10' // 40px (was 32px)
+    default: return 'w-8 h-8'    // 32px (was 24px)
   }
 })
 
 const placeholderTextClass = computed(() => {
-  switch (props.size) {
-    case 'sm': return 'text-[6px]'
-    case 'lg': return 'text-[10px]'
-    default: return 'text-[8px]'
-  }
+  // Use text-xs (12px) as minimum for all sizes
+  return 'text-xs'
 })
 
 // Ring classes based on variant

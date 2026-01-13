@@ -9,7 +9,7 @@
           v-model="searchQuery"
           type="text"
           placeholder="Search weapons..."
-          class="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500"
+          class="w-full px-4 py-2 bg-surface-elevated border border-border rounded-lg focus:outline-none focus:border-accent-primary text-text"
           @focus="showRecentSearches = true"
           @blur="hideRecentSearchesDelayed"
           @keydown.enter="addToRecentSearches"
@@ -18,20 +18,20 @@
         <!-- Recent Searches Dropdown -->
         <div
           v-if="showRecentSearches && recentSearches.length > 0 && !searchQuery"
-          class="absolute z-20 top-full left-0 right-0 mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg overflow-hidden"
+          class="absolute z-20 top-full left-0 right-0 mt-1 bg-surface-elevated border border-border rounded-lg shadow-lg overflow-hidden"
         >
-          <div class="px-3 py-2 text-[10px] uppercase tracking-wider text-gray-500 border-b border-gray-700">
+          <div class="px-3 py-2 text-xs uppercase tracking-wider text-text-subtle border-b border-border">
             Recent Searches
           </div>
           <button
             v-for="search in recentSearches"
             :key="search"
-            class="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 transition-colors flex items-center justify-between group"
+            class="w-full px-4 py-2 text-left text-sm text-text-muted hover:bg-surface-overlay transition-colors flex items-center justify-between group"
             @mousedown.prevent="selectRecentSearch(search)"
           >
             <span>{{ search }}</span>
             <span
-              class="text-gray-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+              class="text-text-subtle hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
               @mousedown.prevent.stop="removeRecentSearch(search)"
             >
               ×
@@ -39,7 +39,7 @@
           </button>
           <button
             v-if="recentSearches.length > 0"
-            class="w-full px-4 py-2 text-[10px] uppercase tracking-wider text-gray-500 hover:text-red-400 hover:bg-gray-700/50 transition-colors border-t border-gray-700"
+            class="w-full px-4 py-2 text-xs uppercase tracking-wider text-text-subtle hover:text-red-400 hover:bg-surface-overlay transition-colors border-t border-border"
             @mousedown.prevent="clearRecentSearches"
           >
             Clear All
@@ -48,27 +48,27 @@
       </div>
 
       <!-- Duplicates only toggle -->
-      <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer select-none">
+      <label class="flex items-center gap-2 text-sm text-text-muted cursor-pointer select-none">
         <div class="relative">
           <input
             type="checkbox"
             v-model="showDuplicatesOnly"
             class="sr-only peer"
           />
-          <div class="w-9 h-5 bg-gray-600 rounded-full peer peer-checked:bg-blue-600 transition-colors"></div>
+          <div class="w-9 h-5 bg-surface-overlay rounded-full peer peer-checked:bg-blue-600 transition-colors"></div>
           <div class="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-4"></div>
         </div>
         <span>Duplicates only</span>
       </label>
 
       <!-- Sort toggle -->
-      <div class="flex items-center gap-1 bg-gray-700 rounded-lg p-1">
+      <div class="flex items-center gap-1 bg-surface-overlay rounded-lg p-1">
         <button
           @click="sortBy = 'copies'"
           class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors"
           :class="sortBy === 'copies'
             ? 'bg-blue-600 text-white'
-            : 'text-gray-400 hover:text-white hover:bg-gray-600'"
+            : 'text-text-muted hover:text-text hover:bg-surface-elevated'"
         >
           Most Duplicates
         </button>
@@ -77,7 +77,7 @@
           class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors"
           :class="sortBy === 'name'
             ? 'bg-blue-600 text-white'
-            : 'text-gray-400 hover:text-white hover:bg-gray-600'"
+            : 'text-text-muted hover:text-text hover:bg-surface-elevated'"
         >
           A-Z
         </button>
@@ -94,7 +94,7 @@
     </div>
 
     <!-- Empty state -->
-    <div v-if="sortedWeapons.length === 0" class="text-center py-12 text-gray-500">
+    <div v-if="sortedWeapons.length === 0" class="text-center py-12 text-text-subtle">
       <p v-if="searchQuery">No weapons found matching "{{ searchQuery }}"</p>
       <p v-else-if="showDuplicatesOnly && props.weapons.length > 0">
         No weapons with duplicates. Toggle off to see all {{ props.weapons.length }} weapons.

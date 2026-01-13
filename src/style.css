@@ -3,7 +3,45 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    /* Light theme */
+    --color-surface: #f8fafc;           /* slate-50 */
+    --color-surface-elevated: #ffffff;  /* white */
+    --color-surface-overlay: #e2e8f0;   /* slate-200 */
+
+    --color-border: #cbd5e1;            /* slate-300 */
+    --color-border-subtle: #e2e8f0;     /* slate-200 */
+
+    --color-text: #1e293b;              /* slate-800 */
+    --color-text-muted: #475569;        /* slate-600 */
+    --color-text-subtle: #94a3b8;       /* slate-400 */
+
+    --color-accent-primary: #3b82f6;    /* blue-500 */
+    --color-accent-secondary: #f97316;  /* orange-500 */
+
+    --ring-offset-color: #ffffff;
+  }
+
+  .dark {
+    /* Dark theme - Destiny-inspired */
+    --color-surface: #0f172a;           /* slate-900 */
+    --color-surface-elevated: #1e293b;  /* slate-800 */
+    --color-surface-overlay: #334155;   /* slate-700 */
+
+    --color-border: #475569;            /* slate-600 */
+    --color-border-subtle: #334155;     /* slate-700 */
+
+    --color-text: #f1f5f9;              /* slate-100 */
+    --color-text-muted: #cbd5e1;        /* slate-300 */
+    --color-text-subtle: #64748b;       /* slate-500 */
+
+    --color-accent-primary: #60a5fa;    /* blue-400 */
+    --color-accent-secondary: #fb923c;  /* orange-400 */
+
+    --ring-offset-color: #0f172a;
+  }
+
   body {
-    @apply bg-gray-900 text-gray-100;
+    @apply bg-surface text-text transition-colors duration-200;
   }
 }

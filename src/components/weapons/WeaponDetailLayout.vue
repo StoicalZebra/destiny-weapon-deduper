@@ -21,11 +21,11 @@
           <div class="hidden sm:flex items-center gap-6 ml-6 pl-6 border-l border-gray-700">
             <div class="text-center">
               <p class="text-lg font-semibold text-gray-300">{{ weapon.totalPerksPossible }}</p>
-              <p class="text-[10px] text-gray-500 uppercase tracking-wide">Perks Possible</p>
+              <p class="text-xs text-gray-500 uppercase tracking-wide">Perks Possible</p>
             </div>
             <div class="text-center">
               <p class="text-lg font-semibold text-green-300">{{ weapon.totalPerksOwned }}</p>
-              <p class="text-[10px] text-gray-500 uppercase tracking-wide">Perks Owned</p>
+              <p class="text-xs text-gray-500 uppercase tracking-wide">Perks Owned</p>
             </div>
           </div>
         </template>

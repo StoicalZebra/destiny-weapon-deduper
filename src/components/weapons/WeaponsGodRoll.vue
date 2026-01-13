@@ -19,7 +19,7 @@
                  <!-- Header row with actions -->
                  <div class="flex justify-between items-start mb-2">
                     <div class="flex items-center gap-1.5">
-                       <span class="text-[10px] text-gray-500">
+                       <span class="text-xs text-gray-500">
                           {{ profile.item.perkHashes.length }} perks
                        </span>
                     </div>
@@ -27,7 +27,7 @@
                     <!-- Actions -->
                     <div class="flex items-center gap-2" @click.stop>
                        <template v-if="profile.showDeleteConfirm">
-                          <span class="text-[10px] text-red-400 font-bold">Sure?</span>
+                          <span class="text-xs text-red-400 font-bold">Sure?</span>
                           <button
                              @click="deleteProfile(profile.id)"
                              class="text-xs px-2 py-0.5 bg-red-900/50 hover:bg-red-900 text-red-200 border border-red-800 rounded"
@@ -104,7 +104,7 @@
             <div
               v-for="col in matrixColumns"
               :key="col.columnIndex"
-              class="p-2 text-[10px] uppercase font-bold text-center text-gray-400 tracking-wider truncate"
+              class="p-2 text-xs uppercase font-bold text-center text-gray-400 tracking-wider truncate"
             >
               {{ col.columnName }}
             </div>
@@ -129,10 +129,10 @@
                   class="relative z-10 flex items-center gap-1.5"
                   :title="perk.description || perk.name"
                 >
-                  <div class="relative flex-shrink-0 ml-0.5">
+                  <div class="relative flex-shrink-0 ml-0.5 w-8 h-8">
                     <!-- Perk icon with ring indicator -->
                     <div
-                      class="w-6 h-6 rounded-full overflow-hidden"
+                      class="w-8 h-8 rounded-full overflow-hidden"
                       :class="getPerkIconClasses(perk)"
                     >
                       <img
@@ -143,7 +143,7 @@
                       <div v-else class="w-full h-full bg-gray-700"></div>
                     </div>
                   </div>
-                  <span class="text-[10px] font-medium truncate select-none leading-tight" :class="perk.isOwned ? 'text-gray-200' : 'text-gray-500'">{{ perk.name }}</span>
+                  <span class="text-xs font-medium truncate select-none leading-tight" :class="perk.isOwned ? 'text-gray-200' : 'text-gray-500'">{{ perk.name }}</span>
                 </div>
               </div>
             </div>
@@ -192,7 +192,7 @@
       <!-- Right: Instances List (matches Coverage tab styling) -->
       <div class="space-y-4">
         <h4 class="font-bold text-lg">In Your Inventory ({{ weapon.instances.length }})</h4>
-        <div class="grid grid-cols-3 gap-2">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           <div
             v-for="(instance, index) in weapon.instances"
             :key="instance.itemInstanceId"
@@ -204,11 +204,11 @@
               <div class="flex items-center gap-1">
                 <span
                   v-if="isMatch(instance.itemInstanceId)"
-                  class="text-[10px] font-bold px-1.5 py-0.5 bg-green-900 text-green-300 rounded uppercase tracking-wide"
+                  class="text-xs font-bold px-1.5 py-0.5 bg-green-900 text-green-300 rounded uppercase tracking-wide"
                 >
                   Match
                 </span>
-                <span :class="getTierClass(instance.gearTier)" class="text-[10px]">{{ formatTier(instance.gearTier) }}</span>
+                <span :class="getTierClass(instance.gearTier)" class="text-xs">{{ formatTier(instance.gearTier) }}</span>
               </div>
             </div>
 

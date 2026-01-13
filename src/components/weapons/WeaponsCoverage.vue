@@ -51,12 +51,12 @@
           <!-- Column Headers -->
           <div 
             class="grid gap-px bg-gray-800 border-b border-gray-700" 
-            :style="{ gridTemplateColumns: `repeat(${matrixColumns.length}, minmax(0, 1fr))` }"
+            :style="{ gridTemplateColumns: `repeat(${matrixColumns.length}, minmax(5rem, 1fr))` }"
           >
             <div 
               v-for="col in matrixColumns" 
               :key="col.columnIndex"
-              class="p-2 text-[10px] uppercase font-bold text-center text-gray-400 tracking-wider truncate"
+              class="p-2 text-xs uppercase font-bold text-center text-gray-400 tracking-wider truncate"
             >
               {{ col.columnName }}
             </div>
@@ -98,10 +98,10 @@
                   class="relative z-10 flex items-center gap-1.5"
                   :title="getPerkTooltip(perk)"
                 >
-                   <div class="relative flex-shrink-0 ml-0.5 w-6 h-6">
+                   <div class="relative flex-shrink-0 ml-0.5 w-8 h-8">
                      <!-- Perk icon with ring indicator -->
                      <div
-                       class="w-6 h-6 rounded-full overflow-hidden"
+                       class="w-8 h-8 rounded-full overflow-hidden"
                        :class="getPerkIconClasses(perk)"
                      >
                        <img
@@ -114,14 +114,14 @@
                     <!-- Wishlist thumbs-up indicator -->
                     <div
                       v-if="isWishlistPerk(perk.hash)"
-                      class="absolute top-0 right-0 w-2.5 h-2.5 bg-green-600 rounded-full flex items-center justify-center shadow-lg"
+                      class="absolute -top-0.5 -right-0.5 w-4 h-4 bg-green-600 rounded-full flex items-center justify-center shadow-lg"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-1.5 w-1.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-2.5 w-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
                       </svg>
                     </div>
                    </div>
-                  <span class="text-[10px] font-medium truncate select-none leading-tight" :class="perk.isOwned ? 'text-gray-200' : 'text-gray-500'">{{ perk.name }}</span>
+                  <span class="text-xs font-medium truncate select-none leading-tight" :class="perk.isOwned ? 'text-gray-200' : 'text-gray-500'">{{ perk.name }}</span>
                 </div>
               </div>
             </div>
@@ -167,7 +167,7 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
           <div
             v-for="(instance, index) in filteredAndSortedInstances"
             :key="instance.itemInstanceId"
@@ -179,7 +179,7 @@
           >
             <div class="flex items-center justify-between mb-2 gap-1">
               <span class="font-bold text-xs">Copy {{ index + 1 }}</span>
-              <span :class="getTierClass(instance.gearTier)" class="text-[10px]">{{ formatTier(instance.gearTier) }}</span>
+              <span :class="getTierClass(instance.gearTier)" class="text-xs">{{ formatTier(instance.gearTier) }}</span>
             </div>
 
             <!-- DIM-style Perk Grid for Instance -->

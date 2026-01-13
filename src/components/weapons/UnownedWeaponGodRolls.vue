@@ -77,7 +77,7 @@
             <span
               v-for="(type, hash) in profile.selection"
               :key="hash"
-              class="text-[10px] px-1.5 py-0.5 rounded"
+              class="text-xs px-1.5 py-0.5 rounded"
               :class="type === 'OR'
                 ? 'bg-blue-900/50 text-blue-200 border border-blue-500/30'
                 : 'bg-orange-900/50 text-orange-200 border border-orange-500/30'"
@@ -87,7 +87,7 @@
             </span>
           </div>
 
-          <p class="text-[10px] text-gray-500 mt-2">
+          <p class="text-xs text-gray-500 mt-2">
             {{ Object.keys(profile.selection).length }} perks selected
           </p>
         </div>
