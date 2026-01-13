@@ -1,8 +1,8 @@
-# D3 Deduper Specification
+# Destiny Weapon Deduper Specification
 
 ## Initial Idea
 
-**D3 - Destiny DeDupe**
+**Destiny Weapon Deduper**
 
 ### Big Picture
 - Simplify duplicate copies of the same weapons stored in a user's Destiny 2 inventory

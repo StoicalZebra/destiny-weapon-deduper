@@ -1,20 +1,20 @@
 <template>
-  <div class="space-y-6 text-gray-200">
-    <div class="flex items-center justify-between bg-gray-800 p-4 rounded-lg">
+  <div class="space-y-6 text-text">
+    <div class="flex items-center justify-between bg-surface-elevated p-4 rounded-lg">
       <div class="space-y-1">
-        <h3 class="text-xl font-bold text-white">Coverage Visualization</h3>
-        <p class="text-sm text-gray-400">
+        <h3 class="text-xl font-bold text-text">Coverage Visualization</h3>
+        <p class="text-sm text-text-muted">
           Hover over perks or instances to see the relationship
         </p>
       </div>
 
-      <div class="flex items-center gap-1 bg-gray-700 rounded-lg p-1">
+      <div class="flex items-center gap-1 bg-surface-overlay rounded-lg p-1">
         <button
           @click="visualMode = 'simple'"
           class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors"
           :class="visualMode === 'simple'
             ? 'bg-green-600 text-white'
-            : 'text-gray-400 hover:text-white hover:bg-gray-600'"
+            : 'text-text-muted hover:text-text hover:bg-surface-elevated'"
           title="Shows all owned perks across all rolls"
         >
           Simple
@@ -24,7 +24,7 @@
           class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors"
           :class="visualMode === 'detailed'
             ? 'bg-purple-600 text-white'
-            : 'text-gray-400 hover:text-white hover:bg-gray-600'"
+            : 'text-text-muted hover:text-text hover:bg-surface-elevated'"
           title="Shows 1 colored bar for each roll that has that perk"
         >
           Detailed
@@ -33,7 +33,7 @@
     </div>
 
     <!-- Wishlists Applied (compact toggle list) -->
-    <div class="bg-gray-800/30 rounded-lg p-4 border border-gray-700/50">
+    <div class="bg-surface-elevated/30 rounded-lg p-4 border border-border/50">
       <WishlistsApplied :weapon-hash="weapon.weaponHash" />
     </div>
 
@@ -44,19 +44,19 @@
       <div class="space-y-4">
         <div class="flex items-center justify-between">
           <h4 class="font-bold text-lg">Perk Matrix (All Owned Rolls)</h4>
-          <span class="text-xs uppercase tracking-wider text-gray-500">{{ weapon.weaponName }}</span>
+          <span class="text-xs uppercase tracking-wider text-text-subtle">{{ weapon.weaponName }}</span>
         </div>
 
-        <div class="bg-gray-900 border border-gray-700 rounded-lg overflow-hidden">
+        <div class="bg-surface border border-border rounded-lg overflow-hidden">
           <!-- Column Headers -->
-          <div 
-            class="grid gap-px bg-gray-800 border-b border-gray-700" 
+          <div
+            class="grid gap-px bg-surface-elevated border-b border-border"
             :style="{ gridTemplateColumns: `repeat(${matrixColumns.length}, minmax(5rem, 1fr))` }"
           >
-            <div 
-              v-for="col in matrixColumns" 
+            <div
+              v-for="col in matrixColumns"
               :key="col.columnIndex"
-              class="p-2 text-xs uppercase font-bold text-center text-gray-400 tracking-wider truncate"
+              class="p-2 text-xs uppercase font-bold text-center text-text-muted tracking-wider truncate"
             >
               {{ col.columnName }}
             </div>
@@ -109,7 +109,7 @@
                          :src="`https://www.bungie.net${perk.icon}`"
                          class="w-full h-full object-cover"
                        />
-                       <div v-else class="w-full h-full bg-gray-700"></div>
+                       <div v-else class="w-full h-full bg-surface-overlay"></div>
                      </div>
                     <!-- Wishlist thumbs-up indicator -->
                     <div
@@ -121,7 +121,7 @@
                       </svg>
                     </div>
                    </div>
-                  <span class="text-xs font-medium truncate select-none leading-tight" :class="perk.isOwned ? 'text-gray-200' : 'text-gray-500'">{{ perk.name }}</span>
+                  <span class="text-xs font-medium truncate select-none leading-tight" :class="perk.isOwned ? 'text-text' : 'text-text-subtle'">{{ perk.name }}</span>
                 </div>
               </div>
             </div>
@@ -138,19 +138,19 @@
             <button
               @click="cycleSortOrder"
               class="px-2 py-1 text-xs font-medium rounded transition-colors"
-              :class="sortOrder !== 'none' ? 'bg-gray-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'"
+              :class="sortOrder !== 'none' ? 'bg-surface-overlay text-text' : 'bg-surface-elevated text-text-muted hover:bg-surface-overlay'"
               title="Sort by tier"
             >
               {{ sortOrder === 'desc' ? '↓' : sortOrder === 'asc' ? '↑' : '−' }} Tier
             </button>
             <!-- Tier filter buttons -->
-            <div class="flex gap-0.5 bg-gray-800 rounded p-0.5">
+            <div class="flex gap-0.5 bg-surface-elevated rounded p-0.5">
               <button
                 v-for="tier in [5, 4, 3, 2, 1]"
                 :key="tier"
                 @click="toggleTier(tier)"
                 class="w-6 h-6 text-xs font-medium rounded transition-colors"
-                :class="enabledTiers.has(tier) ? 'bg-gray-600 text-white' : 'bg-gray-800 text-gray-600 hover:text-gray-400'"
+                :class="enabledTiers.has(tier) ? 'bg-surface-overlay text-text' : 'bg-surface-elevated text-text-subtle hover:text-text-muted'"
                 :title="`Toggle Tier ${tier}`"
               >
                 {{ tier }}
@@ -158,7 +158,7 @@
               <button
                 @click="toggleTier(null)"
                 class="w-6 h-6 text-xs font-medium rounded transition-colors"
-                :class="enabledTiers.has(null) ? 'bg-gray-600 text-white' : 'bg-gray-800 text-gray-600 hover:text-gray-400'"
+                :class="enabledTiers.has(null) ? 'bg-surface-overlay text-text' : 'bg-surface-elevated text-text-subtle hover:text-text-muted'"
                 title="Toggle No Tier"
               >
                 0
@@ -196,17 +196,17 @@
     </div>
 
     <!-- Notes Section (shown for ALL modes) -->
-    <div class="rounded-lg border border-gray-700 bg-gray-900/40 p-3">
-      <h4 class="text-xs font-semibold uppercase tracking-wide text-gray-400">Notes</h4>
+    <div class="rounded-lg border border-border bg-surface/40 p-3">
+      <h4 class="text-xs font-semibold uppercase tracking-wide text-text-muted">Notes</h4>
       <div class="mt-2 space-y-2 text-sm">
         <div>
-          <p class="text-xs text-gray-500">Intrinsic Trait</p>
+          <p class="text-xs text-text-subtle">Intrinsic Trait</p>
           <div v-if="weapon.intrinsicPerks.length" class="mt-1 flex flex-wrap gap-2">
             <span
               v-for="perk in weapon.intrinsicPerks"
               :key="perk.hash"
               :title="perk.description || perk.name"
-              class="inline-flex items-center gap-2 rounded border border-gray-700 bg-gray-900/60 px-2 py-1 text-xs text-gray-200 cursor-help"
+              class="inline-flex items-center gap-2 rounded border border-border bg-surface/60 px-2 py-1 text-xs text-text cursor-help"
             >
               <img
                 v-if="perk.icon"
@@ -217,16 +217,16 @@
               <span>{{ perk.name }}</span>
             </span>
           </div>
-          <p v-else class="mt-1 text-xs text-gray-500">None detected</p>
+          <p v-else class="mt-1 text-xs text-text-subtle">None detected</p>
         </div>
         <div>
-          <p class="text-xs text-gray-500">Masterwork</p>
+          <p class="text-xs text-text-subtle">Masterwork</p>
           <div v-if="weapon.masterworkPerks.length" class="mt-1 flex flex-wrap gap-2">
             <span
               v-for="perk in weapon.masterworkPerks"
               :key="perk.hash"
               :title="perk.description || perk.name"
-              class="inline-flex items-center gap-2 rounded border border-gray-700 bg-gray-900/60 px-2 py-1 text-xs text-gray-200 cursor-help"
+              class="inline-flex items-center gap-2 rounded border border-border bg-surface/60 px-2 py-1 text-xs text-text cursor-help"
             >
               <img
                 v-if="perk.icon"
@@ -237,7 +237,7 @@
               <span>{{ perk.name }}</span>
             </span>
           </div>
-          <p v-else class="mt-1 text-xs text-gray-500">None detected</p>
+          <p v-else class="mt-1 text-xs text-text-subtle">None detected</p>
         </div>
       </div>
     </div>
@@ -430,29 +430,29 @@ const isPerkHighlighted = (perkHash: number) => {
 // Row background and border classes (for hover states and ownership)
 const getPerkRowClasses = (perk: Perk) => {
   // Hover states - match inventory card styling
-  if (hoveredPerkHash.value === perk.hash) return 'bg-gray-700 border-orange-400 ring-1 ring-orange-400'
+  if (hoveredPerkHash.value === perk.hash) return 'bg-surface-overlay border-orange-400 ring-1 ring-orange-400'
   if (hoveredInstanceId.value) {
     // Instance is hovered - highlight its perks, dim others
-    if (isPerkHighlighted(perk.hash)) return 'bg-gray-700/50 border-orange-400/50'
-    return 'bg-gray-800 border-gray-700 opacity-40'
+    if (isPerkHighlighted(perk.hash)) return 'bg-surface-overlay/50 border-orange-400/50'
+    return 'bg-surface-elevated border-border opacity-40'
   }
   // Unowned perks are dimmed
-  if (!perk.isOwned) return 'bg-gray-800/30 border-gray-700/50'
-  return 'bg-gray-800 border-gray-700'
+  if (!perk.isOwned) return 'bg-surface-elevated/30 border-border/50'
+  return 'bg-surface-elevated border-border'
 }
 
 // Perk icon ring classes
 const getPerkIconClasses = (perk: Perk) => {
   // Highlighted from hover
   if (hoveredPerkHash.value === perk.hash) {
-    return 'ring-2 ring-orange-400 ring-offset-1 ring-offset-gray-900'
+    return 'ring-2 ring-orange-400 ring-offset-1 ring-offset-surface'
   }
   // Owned perk (white ring)
   if (perk.isOwned) {
-    return 'ring-1 ring-white/80 ring-offset-1 ring-offset-gray-900'
+    return 'ring-1 ring-white/80 ring-offset-1 ring-offset-surface'
   }
   // Not owned (dimmed with gray ring)
-  return 'ring-1 ring-gray-700 opacity-40'
+  return 'ring-1 ring-border opacity-40'
 }
 
 const instanceHasPerk = (instId: string, perkHash: number): boolean => {
@@ -463,15 +463,15 @@ const instanceHasPerk = (instId: string, perkHash: number): boolean => {
 }
 
 const getInstanceClasses = (instId: string) => {
-  const base = 'bg-gray-800 border-gray-700'
+  const base = 'bg-surface-elevated border-border'
 
   // Simple mode
   if (visualMode.value === 'simple') {
-    if (hoveredInstanceId.value === instId) return 'bg-gray-700 border-orange-400 ring-1 ring-orange-400'
+    if (hoveredInstanceId.value === instId) return 'bg-surface-overlay border-orange-400 ring-1 ring-orange-400'
 
     // Highlight if hovered perk is on this instance (subtle orange border)
     if (hoveredPerkHash.value) {
-      if (instanceHasPerk(instId, hoveredPerkHash.value)) return 'bg-gray-700/50 border-orange-400/50'
+      if (instanceHasPerk(instId, hoveredPerkHash.value)) return 'bg-surface-overlay/50 border-orange-400/50'
       return 'opacity-50'
     }
 
@@ -488,7 +488,7 @@ const getInstanceClasses = (instId: string) => {
   }
 
   if (hoveredPerkHash.value) {
-    if (instanceHasPerk(instId, hoveredPerkHash.value)) return 'bg-gray-700/50 border-orange-400/50'
+    if (instanceHasPerk(instId, hoveredPerkHash.value)) return 'bg-surface-overlay/50 border-orange-400/50'
     return 'opacity-40 grayscale-[0.5]'
   }
 
@@ -520,9 +520,9 @@ function formatTier(tier: number | null | undefined): string {
 
 function getTierClass(tier: number | null | undefined): string {
   if (!tier) {
-    return 'text-gray-600'
+    return 'text-text-subtle'
   }
-  return 'text-gray-400'
+  return 'text-text-muted'
 }
 
 // Sort and filter helpers

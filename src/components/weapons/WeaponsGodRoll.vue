@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-6 text-gray-200">
+  <div class="space-y-6 text-text">
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
 
       <!-- Left: Selection Grid -->
@@ -7,19 +7,19 @@
 
         <!-- Saved Profiles List -->
         <div v-if="displayProfiles.length > 0" class="space-y-3">
-           <h4 class="font-bold text-sm text-gray-400 uppercase tracking-wider">Saved on Your Custom Wishlist</h4>
+           <h4 class="font-bold text-sm text-text-muted uppercase tracking-wider">Saved on Your Custom Wishlist</h4>
            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               <div
                  v-for="profile in displayProfiles"
                  :key="profile.id"
-                 class="group bg-gray-800 border border-gray-700 hover:border-gray-500 rounded-lg p-3 transition-colors cursor-pointer relative"
+                 class="group bg-surface-elevated border border-border hover:border-border-subtle rounded-lg p-3 transition-colors cursor-pointer relative"
                  :class="{ 'ring-2 ring-blue-500/50 border-blue-500/50 bg-blue-900/10': isProfileActive(profile) }"
                  @click="loadProfile(profile)"
               >
                  <!-- Header row with actions -->
                  <div class="flex justify-between items-start mb-2">
                     <div class="flex items-center gap-1.5">
-                       <span class="text-xs text-gray-500">
+                       <span class="text-xs text-text-subtle">
                           {{ profile.item.perkHashes.length }} perks
                        </span>
                     </div>
@@ -36,7 +36,7 @@
                           </button>
                           <button
                              @click="profile.showDeleteConfirm = false"
-                             class="text-xs px-2 py-0.5 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded"
+                             class="text-xs px-2 py-0.5 bg-surface-overlay hover:bg-surface-elevated text-text-muted rounded"
                           >
                              Cancel
                           </button>
@@ -44,7 +44,7 @@
                        <template v-else>
                           <button
                              @click="profile.showDeleteConfirm = true"
-                             class="p-1 text-gray-500 hover:text-red-400 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                             class="p-1 text-text-subtle hover:text-red-400 rounded opacity-0 group-hover:opacity-100 transition-opacity"
                              title="Delete"
                           >
                              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -62,7 +62,7 @@
                  />
 
                  <!-- Notes (if any) -->
-                 <p v-if="profile.item.notes" class="text-xs text-gray-400 mt-2 line-clamp-2">
+                 <p v-if="profile.item.notes" class="text-xs text-text-muted mt-2 line-clamp-2">
                     {{ profile.item.notes }}
                  </p>
               </div>
@@ -71,40 +71,40 @@
 
         <!-- Header -->
         <div class="flex items-center justify-between">
-          <h4 class="font-bold text-lg">Wishlist Roll Editor</h4>
-          
+          <h4 class="font-bold text-lg text-text">Wishlist Roll Editor</h4>
+
           <div class="flex items-center gap-4">
              <!-- Legend -->
-            <div class="flex items-center gap-3 text-xs bg-gray-800/50 px-3 py-1.5 rounded-full border border-gray-700/50">
+            <div class="flex items-center gap-3 text-xs bg-surface-elevated/50 px-3 py-1.5 rounded-full border border-border/50">
               <span class="flex items-center gap-1.5">
                 <span class="w-2 h-2 rounded-full bg-orange-500"></span>
-                <span class="text-gray-300">Required Perk (Click)</span>
+                <span class="text-text-muted">Required Perk (Click)</span>
               </span>
-              <span class="w-px h-3 bg-gray-600"></span>
+              <span class="w-px h-3 bg-border"></span>
               <span class="flex items-center gap-1.5">
                 <span class="w-2 h-2 rounded-full bg-blue-500"></span>
-                <span class="text-gray-300">Nice to Have / Optional Perk (Shift+Click)</span>
+                <span class="text-text-muted">Nice to Have / Optional Perk (Shift+Click)</span>
               </span>
             </div>
-             <button 
+             <button
                 @click="clearSelection"
-                class="text-xs px-3 py-1.5 rounded bg-gray-800 hover:bg-gray-700 border border-gray-700 transition-colors text-gray-400 hover:text-white"
+                class="text-xs px-3 py-1.5 rounded bg-surface-elevated hover:bg-surface-overlay border border-border transition-colors text-text-muted hover:text-text"
               >
                 Clear Perks
               </button>
           </div>
         </div>
 
-        <div class="bg-gray-900 border border-gray-700 rounded-lg overflow-hidden">
+        <div class="bg-surface border border-border rounded-lg overflow-hidden">
           <!-- Column Headers -->
           <div
-             class="grid gap-px bg-gray-800 border-b border-gray-700"
+             class="grid gap-px bg-surface-elevated border-b border-border"
              :style="{ gridTemplateColumns: `repeat(${matrixColumns.length}, minmax(0, 1fr))` }"
           >
             <div
               v-for="col in matrixColumns"
               :key="col.columnIndex"
-              class="p-2 text-xs uppercase font-bold text-center text-gray-400 tracking-wider truncate"
+              class="p-2 text-xs uppercase font-bold text-center text-text-muted tracking-wider truncate"
             >
               {{ col.columnName }}
             </div>
@@ -140,10 +140,10 @@
                         :src="`https://www.bungie.net${perk.icon}`"
                         class="w-full h-full object-cover"
                       />
-                      <div v-else class="w-full h-full bg-gray-700"></div>
+                      <div v-else class="w-full h-full bg-surface-overlay"></div>
                     </div>
                   </div>
-                  <span class="text-xs font-medium truncate select-none leading-tight" :class="perk.isOwned ? 'text-gray-200' : 'text-gray-500'">{{ perk.name }}</span>
+                  <span class="text-xs font-medium truncate select-none leading-tight" :class="perk.isOwned ? 'text-text' : 'text-text-subtle'">{{ perk.name }}</span>
                 </div>
               </div>
             </div>
@@ -151,28 +151,28 @@
         </div>
 
         <!-- Inline Save / Update Form -->
-        <div v-if="hasSelection" class="bg-gray-800/80 rounded-lg border border-gray-700 p-4 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div v-if="hasSelection" class="bg-surface-elevated/80 rounded-lg border border-border p-4 animate-in fade-in slide-in-from-top-2 duration-200">
            <div class="space-y-3">
               <div>
-                 <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                 <label class="block text-xs font-bold text-text-muted uppercase tracking-wider mb-1">
                     Notes (Optional)
                  </label>
                  <textarea
                     v-model="profileNotesInput"
                     placeholder="Add notes about this roll (e.g., PvP Roll, Best for add clear)..."
                     rows="2"
-                    class="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-600 resize-none"
+                    class="w-full bg-surface border border-border rounded px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-text-subtle resize-none"
                  />
-                 <p class="text-xs text-gray-500 mt-1">
+                 <p class="text-xs text-text-subtle mt-1">
                     {{ saveTargetText }}
                  </p>
               </div>
 
               <div class="flex justify-end items-center gap-3">
-                 <p v-if="saveMessage" :class="['text-xs', saveMessage.type === 'error' ? 'text-red-400' : 'text-gray-400']">{{ saveMessage.text }}</p>
+                 <p v-if="saveMessage" :class="['text-xs', saveMessage.type === 'error' ? 'text-red-400' : 'text-text-muted']">{{ saveMessage.text }}</p>
                  <button
                     @click="handleCancel"
-                    class="px-4 py-2 rounded text-sm font-medium transition-colors bg-gray-700 hover:bg-gray-600 text-gray-200 border border-gray-600"
+                    class="px-4 py-2 rounded text-sm font-medium transition-colors bg-surface-overlay hover:bg-surface-elevated text-text border border-border"
                  >
                     Cancel
                  </button>
@@ -191,7 +191,7 @@
 
       <!-- Right: Instances List (matches Coverage tab styling) -->
       <div class="space-y-4">
-        <h4 class="font-bold text-lg">In Your Inventory ({{ weapon.instances.length }})</h4>
+        <h4 class="font-bold text-lg text-text">In Your Inventory ({{ weapon.instances.length }})</h4>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           <div
             v-for="(instance, index) in weapon.instances"
@@ -640,10 +640,10 @@ const getPerkRowClasses = (perk: Perk) => {
   }
 
   // Unowned perks are dimmed
-  if (!perk.isOwned) return 'bg-gray-800/30 border-gray-700/50 hover:bg-gray-700/30'
+  if (!perk.isOwned) return 'bg-surface-elevated/30 border-border/50 hover:bg-surface-overlay/30'
 
   // Default owned state
-  return 'bg-gray-800 border-gray-700 hover:bg-gray-700'
+  return 'bg-surface-elevated border-border hover:bg-surface-overlay'
 }
 
 // Perk icon ring classes (matches Coverage tab styling + selection state)
@@ -652,26 +652,26 @@ const getPerkIconClasses = (perk: Perk) => {
 
   // Selected states
   if (selectionType === 'AND') {
-    return 'ring-2 ring-orange-400 ring-offset-1 ring-offset-gray-900'
+    return 'ring-2 ring-orange-400 ring-offset-1 ring-offset-surface'
   }
   if (selectionType === 'OR') {
-    return 'ring-2 ring-blue-400 ring-offset-1 ring-offset-gray-900'
+    return 'ring-2 ring-blue-400 ring-offset-1 ring-offset-surface'
   }
 
   // Owned perk (white ring)
   if (perk.isOwned) {
-    return 'ring-1 ring-white/80 ring-offset-1 ring-offset-gray-900'
+    return 'ring-1 ring-white/80 ring-offset-1 ring-offset-surface'
   }
 
   // Not owned (dimmed with gray ring)
-  return 'ring-1 ring-gray-700 opacity-40'
+  return 'ring-1 ring-border opacity-40'
 }
 
 const getMatchClasses = (instId: string) => {
-  if (!hasSelection.value) return 'bg-gray-800 border-gray-700'
+  if (!hasSelection.value) return 'bg-surface-elevated border-border'
   return isMatch(instId)
     ? 'bg-green-900/20 border-green-500/50 ring-1 ring-green-500/30'
-    : 'bg-gray-800 border-gray-700 opacity-50'
+    : 'bg-surface-elevated border-border opacity-50'
 }
 
 // Tier display helpers (matching Coverage tab)
@@ -685,9 +685,9 @@ function formatTier(tier: number | null | undefined): string {
 
 function getTierClass(tier: number | null | undefined): string {
   if (!tier) {
-    return 'text-gray-600'
+    return 'text-text-subtle'
   }
-  return 'text-gray-400'
+  return 'text-text-muted'
 }
 
 </script>

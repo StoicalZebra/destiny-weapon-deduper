@@ -14,8 +14,8 @@
         class="w-full h-full object-cover"
         :alt="name"
       />
-      <div v-else class="w-full h-full bg-gray-700 flex items-center justify-center">
-        <span class="text-gray-500" :class="placeholderTextClass">?</span>
+      <div v-else class="w-full h-full bg-surface-overlay flex items-center justify-center">
+        <span class="text-text-subtle" :class="placeholderTextClass">?</span>
       </div>
     </div>
 
@@ -76,15 +76,15 @@ const placeholderTextClass = computed(() => {
 const ringClasses = computed(() => {
   switch (props.variant) {
     case 'highlighted':
-      return 'ring-2 ring-orange-400 ring-offset-1 ring-offset-gray-900'
+      return 'ring-2 ring-orange-400 ring-offset-1 ring-offset-surface'
     case 'wishlist':
-      return 'ring-1 ring-yellow-500/70 ring-offset-1 ring-offset-gray-900'
+      return 'ring-1 ring-yellow-500/70 ring-offset-1 ring-offset-surface'
     case 'owned':
-      return 'ring-1 ring-white/80 ring-offset-1 ring-offset-gray-900'
+      return 'ring-1 ring-white/80 ring-offset-1 ring-offset-surface'
     case 'none':
       return ''
     default:
-      return 'ring-1 ring-gray-600 ring-offset-1 ring-offset-gray-900'
+      return 'ring-1 ring-border ring-offset-1 ring-offset-surface'
   }
 })
 

@@ -2,9 +2,9 @@
   <header class="bg-surface-elevated border-b border-border">
     <div class="container mx-auto px-4 py-4 flex items-center justify-between">
       <RouterLink to="/" class="flex items-center gap-3 text-xl sm:text-2xl font-bold text-text hover:text-text-muted transition">
-        <img src="/images/icon.webp" alt="D3 Icon" class="w-8 h-8 rounded" />
+        <img src="/images/icon.webp" alt="Destiny Weapon Deduper" class="w-8 h-8 rounded" />
         <span class="hidden xs:inline">Destiny Weapon Deduper</span>
-        <span class="xs:hidden">D3</span>
+        <span class="xs:hidden">DWD</span>
       </RouterLink>
 
       <!-- Desktop Nav -->

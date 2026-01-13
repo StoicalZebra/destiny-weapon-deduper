@@ -3,8 +3,8 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
       <div>
-        <h1 class="text-3xl font-bold">Wishlists</h1>
-        <p class="text-sm text-gray-400 mt-1">
+        <h1 class="text-3xl font-bold text-text">Wishlists</h1>
+        <p class="text-sm text-text-muted mt-1">
           {{ store.presetCount }} presets, {{ store.userCount }} custom
         </p>
       </div>
@@ -15,7 +15,7 @@
           v-if="store.presetCount > 0"
           @click="handleCheckUpdates"
           :disabled="store.loading"
-          class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-700 text-gray-200 hover:bg-gray-600 disabled:opacity-50 transition-colors"
+          class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-overlay text-text hover:bg-surface-elevated disabled:opacity-50 transition-colors"
         >
           <svg
             :class="['h-4 w-4', store.loading && 'animate-spin']"
@@ -28,8 +28,9 @@
           Check for Updates
         </button>
 
-        <!-- Create New Button -->
+        <!-- Create New Button - only show when no custom wishlist exists -->
         <button
+          v-if="store.canCreateUserWishlist"
           @click="showCreateModal = true"
           class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-500 transition-colors"
         >
@@ -80,11 +81,11 @@
 
     <!-- Loading State -->
     <div v-if="store.loading && !store.initialized" class="text-center py-12">
-      <svg class="h-8 w-8 mx-auto animate-spin text-blue-400" fill="none" viewBox="0 0 24 24">
+      <svg class="h-8 w-8 mx-auto animate-spin text-accent-primary" fill="none" viewBox="0 0 24 24">
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
       </svg>
-      <p class="mt-2 text-gray-400">Loading wishlists...</p>
+      <p class="mt-2 text-text-muted">Loading wishlists...</p>
     </div>
 
     <template v-else>
@@ -103,8 +104,8 @@
 
       <!-- Empty State -->
       <div v-if="store.allWishlists.length === 0" class="text-center py-12">
-        <p class="text-gray-400 mb-4">No wishlists yet.</p>
-        <p class="text-sm text-gray-500">
+        <p class="text-text-muted mb-4">No wishlists yet.</p>
+        <p class="text-sm text-text-subtle">
           Load preset wishlists or import your own below.
         </p>
       </div>
@@ -114,7 +115,7 @@
         <button
           @click="handleLoadPresets"
           :disabled="store.loading"
-          class="w-full py-4 rounded-lg border-2 border-dashed border-gray-600 text-gray-400 hover:border-gray-500 hover:text-gray-300 transition-colors"
+          class="w-full py-4 rounded-lg border-2 border-dashed border-border text-text-muted hover:border-border-subtle hover:text-text transition-colors"
         >
           <span v-if="store.loading">Loading preset wishlists...</span>
           <span v-else>Load Preset Wishlists (Voltron, Pandapaxxy, etc.)</span>
@@ -131,27 +132,27 @@
       class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
       @click.self="showCreateModal = false"
     >
-      <div class="w-full max-w-md rounded-xl bg-gray-800 border border-gray-700 p-6">
-        <h2 class="text-xl font-semibold mb-4">Create New Wishlist</h2>
+      <div class="w-full max-w-md rounded-xl bg-surface-elevated border border-border p-6">
+        <h2 class="text-xl font-semibold text-text mb-4">Create New Wishlist</h2>
 
         <div class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-300 mb-1">Name</label>
+            <label class="block text-sm font-medium text-text-muted mb-1">Name</label>
             <input
               v-model="newWishlistName"
               type="text"
               placeholder="My PvP Rolls"
-              class="w-full px-3 py-2 rounded-lg bg-gray-700 border border-gray-600 text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500"
+              class="w-full px-3 py-2 rounded-lg bg-surface-overlay border border-border text-text placeholder-text-subtle focus:outline-none focus:border-blue-500"
             />
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-300 mb-1">Description (optional)</label>
+            <label class="block text-sm font-medium text-text-muted mb-1">Description (optional)</label>
             <textarea
               v-model="newWishlistDescription"
               rows="2"
               placeholder="My preferred rolls for Crucible"
-              class="w-full px-3 py-2 rounded-lg bg-gray-700 border border-gray-600 text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500 resize-none"
+              class="w-full px-3 py-2 rounded-lg bg-surface-overlay border border-border text-text placeholder-text-subtle focus:outline-none focus:border-blue-500 resize-none"
             />
           </div>
         </div>
@@ -159,7 +160,7 @@
         <div class="flex justify-end gap-2 mt-6">
           <button
             @click="showCreateModal = false"
-            class="px-4 py-2 rounded-lg bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors"
+            class="px-4 py-2 rounded-lg bg-surface-overlay text-text-muted hover:bg-surface-elevated transition-colors"
           >
             Cancel
           </button>
@@ -180,16 +181,16 @@
       class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
       @click.self="deletingWishlist = null"
     >
-      <div class="w-full max-w-md rounded-xl bg-gray-800 border border-gray-700 p-6">
+      <div class="w-full max-w-md rounded-xl bg-surface-elevated border border-border p-6">
         <h2 class="text-xl font-semibold mb-4 text-red-400">Delete Wishlist</h2>
-        <p class="text-sm text-gray-400">
+        <p class="text-sm text-text-muted">
           Are you sure you want to delete "{{ deletingWishlist.name }}"? This cannot be undone.
         </p>
 
         <div class="flex justify-end gap-2 mt-6">
           <button
             @click="deletingWishlist = null"
-            class="px-4 py-2 rounded-lg bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors"
+            class="px-4 py-2 rounded-lg bg-surface-overlay text-text-muted hover:bg-surface-elevated transition-colors"
           >
             Cancel
           </button>

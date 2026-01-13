@@ -52,7 +52,7 @@ export interface PresetWishlistConfig {
   description: string
   githubUrl: string // Raw GitHub URL to .txt file
   author?: string
-  isAdminCurated?: boolean // D3 admin-maintained list
+  isAdminCurated?: boolean // Admin-maintained list
 }
 
 /**

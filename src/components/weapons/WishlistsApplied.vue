@@ -2,8 +2,8 @@
   <div class="space-y-3">
     <!-- Header -->
     <div class="flex items-center justify-between">
-      <h4 class="font-bold text-lg text-gray-200">Wishlists Applied</h4>
-      <span class="text-xs text-gray-500">
+      <h4 class="font-bold text-lg text-text">Wishlists Applied</h4>
+      <span class="text-xs text-text-subtle">
         {{ enabledCount }} of {{ totalCount }} active
       </span>
     </div>
@@ -15,8 +15,8 @@
         :key="wishlist.id"
         class="flex flex-col gap-1 p-2 rounded-lg border transition-colors cursor-pointer"
         :class="isEnabled(wishlist)
-          ? 'bg-gray-800/50 border-gray-700 hover:bg-gray-800'
-          : 'bg-gray-900/30 border-gray-800 opacity-60'"
+          ? 'bg-surface-elevated/50 border-border hover:bg-surface-elevated'
+          : 'bg-surface/30 border-border-subtle opacity-60'"
         @click="toggleWishlist(wishlist)"
       >
         <!-- Top row: checkbox + name -->
@@ -26,16 +26,16 @@
             :checked="isEnabled(wishlist)"
             @click.stop
             @change="toggleWishlist(wishlist)"
-            class="w-3 h-3 rounded border-gray-600 bg-gray-700 text-green-500 focus:ring-green-500 focus:ring-offset-gray-800 cursor-pointer flex-shrink-0"
+            class="w-3 h-3 rounded border-border bg-surface-overlay text-green-500 focus:ring-green-500 focus:ring-offset-surface cursor-pointer flex-shrink-0"
           />
-          <span class="font-medium text-xs truncate" :class="isEnabled(wishlist) ? 'text-gray-200' : 'text-gray-400'">
+          <span class="font-medium text-xs truncate" :class="isEnabled(wishlist) ? 'text-text' : 'text-text-muted'">
             {{ wishlist.name }}
           </span>
         </div>
 
         <!-- Bottom row: roll count + source type badge -->
         <div class="flex items-center justify-between text-xs">
-          <span class="text-gray-500">{{ itemCount }} {{ itemCount === 1 ? 'roll' : 'rolls' }}</span>
+          <span class="text-text-subtle">{{ itemCount }} {{ itemCount === 1 ? 'roll' : 'rolls' }}</span>
           <span
             :class="[
               'inline-flex items-center rounded-full px-1.5 py-0.5 text-xs font-medium border',
@@ -51,18 +51,18 @@
     </div>
 
     <!-- Empty state -->
-    <div v-else class="text-sm text-gray-500 text-center py-4">
+    <div v-else class="text-sm text-text-subtle text-center py-4">
       No wishlists available.
-      <router-link to="/wishlists" class="text-blue-400 hover:text-blue-300 ml-1">
+      <router-link to="/wishlists" class="text-accent-primary hover:text-accent-primary/80 ml-1">
         Browse wishlists
       </router-link>
     </div>
 
     <!-- Link to manage wishlists -->
-    <div v-if="wishlistsWithCounts.length > 0" class="pt-2 border-t border-gray-700/50">
+    <div v-if="wishlistsWithCounts.length > 0" class="pt-2 border-t border-border/50">
       <router-link
         to="/wishlists"
-        class="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+        class="text-sm text-accent-primary hover:text-accent-primary/80 transition-colors"
       >
         Manage wishlists &rarr;
       </router-link>

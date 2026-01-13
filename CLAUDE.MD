@@ -1,8 +1,8 @@
-# D3 DeDuper - Claude Code Context
+# Destiny Weapon Deduper - Claude Code Context
 
 ## Project Overview
 
-**D3 - Destiny DeDupe** is a Vue 3 + TypeScript application that simplifies duplicate weapon management in Destiny 2 inventory.
+**Destiny Weapon Deduper** is a Vue 3 + TypeScript application that simplifies duplicate weapon management in Destiny 2 inventory.
 
 ### Problem Statement
 Players accumulate multiple copies of the same weapon with different perk combinations (rolls), leading to inventory management fatigue and uncertainty about which weapons to keep or dismantle.

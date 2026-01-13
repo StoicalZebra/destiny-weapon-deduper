@@ -35,6 +35,10 @@ export default {
           uncommon: '#366f42',
           common: '#c3bcb4',
         }
+      },
+      // Ring offset color for theme-aware perk icons
+      ringOffsetColor: {
+        surface: 'var(--color-surface)',
       }
     },
   },

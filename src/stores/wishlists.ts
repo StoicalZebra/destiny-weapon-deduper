@@ -61,6 +61,9 @@ export const useWishlistsStore = defineStore('wishlists', () => {
   const presetCount = computed(() => presetWishlists.value.length)
   const userCount = computed(() => userWishlists.value.length)
 
+  // Only allow one custom wishlist - users can rename it but not create more
+  const canCreateUserWishlist = computed(() => userWishlists.value.length === 0)
+
   // ==================== Actions ====================
 
   /**
@@ -541,14 +544,17 @@ export const useWishlistsStore = defineStore('wishlists', () => {
   const DEFAULT_USER_WISHLIST_NAME = 'My God Rolls'
 
   /**
-   * Get or create the default "My God Rolls" user wishlist
+   * Get or create the default user wishlist for saving god rolls.
+   * Returns the user's existing custom wishlist if one exists,
+   * otherwise creates a new "My God Rolls" wishlist.
    */
   function getOrCreateDefaultWishlist(): Wishlist {
-    // Look for existing default wishlist
-    const existing = userWishlists.value.find((w) => w.name === DEFAULT_USER_WISHLIST_NAME)
-    if (existing) return existing
+    // If user has any custom wishlist, use it (single wishlist model)
+    if (userWishlists.value.length > 0) {
+      return userWishlists.value[0]
+    }
 
-    // Create new default wishlist
+    // Create new default wishlist only if no user wishlists exist
     return createUserWishlist(
       DEFAULT_USER_WISHLIST_NAME,
       'Personal god rolls created with the God Roll Creator'
@@ -614,10 +620,11 @@ export const useWishlistsStore = defineStore('wishlists', () => {
   }
 
   /**
-   * Delete a god roll from the default user wishlist
+   * Delete a god roll from the user's custom wishlist
    */
   function deleteGodRoll(itemId: string): boolean {
-    const wishlist = userWishlists.value.find((w) => w.name === DEFAULT_USER_WISHLIST_NAME)
+    // Use the first (and only) user wishlist
+    const wishlist = userWishlists.value[0]
     if (!wishlist) return false
 
     const itemExists = wishlist.items.some((i) => i.id === itemId)
@@ -769,6 +776,7 @@ export const useWishlistsStore = defineStore('wishlists', () => {
     hasUpdatesAvailable,
     presetCount,
     userCount,
+    canCreateUserWishlist,
 
     // Actions
     initialize,

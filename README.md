@@ -1,4 +1,4 @@
-# D3 - Destiny DeDupe
+# Destiny Weapon Deduper
 
 A Vue 3 + TypeScript application that simplifies duplicate weapon management in Destiny 2 inventory.
 
@@ -34,7 +34,7 @@ The app requires access to the Bungie Destiny 2 API for fetching weapon definiti
 2. Sign in with your Bungie account
 3. Click **Create New App**
 4. Fill in the required fields:
-   - **Application Name**: Your app name (e.g., "D3 DeDuper Dev")
+   - **Application Name**: Your app name (e.g., "DeDuper Dev")
    - **Website**: Can be `http://localhost:5173` for local development
    - **Redirect URL**: `http://localhost:5173/callback`
    - **Origin Header**: `http://localhost:5173`
