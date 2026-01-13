@@ -4,7 +4,6 @@ import AboutView from '@/views/AboutView.vue'
 import WeaponsView from '@/views/WeaponsView.vue'
 import CallbackView from '@/views/CallbackView.vue'
 import WeaponDetailView from '@/views/WeaponDetailView.vue'
-import PlaygroundView from '@/views/PlaygroundView.vue'
 import WishlistsView from '@/views/WishlistsView.vue'
 import WishlistDetailView from '@/views/WishlistDetailView.vue'
 
@@ -27,11 +26,6 @@ const router = createRouter({
       name: 'weapon-detail',
       component: WeaponDetailView,
       meta: { requiresAuth: true }
-    },
-    {
-      path: '/playground/:weaponHash?',
-      name: 'playground',
-      component: PlaygroundView
     },
     {
       path: '/callback',
