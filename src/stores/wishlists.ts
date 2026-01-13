@@ -47,7 +47,8 @@ export const useWishlistsStore = defineStore('wishlists', () => {
 
   // Track local edits to preset wishlists (for admin mode)
   // When a preset is edited locally, we need to know so we can show "unsaved changes"
-  const hasUnsavedPresetChanges = ref<Map<string, boolean>>(new Map())
+  // Using a plain object instead of Map for better Vue reactivity (Map.get() doesn't trigger updates)
+  const hasUnsavedPresetChanges = ref<Record<string, boolean>>({})
 
   // ==================== Computed ====================
 
@@ -360,14 +361,14 @@ export const useWishlistsStore = defineStore('wishlists', () => {
    * Check if a preset has unsaved local changes
    */
   function hasLocalChanges(wishlistId: string): boolean {
-    return hasUnsavedPresetChanges.value.get(wishlistId) ?? false
+    return hasUnsavedPresetChanges.value[wishlistId] ?? false
   }
 
   /**
    * Mark a preset's changes as saved (call after export)
    */
   function markChangesSaved(wishlistId: string): void {
-    hasUnsavedPresetChanges.value.set(wishlistId, false)
+    hasUnsavedPresetChanges.value[wishlistId] = false
   }
 
   /**
@@ -384,7 +385,7 @@ export const useWishlistsStore = defineStore('wishlists', () => {
     wishlist.lastUpdated = new Date().toISOString()
 
     // Mark as having unsaved changes
-    hasUnsavedPresetChanges.value.set(wishlistId, true)
+    hasUnsavedPresetChanges.value[wishlistId] = true
 
     // Rebuild weapon index for this wishlist
     weaponIndexes.value.set(wishlistId, buildWeaponIndex(wishlist))
@@ -410,7 +411,7 @@ export const useWishlistsStore = defineStore('wishlists', () => {
     wishlist.items.splice(index, 1)
     wishlist.lastUpdated = new Date().toISOString()
 
-    hasUnsavedPresetChanges.value.set(wishlistId, true)
+    hasUnsavedPresetChanges.value[wishlistId] = true
     weaponIndexes.value.set(wishlistId, buildWeaponIndex(wishlist))
     await wishlistStorageService.savePreset(wishlist)
 
@@ -436,7 +437,7 @@ export const useWishlistsStore = defineStore('wishlists', () => {
     Object.assign(item, updates)
     wishlist.lastUpdated = new Date().toISOString()
 
-    hasUnsavedPresetChanges.value.set(wishlistId, true)
+    hasUnsavedPresetChanges.value[wishlistId] = true
     weaponIndexes.value.set(wishlistId, buildWeaponIndex(wishlist))
     await wishlistStorageService.savePreset(wishlist)
 

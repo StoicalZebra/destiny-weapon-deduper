@@ -2,9 +2,10 @@
   "$schema": "https://unpkg.com/knip@5/schema.json",
   "entry": [
     "src/main.ts",
-    "src/**/*.test.ts"
+    "src/**/*.test.ts",
+    "e2e/**/*.spec.ts"
   ],
-  "project": ["src/**/*.{ts,vue}"],
+  "project": ["src/**/*.{ts,vue}", "e2e/**/*.ts"],
   "ignore": [
     "dump_perks.ts",
     "src/components/playground/**",

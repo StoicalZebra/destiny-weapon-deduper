@@ -189,6 +189,16 @@
         </div>
       </div>
 
+      <!-- Load More Button -->
+      <div v-if="hasMoreGroups" class="text-center py-6">
+        <button
+          @click="loadMore"
+          class="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors"
+        >
+          Load More ({{ remainingCount.toLocaleString() }} weapons remaining)
+        </button>
+      </div>
+
       <!-- Empty search results -->
       <div v-if="filteredGroups.length === 0 && searchQuery" class="text-center py-12">
         <p class="text-gray-400">No items match "{{ searchQuery }}"</p>
@@ -203,7 +213,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useWishlistsStore } from '@/stores/wishlists'
 import { manifestService } from '@/services/manifest-service'
@@ -218,6 +228,7 @@ const wishlistsStore = useWishlistsStore()
 
 const loading = ref(true)
 const searchQuery = ref('')
+const displayLimit = ref(50) // Start with 50 weapons, load more on scroll
 
 // Get wishlist
 const wishlist = computed(() => {
@@ -257,7 +268,7 @@ const groupedByWeapon = computed(() => {
 })
 
 // Filter by search
-const filteredGroups = computed(() => {
+const allFilteredGroups = computed(() => {
   const query = searchQuery.value.toLowerCase().trim()
   if (!query) {
     return Array.from(groupedByWeapon.value.entries())
@@ -270,6 +281,29 @@ const filteredGroups = computed(() => {
     // Check item notes
     return items.some((item) => item.notes?.toLowerCase().includes(query))
   })
+})
+
+// Paginated groups - only show up to displayLimit weapons at a time
+const filteredGroups = computed(() => {
+  return allFilteredGroups.value.slice(0, displayLimit.value)
+})
+
+// Check if there are more to load
+const hasMoreGroups = computed(() => {
+  return allFilteredGroups.value.length > displayLimit.value
+})
+
+const remainingCount = computed(() => {
+  return allFilteredGroups.value.length - displayLimit.value
+})
+
+function loadMore() {
+  displayLimit.value += 50
+}
+
+// Reset pagination when search changes
+watch(searchQuery, () => {
+  displayLimit.value = 50
 })
 
 // Initialize
