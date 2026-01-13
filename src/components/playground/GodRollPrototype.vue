@@ -3,7 +3,7 @@
     <!-- Header Controls -->
     <div class="flex items-center justify-between bg-gray-800 p-4 rounded-lg">
       <div class="space-y-1">
-        <h3 class="text-xl font-bold text-white">God Roll Builder Prototype</h3>
+        <h3 class="text-xl font-bold text-white">Roll Builder Prototype</h3>
         <p class="text-sm text-gray-400">Define your target, see what matches.</p>
       </div>
       
@@ -70,7 +70,7 @@
             class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded text-sm font-semibold transition-colors flex items-center gap-2"
           >
             <span v-if="hasUnsavedChanges">*</span>
-            {{ currentProfileId ? 'Save Changes' : 'Save God Roll' }}
+            {{ currentProfileId ? 'Save Changes' : 'Save Roll' }}
           </button>
         </div>
       </div>
@@ -83,7 +83,7 @@
       <div class="lg:col-span-2 space-y-4">
         <!-- ... (Header and Legend) ... -->
         <div class="flex items-center justify-between">
-          <h4 class="font-bold text-lg">God Roll Selector</h4>
+          <h4 class="font-bold text-lg">Roll Selector</h4>
           <span class="text-xs uppercase tracking-wider text-gray-500">Anonymous Autumn</span>
         </div>
 
@@ -179,10 +179,10 @@
 
     <!-- Bottom: Saved Profiles (Persistence Demo) -->
     <div class="border-t border-gray-700 pt-8">
-      <h4 class="font-bold text-lg mb-4">Saved God Rolls</h4>
-      
+      <h4 class="font-bold text-lg mb-4">Saved Rolls</h4>
+
       <div v-if="savedProfiles.length === 0" class="text-center text-gray-500 py-8 bg-gray-900/30 rounded border border-dashed border-gray-700">
-        No saved profiles yet. Click "Save God Roll" to create one.
+        No saved profiles yet. Click "Save Roll" to create one.
       </div>
 
       <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

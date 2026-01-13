@@ -15,14 +15,6 @@
         </RouterLink>
 
         <RouterLink
-          v-if="authStore.isAuthenticated"
-          to="/godrolls"
-          class="text-gray-300 hover:text-white transition"
-        >
-          God Roll Manager
-        </RouterLink>
-
-        <RouterLink
           to="/wishlists"
           class="text-gray-300 hover:text-white transition"
         >

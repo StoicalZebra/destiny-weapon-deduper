@@ -15,7 +15,7 @@
       <div class="xl:col-span-2 space-y-4">
         <!-- Header -->
         <div class="flex items-center justify-between">
-          <h4 class="font-bold text-lg">God Roll Creator</h4>
+          <h4 class="font-bold text-lg">Wishlist Roll Editor</h4>
           
           <div class="flex items-center gap-4">
              <!-- Legend -->
@@ -103,7 +103,7 @@
                  </label>
                  <textarea
                     v-model="profileNotesInput"
-                    placeholder="Add notes about this God Roll (e.g., PvP Roll, Best for add clear)..."
+                    placeholder="Add notes about this roll (e.g., PvP Roll, Best for add clear)..."
                     rows="2"
                     class="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-600 resize-none"
                  />
@@ -127,7 +127,7 @@
         
         <!-- Saved Profiles List -->
         <div v-if="displayProfiles.length > 0" class="space-y-3 pt-4 border-t border-gray-700/50">
-           <h4 class="font-bold text-sm text-gray-400 uppercase tracking-wider">Saved God Rolls</h4>
+           <h4 class="font-bold text-sm text-gray-400 uppercase tracking-wider">Saved to Wishlist</h4>
            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               <div
                  v-for="profile in displayProfiles"
@@ -556,8 +556,8 @@ const isCurrentProfileLocked = computed(() => {
 
 // Button state computed properties (simplified - no names in DIM format)
 const buttonLabel = computed(() => {
-    if (!currentProfileId.value) return 'Save God Roll'
-    return 'Update God Roll'
+    if (!currentProfileId.value) return 'Save to Wishlist'
+    return 'Update Roll'
 })
 
 // Dynamic save target text
@@ -568,7 +568,7 @@ const saveTargetText = computed(() => {
             return `Saves to "${wishlist.name}" wishlist`
         }
     }
-    return 'Saves to your "My God Rolls" wishlist in DIM-compatible format'
+    return 'Saves to your personal wishlist in DIM-compatible format'
 })
 
 const buttonClasses = computed(() => {

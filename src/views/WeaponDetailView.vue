@@ -18,7 +18,7 @@
     v-else-if="!weaponsStore.loading && hasGodRolls && weaponFromManifest"
     :weapon-hash="weaponHash"
     :weapon-def="weaponFromManifest"
-    @back="router.push('/godrolls')"
+    @back="router.push('/')"
   />
 
   <!-- Loading state -->
@@ -64,8 +64,8 @@ const weaponHash = computed(() => {
   return typeof raw === 'string' ? Number(raw) : Array.isArray(raw) ? Number(raw[0]) : NaN
 })
 
-const initialTab = computed<'coverage' | 'godroll'>(() => {
-  return route.query.tab === 'godrolls' ? 'godroll' : 'coverage'
+const initialTab = computed<'coverage' | 'editrolls'>(() => {
+  return route.query.tab === 'editrolls' ? 'editrolls' : 'coverage'
 })
 
 // Edit mode params from wishlist detail page

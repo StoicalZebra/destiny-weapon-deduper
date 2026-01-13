@@ -228,7 +228,7 @@ Workflow
         - Clicking "edit" on each entry brings up the "God Roll Creator" UI to allow edits. Update brings back to main custom wishlist view
         - change cards for each entry in wishlist to mimic DIM perk matrix
 
-
+- [ ] DIM markings: mark as junk in DIM
 
 
 

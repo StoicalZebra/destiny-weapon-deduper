@@ -88,7 +88,7 @@
         />
       </div>
 
-      <div v-else-if="activeTab === 'godroll'">
+      <div v-else-if="activeTab === 'editrolls'">
         <WeaponsGodRoll
           ref="godRollRef"
           :weapon="weapon"
@@ -119,7 +119,7 @@ interface Props {
   fallbackTitle?: string
   loadingMessage?: string
   notFoundMessage?: string
-  initialTab?: 'coverage' | 'godroll'
+  initialTab?: 'coverage' | 'editrolls'
   editItemId?: string
   editWishlistId?: string
 }
@@ -139,24 +139,24 @@ defineEmits<{
   back: []
 }>()
 
-const activeTab = ref<'coverage' | 'godroll'>(props.initialTab)
+const activeTab = ref<'coverage' | 'editrolls'>(props.initialTab)
 const godRollRef = ref<InstanceType<typeof WeaponsGodRoll> | null>(null)
 
 const tabs = [
   { id: 'coverage', label: 'Perk Coverage' },
-  { id: 'godroll', label: 'Set your God Rolls' }
+  { id: 'editrolls', label: 'Edit Wishlist Rolls' }
 ] as const
 
 // Handle loading a wishlist item into the God Roll Creator
 async function handleLoadWishlistItem(item: WishlistItem, _wishlist: Wishlist) {
-  activeTab.value = 'godroll'
+  activeTab.value = 'editrolls'
   await nextTick()
   godRollRef.value?.loadWishlistItem(item)
 }
 
 // Handle editing a wishlist item in the God Roll Creator
 async function handleEditWishlistItem(item: WishlistItem, wishlist: Wishlist) {
-  activeTab.value = 'godroll'
+  activeTab.value = 'editrolls'
   await nextTick()
   godRollRef.value?.editWishlistItem(item, wishlist)
 }

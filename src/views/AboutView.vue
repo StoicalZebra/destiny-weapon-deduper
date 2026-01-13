@@ -13,7 +13,7 @@
           </li>
           <li class="flex items-start">
             <span class="text-green-400 mr-2">✓</span>
-            <span>Track your god roll progress for each weapon</span>
+            <span>Track your wishlist progress for each weapon</span>
           </li>
           <li class="flex items-start">
             <span class="text-green-400 mr-2">✓</span>

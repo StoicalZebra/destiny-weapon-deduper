@@ -2,11 +2,11 @@
   <div class="max-w-2xl mx-auto">
     <h1 class="text-3xl font-bold mb-8">Settings</h1>
 
-    <!-- God Roll Data Section -->
+    <!-- Wishlist Data Section -->
     <div class="rounded-xl border border-gray-700 bg-gray-800 p-6 mb-6">
-      <h2 class="text-xl font-semibold mb-2">God Roll Data</h2>
+      <h2 class="text-xl font-semibold mb-2">Wishlist Data</h2>
       <p class="text-sm text-gray-400 mb-6">
-        You have <span class="text-white font-medium">{{ stats.rollCount }}</span> god rolls
+        You have <span class="text-white font-medium">{{ stats.rollCount }}</span> saved rolls
         across <span class="text-white font-medium">{{ stats.weaponCount }}</span> weapons
       </p>
 
@@ -16,7 +16,7 @@
         :disabled="stats.rollCount === 0"
         class="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors mb-6"
       >
-        Export God Rolls
+        Export Wishlist Data
       </button>
 
       <!-- Import Drop Zone -->
@@ -60,9 +60,9 @@
     <!-- Import Mode Dialog -->
     <div v-if="showImportDialog" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
       <div class="bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4 border border-gray-700">
-        <h3 class="text-lg font-semibold mb-2">Import God Rolls</h3>
+        <h3 class="text-lg font-semibold mb-2">Import Wishlist Data</h3>
         <p class="text-sm text-gray-400 mb-4">
-          Found {{ pendingImport?.godRolls.length }} weapons with god rolls.
+          Found {{ pendingImport?.godRolls.length }} weapons with saved rolls.
           How would you like to import?
         </p>
 
@@ -96,7 +96,7 @@
     <div class="rounded-xl border border-red-900/50 bg-red-950/20 p-6 mb-6">
       <h2 class="text-xl font-semibold text-red-400 mb-2">Danger Zone</h2>
       <p class="text-sm text-gray-400 mb-4">
-        This action cannot be undone. Consider exporting your god rolls first.
+        This action cannot be undone. Consider exporting your wishlist data first.
       </p>
 
       <button
@@ -105,7 +105,7 @@
         :disabled="stats.rollCount === 0"
         class="px-4 py-2 bg-red-600 hover:bg-red-500 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
       >
-        Clear All God Rolls
+        Clear All Wishlist Data
       </button>
 
       <div v-else class="flex items-center gap-3">
@@ -129,7 +129,7 @@
     <div class="rounded-xl border border-gray-700 bg-gray-800/50 p-6">
       <h2 class="text-xl font-semibold mb-2">About Storage</h2>
       <p class="text-sm text-gray-400 mb-4">
-        Your god rolls are stored locally in your browser using localStorage. They persist across sessions and survive normal cache clearing.
+        Your wishlist data is stored locally in your browser using localStorage. It persists across sessions and survives normal cache clearing.
       </p>
       <div class="text-sm text-gray-400 space-y-2">
         <p class="font-medium text-gray-300">Your data will be lost if you:</p>
@@ -139,7 +139,7 @@
           <li>Use private/incognito mode</li>
         </ul>
         <p class="mt-4 text-gray-500">
-          Use the Export feature above to back up your god rolls and transfer them between devices.
+          Use the Export feature above to back up your wishlist data and transfer it between devices.
         </p>
       </div>
     </div>
@@ -221,9 +221,9 @@ function confirmImport(mode: 'merge' | 'replace') {
   const result = godRollStorageService.importAll(pendingImport.value, mode)
 
   if (mode === 'merge') {
-    importMessage.value = `Imported ${result.imported} god rolls. ${result.skipped > 0 ? `Skipped ${result.skipped} duplicates.` : ''}`
+    importMessage.value = `Imported ${result.imported} rolls. ${result.skipped > 0 ? `Skipped ${result.skipped} duplicates.` : ''}`
   } else {
-    importMessage.value = `Replaced all god rolls. Imported ${result.imported} rolls across ${result.weaponsAffected} weapons.`
+    importMessage.value = `Replaced all wishlist data. Imported ${result.imported} rolls across ${result.weaponsAffected} weapons.`
   }
 
   importSuccess.value = true
@@ -239,7 +239,7 @@ function cancelImport() {
 
 function handleClearAll() {
   const count = godRollStorageService.clearAll()
-  importMessage.value = `Cleared ${count} weapons worth of god rolls.`
+  importMessage.value = `Cleared ${count} weapons worth of wishlist data.`
   importSuccess.value = true
   showClearConfirm.value = false
   refreshStats()

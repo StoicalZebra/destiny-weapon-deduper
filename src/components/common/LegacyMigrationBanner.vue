@@ -21,11 +21,11 @@
           />
         </svg>
         <div>
-          <h4 class="font-semibold text-amber-200">Legacy God Rolls Found</h4>
+          <h4 class="font-semibold text-amber-200">Legacy Rolls Found</h4>
           <p class="text-sm text-amber-300/80 mt-1">
-            You have {{ stats.rollCount }} god roll{{ stats.rollCount === 1 ? '' : 's' }}
+            You have {{ stats.rollCount }} roll{{ stats.rollCount === 1 ? '' : 's' }}
             across {{ stats.weaponCount }} weapon{{ stats.weaponCount === 1 ? '' : 's' }}
-            stored in the old format. Migrate them to your "My God Rolls" wishlist for
+            stored in the old format. Migrate them to your personal wishlist for
             better DIM compatibility.
           </p>
         </div>
@@ -60,9 +60,9 @@
     >
       <p class="text-sm">
         <span v-if="migrationResult.migrated > 0">
-          Successfully migrated {{ migrationResult.migrated }} god roll{{ migrationResult.migrated === 1 ? '' : 's' }}.
+          Successfully migrated {{ migrationResult.migrated }} roll{{ migrationResult.migrated === 1 ? '' : 's' }}.
         </span>
-        <span v-else>No new god rolls to migrate.</span>
+        <span v-else>No new rolls to migrate.</span>
         <span v-if="migrationResult.errors.length > 0" class="text-amber-400">
           {{ migrationResult.errors.length }} error{{ migrationResult.errors.length === 1 ? '' : 's' }} occurred.
         </span>

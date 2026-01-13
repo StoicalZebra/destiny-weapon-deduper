@@ -316,7 +316,7 @@ function handleEditItem(item: WishlistItem, weaponHash: number) {
     name: 'weapon-detail',
     params: { weaponHash: weaponHash.toString() },
     query: {
-      tab: 'godrolls',
+      tab: 'editrolls',
       editItemId: item.id,
       wishlistId: wishlist.value.id
     }

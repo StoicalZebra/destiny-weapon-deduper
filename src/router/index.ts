@@ -6,7 +6,6 @@ import CallbackView from '@/views/CallbackView.vue'
 import WeaponDetailView from '@/views/WeaponDetailView.vue'
 import PlaygroundView from '@/views/PlaygroundView.vue'
 import SettingsView from '@/views/SettingsView.vue'
-import GodRollsView from '@/views/GodRollsView.vue'
 import WishlistsView from '@/views/WishlistsView.vue'
 import WishlistDetailView from '@/views/WishlistDetailView.vue'
 
@@ -44,12 +43,6 @@ const router = createRouter({
       path: '/settings',
       name: 'settings',
       component: SettingsView
-    },
-    {
-      path: '/godrolls',
-      name: 'godrolls',
-      component: GodRollsView,
-      meta: { requiresAuth: true }
     },
     {
       path: '/wishlists',

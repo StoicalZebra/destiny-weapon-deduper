@@ -48,7 +48,7 @@
       <!-- Weapon Grid -->
       <div v-else class="space-y-6">
         <p class="text-gray-400">
-          Select a weapon below to see the full perk coverage and god roll experience.
+          Select a weapon below to see the full perk coverage and wishlist experience.
         </p>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

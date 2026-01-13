@@ -19,9 +19,9 @@
           <span class="absolute left-0 bottom-full mb-2 hidden group-hover/tooltip:block z-50 w-72 p-3 text-xs font-normal bg-gray-900 border border-amber-600 rounded-lg shadow-xl text-gray-200">
             <span class="font-bold text-amber-300 block mb-2">Admin Mode - How to add picks:</span>
             <ol class="list-decimal list-inside space-y-1 text-gray-400 text-[11px]">
-              <li>Select perks in God Roll Creator below</li>
+              <li>Select perks in Wishlist Roll Editor below</li>
               <li>Click + Add Community Pick</li>
-              <li>Fill form & click Copy from God Roll Creator</li>
+              <li>Fill form & click Copy from Wishlist Roll Editor</li>
               <li>Click Add Pick → <span class="text-amber-300">JSON from ALL saved Community Picks are copied to clipboard</span></li>
               <li>Open data/community-picks.json</li>
               <li><span class="text-amber-300">Select All → Paste</span> (replace entire file with clipboard contents)</li>
@@ -116,13 +116,13 @@
             </div>
           </div>
 
-          <!-- Add to God Rolls Button -->
+          <!-- Add to Wishlist Button -->
           <button
             v-if="!isPickAlreadySaved(pick)"
             @click.stop="emit('saveToMyRolls', pick)"
             class="w-full text-[10px] px-2 py-1.5 rounded bg-green-700 hover:bg-green-600 text-white border border-green-600 transition-colors"
           >
-            Add to my God Rolls
+            Add to my Wishlist
           </button>
           <div
             v-else
@@ -214,7 +214,7 @@
           <!-- Perk Selection Info -->
           <div class="p-3 bg-gray-800/50 rounded-lg border border-gray-700">
             <p class="text-xs text-gray-400 mb-2">
-              <strong class="text-gray-300">Perk Selection:</strong> Use the God Roll Creator below to select perks, then copy the selection here.
+              <strong class="text-gray-300">Perk Selection:</strong> Use the Wishlist Roll Editor below to select perks, then copy the selection here.
             </p>
             <div class="flex flex-wrap gap-1 mb-2">
               <span
@@ -233,7 +233,7 @@
               @click="copyCurrentSelection"
               class="text-xs px-2 py-1 rounded bg-purple-900/50 hover:bg-purple-900 text-purple-200 border border-purple-800 transition-colors"
             >
-              Copy from God Roll Creator
+              Copy from Wishlist Roll Editor
             </button>
           </div>
 

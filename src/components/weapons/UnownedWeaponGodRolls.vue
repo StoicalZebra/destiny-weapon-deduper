@@ -24,24 +24,24 @@
         @click="$emit('back')"
         class="text-sm text-blue-400 hover:text-blue-300"
       >
-        &larr; Back to God Roll Manager
+        &larr; Back to Weapons
       </button>
     </div>
 
     <!-- Info Banner -->
     <div class="mb-6 p-4 bg-gray-800/50 rounded-lg border border-gray-700">
       <p class="text-sm text-gray-400">
-        You have saved god rolls for this weapon, but it's not currently in your inventory.
+        You have saved wishlist rolls for this weapon, but it's not currently in your inventory.
         The perk selection grid is only available for weapons you own.
       </p>
     </div>
 
-    <!-- Saved God Rolls -->
+    <!-- Saved Wishlist Rolls -->
     <div class="space-y-4">
-      <h2 class="text-lg font-bold text-gray-200">Saved God Rolls</h2>
+      <h2 class="text-lg font-bold text-gray-200">Saved Wishlist Rolls</h2>
 
       <div v-if="profiles.length === 0" class="text-center py-8 text-gray-500">
-        No saved god rolls found.
+        No saved wishlist rolls found.
       </div>
 
       <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
