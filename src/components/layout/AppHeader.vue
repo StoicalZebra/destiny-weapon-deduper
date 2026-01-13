@@ -8,17 +8,17 @@
 
       <nav class="flex items-center gap-6">
         <RouterLink
-          to="/about"
-          class="text-gray-300 hover:text-white transition"
-        >
-          About
-        </RouterLink>
-
-        <RouterLink
           to="/wishlists"
           class="text-gray-300 hover:text-white transition"
         >
           Wishlists
+        </RouterLink>
+
+        <RouterLink
+          to="/about"
+          class="text-gray-300 hover:text-white transition"
+        >
+          About
         </RouterLink>
 
         <div v-if="authStore.isAuthenticated" class="flex items-center gap-3">
