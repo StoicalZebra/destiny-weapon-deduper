@@ -1,9 +1,12 @@
 <template>
   <div class="text-center max-w-4xl mx-auto">
-    <h1 class="text-5xl font-bold mb-6">Destiny Weapon Deduper</h1>
-    <p class="text-xl text-gray-400 mb-4">Destiny 2 Weapon Deduplication Manager</p>
+    <h1 class="text-5xl font-bold mb-8">Destiny Weapon Deduper</h1>
 
-    <div class="my-12 p-8 bg-gray-800 rounded-lg flex gap-8 items-center">
+    <div class="mb-12">
+      <LoginButton class="!px-12 !py-4 !text-lg" />
+    </div>
+
+    <div class="p-8 bg-gray-800 rounded-lg flex gap-8 items-center">
       <div class="flex-1">
         <h2 class="text-2xl font-semibold mb-4 text-left">What is Destiny Weapon Deduper?</h2>
         <ul class="text-left space-y-3 text-gray-300">
@@ -28,10 +31,6 @@
       <div class="flex-1">
         <img src="/images/icon.webp" alt="Destiny Weapon Deduper" class="max-w-full rounded-lg" />
       </div>
-    </div>
-
-    <div class="mt-8">
-      <LoginButton />
     </div>
 
     <div class="mt-12">
