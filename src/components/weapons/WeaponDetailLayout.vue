@@ -99,13 +99,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick } from 'vue'
+import { ref, nextTick, onMounted, watch } from 'vue'
 import WeaponsCoverage from '@/components/weapons/WeaponsCoverage.vue'
 import WeaponsGodRoll from '@/components/weapons/WeaponsGodRoll.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import ErrorMessage from '@/components/common/ErrorMessage.vue'
 import WeaponIcon from '@/components/common/WeaponIcon.vue'
 import LegacyMigrationBanner from '@/components/common/LegacyMigrationBanner.vue'
+import { useWishlistsStore } from '@/stores/wishlists'
 import type { DedupedWeapon } from '@/models/deduped-weapon'
 import type { WishlistItem, Wishlist } from '@/models/wishlist'
 
@@ -119,6 +120,8 @@ interface Props {
   loadingMessage?: string
   notFoundMessage?: string
   initialTab?: 'coverage' | 'godroll'
+  editItemId?: string
+  editWishlistId?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -157,4 +160,40 @@ async function handleEditWishlistItem(item: WishlistItem, wishlist: Wishlist) {
   await nextTick()
   godRollRef.value?.editWishlistItem(item, wishlist)
 }
+
+// Load edit item from URL params
+const wishlistsStore = useWishlistsStore()
+
+async function loadEditItem() {
+  if (!props.editItemId || !props.editWishlistId) return
+
+  // Ensure wishlists store is initialized
+  if (!wishlistsStore.initialized) {
+    await wishlistsStore.initialize(false)
+  }
+
+  // Find the wishlist and item
+  const wishlist = wishlistsStore.getWishlistById(props.editWishlistId)
+  if (!wishlist) return
+
+  const item = wishlist.items.find(i => i.id === props.editItemId)
+  if (!item) return
+
+  // Trigger edit mode
+  await handleEditWishlistItem(item, wishlist)
+}
+
+// Trigger edit when component mounts with edit params
+onMounted(() => {
+  if (props.editItemId && props.editWishlistId) {
+    loadEditItem()
+  }
+})
+
+// Also watch for weapon to load (in case it wasn't ready at mount)
+watch(() => props.weapon, (newWeapon) => {
+  if (newWeapon && props.editItemId && props.editWishlistId) {
+    loadEditItem()
+  }
+}, { immediate: false })
 </script>

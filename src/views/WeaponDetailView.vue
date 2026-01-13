@@ -6,6 +6,8 @@
     :loading="weaponsStore.loading"
     :error="weaponsStore.error"
     :initial-tab="initialTab"
+    :edit-item-id="editItemId"
+    :edit-wishlist-id="editWishlistId"
     back-label="Back to all weapons"
     loading-message="Loading your arsenal..."
     @back="router.push('/')"
@@ -65,6 +67,10 @@ const weaponHash = computed(() => {
 const initialTab = computed<'coverage' | 'godroll'>(() => {
   return route.query.tab === 'godrolls' ? 'godroll' : 'coverage'
 })
+
+// Edit mode params from wishlist detail page
+const editItemId = computed(() => route.query.editItemId as string | undefined)
+const editWishlistId = computed(() => route.query.wishlistId as string | undefined)
 
 const selectedWeapon = computed(() => {
   if (!Number.isFinite(weaponHash.value)) return null

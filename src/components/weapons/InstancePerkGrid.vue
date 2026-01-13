@@ -8,37 +8,26 @@
         :key="colIdx"
         class="flex flex-col gap-1"
       >
-        <div
+        <PerkIcon
           v-for="perkHash in column"
           :key="perkHash"
-          class="relative group"
-          :title="getTooltip(perkHash)"
+          :perk-hash="perkHash"
+          size="md"
+          :variant="getPerkVariant(perkHash)"
+          :custom-tooltip="getTooltip(perkHash)"
         >
-          <!-- Perk icon with ring indicator -->
-          <div
-            class="w-6 h-6 rounded-full overflow-hidden relative"
-            :class="getPerkRingClass(perkHash)"
-          >
-            <img
-              v-if="getPerkIcon(perkHash)"
-              :src="`https://www.bungie.net${getPerkIcon(perkHash)}`"
-              class="w-full h-full object-cover"
-              :alt="getPerkName(perkHash)"
-            />
-            <div v-else class="w-full h-full bg-gray-700"></div>
-          </div>
-
-          <!-- Wishlist thumbs-up indicator -->
-          <div
-            v-if="isWishlistPerk(perkHash)"
-            class="absolute -top-0.5 -right-0.5 w-3 h-3 bg-green-600 rounded-full flex items-center justify-center shadow-lg"
-            :title="getWishlistTooltip(perkHash)"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-2 w-2 text-white" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
-            </svg>
-          </div>
-        </div>
+          <!-- Wishlist thumbs-up indicator badge -->
+          <template #badge v-if="isWishlistPerk(perkHash)">
+            <div
+              class="absolute -top-0.5 -right-0.5 w-3 h-3 bg-green-600 rounded-full flex items-center justify-center shadow-lg"
+              :title="getWishlistTooltip(perkHash)"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-2 w-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
+              </svg>
+            </div>
+          </template>
+        </PerkIcon>
       </div>
     </div>
   </div>
@@ -49,6 +38,7 @@ import { computed } from 'vue'
 import type { WeaponInstance } from '@/models/weapon-instance'
 import type { PerkColumn } from '@/models/deduped-weapon'
 import { manifestService } from '@/services/manifest-service'
+import PerkIcon from '@/components/common/PerkIcon.vue'
 
 const props = defineProps<{
   instance: WeaponInstance
@@ -86,6 +76,14 @@ const organizedPerks = computed(() => {
   return columns
 })
 
+// Determine variant based on highlight state
+function getPerkVariant(perkHash: number): 'highlighted' | 'owned' {
+  if (props.highlightedPerks?.has(perkHash)) {
+    return 'highlighted'
+  }
+  return 'owned'
+}
+
 // Check if perk is in wishlist recommendations
 function isWishlistPerk(perkHash: number): boolean {
   return props.wishlistPerkAnnotations?.has(perkHash) ?? false
@@ -96,22 +94,6 @@ function getWishlistTooltip(perkHash: number): string {
   const wishlists = props.wishlistPerkAnnotations?.get(perkHash)
   if (!wishlists || wishlists.length === 0) return ''
   return `Recommended by: ${wishlists.join(', ')}`
-}
-
-// Get ring class for perk icon
-function getPerkRingClass(perkHash: number): string {
-  // Highlighted from god roll selection
-  if (props.highlightedPerks?.has(perkHash)) {
-    return 'ring-2 ring-orange-400 ring-offset-1 ring-offset-gray-900'
-  }
-  // Default owned perk (white ring)
-  return 'ring-1 ring-white/80 ring-offset-1 ring-offset-gray-900'
-}
-
-// Get perk icon from manifest
-function getPerkIcon(perkHash: number): string | null {
-  const def = manifestService.getInventoryItem(perkHash)
-  return def?.displayProperties?.icon || null
 }
 
 // Get perk name from manifest
@@ -126,7 +108,7 @@ function getPerkDescription(perkHash: number): string {
   return def?.displayProperties?.description || ''
 }
 
-// Build full tooltip
+// Build full tooltip (including wishlist info)
 function getTooltip(perkHash: number): string {
   const name = getPerkName(perkHash)
   const desc = getPerkDescription(perkHash)

@@ -136,39 +136,33 @@
                 </span>
               </div>
 
-              <!-- Perks -->
-              <div class="space-y-1 mb-2">
-                <div
-                  v-for="perkHash in item.perkHashes"
-                  :key="perkHash"
-                  class="flex items-center gap-2"
-                >
-                  <img
-                    v-if="getPerkIcon(perkHash)"
-                    :src="`https://www.bungie.net${getPerkIcon(perkHash)}`"
-                    :alt="getPerkName(perkHash)"
-                    class="w-5 h-5 rounded"
-                  />
-                  <div v-else class="w-5 h-5 rounded bg-gray-700 flex items-center justify-center">
-                    <span class="text-gray-500 text-[8px]">?</span>
-                  </div>
-                  <span class="text-xs text-gray-300 truncate">{{ getPerkName(perkHash) }}</span>
-                </div>
-              </div>
+              <!-- Perks - DIM-style matrix -->
+              <WishlistPerkMatrix
+                :weapon-hash="weaponHash"
+                :perk-hashes="item.perkHashes"
+                class="mb-2"
+              />
 
               <!-- Notes -->
               <p v-if="item.notes" class="text-xs text-gray-500 line-clamp-3">
                 {{ item.notes }}
               </p>
 
-              <!-- Delete button for user wishlists -->
-              <button
-                v-if="wishlist.sourceType === 'user'"
-                @click="handleDeleteItem(item.id)"
-                class="mt-2 text-xs text-red-400 hover:text-red-300"
-              >
-                Remove
-              </button>
+              <!-- Action buttons for user wishlists -->
+              <div v-if="wishlist.sourceType === 'user'" class="mt-2 flex gap-3">
+                <button
+                  @click="handleEditItem(item, weaponHash)"
+                  class="text-xs text-blue-400 hover:text-blue-300"
+                >
+                  Edit
+                </button>
+                <button
+                  @click="handleDeleteItem(item.id)"
+                  class="text-xs text-red-400 hover:text-red-300"
+                >
+                  Remove
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -189,13 +183,15 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useWishlistsStore } from '@/stores/wishlists'
 import { manifestService } from '@/services/manifest-service'
 import { getWishlistStats } from '@/services/dim-wishlist-parser'
+import WishlistPerkMatrix from '@/components/wishlists/WishlistPerkMatrix.vue'
 import type { WishlistItem, WishlistTag } from '@/models/wishlist'
 
 const route = useRoute()
+const router = useRouter()
 const wishlistsStore = useWishlistsStore()
 
 const loading = ref(true)
@@ -261,16 +257,6 @@ function getWeaponIcon(hash: number): string | null {
   return def?.displayProperties?.icon || null
 }
 
-function getPerkName(hash: number): string {
-  const def = manifestService.getInventoryItem(hash)
-  return def?.displayProperties?.name || `Unknown (${hash})`
-}
-
-function getPerkIcon(hash: number): string | null {
-  const def = manifestService.getInventoryItem(hash)
-  return def?.displayProperties?.icon || null
-}
-
 function formatDate(isoString?: string): string {
   if (!isoString) return 'Unknown'
   const date = new Date(isoString)
@@ -321,5 +307,19 @@ function handleExport() {
 function handleDeleteItem(itemId: string) {
   if (!wishlist.value) return
   wishlistsStore.removeItemFromWishlist(wishlist.value.id, itemId)
+}
+
+function handleEditItem(item: WishlistItem, weaponHash: number) {
+  if (!wishlist.value) return
+  // Navigate to weapon detail page with edit params
+  router.push({
+    name: 'weapon-detail',
+    params: { weaponHash: weaponHash.toString() },
+    query: {
+      tab: 'godrolls',
+      editItemId: item.id,
+      wishlistId: wishlist.value.id
+    }
+  })
 }
 </script>

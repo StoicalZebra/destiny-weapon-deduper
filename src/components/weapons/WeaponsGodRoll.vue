@@ -39,14 +39,14 @@
           </div>
         </div>
 
-        <div class="bg-gray-900 border border-gray-700 rounded-lg overflow-hidden relative">
+        <div class="bg-gray-900 border border-gray-700 rounded-lg overflow-hidden">
           <!-- Column Headers -->
-          <div 
-             class="grid gap-px bg-gray-800 border-b border-gray-700" 
+          <div
+             class="grid gap-px bg-gray-800 border-b border-gray-700"
              :style="{ gridTemplateColumns: `repeat(${matrixColumns.length}, minmax(0, 1fr))` }"
           >
-            <div 
-              v-for="col in matrixColumns" 
+            <div
+              v-for="col in matrixColumns"
               :key="col.columnIndex"
               class="p-2 text-[10px] uppercase font-bold text-center text-gray-400 tracking-wider truncate"
             >
@@ -54,35 +54,40 @@
             </div>
           </div>
 
-          <!-- Matrix Content -->
-          <div class="flex">
-            <div 
-              v-for="column in matrixColumns" 
+          <!-- Matrix Content (matches Coverage tab styling) -->
+          <div class="flex gap-2 p-2">
+            <div
+              v-for="column in matrixColumns"
               :key="column.columnIndex"
-              class="flex-1 border-r border-gray-800 last:border-r-0"
+              class="flex-1 flex flex-col gap-1"
             >
-              <div 
-                v-for="perk in column.availablePerks" 
+              <div
+                v-for="perk in getAvailablePerks(column)"
                 :key="perk.hash"
-                class="relative h-10 border-b border-gray-800 last:border-b-0 cursor-pointer group select-none"
-                :class="getSelectionClasses(perk.hash)"
+                class="relative px-2 py-1.5 rounded-lg border cursor-pointer group transition-all duration-200"
+                :class="getPerkRowClasses(perk)"
                 @click="toggleSelection(perk.hash, $event)"
               >
-                 <!-- Owned Indicator (Subtle stripe or dot) -->
-                 <div v-if="perk.isOwned" class="absolute left-0 top-0 bottom-0 w-0.5 bg-green-500/30"></div>
-
                 <!-- Content -->
                 <div
-                  class="relative z-10 flex items-center h-full px-2 gap-1.5 overflow-hidden"
+                  class="relative z-10 flex items-center gap-1.5"
                   :title="perk.description || perk.name"
                 >
-                   <img
-                    v-if="perk.icon"
-                    :src="`https://www.bungie.net${perk.icon}`"
-                    class="w-5 h-5 rounded flex-shrink-0"
-                  />
-                  <div v-else class="w-5 h-5 rounded bg-gray-700 flex-shrink-0"></div>
-                  <span class="text-[10px] font-medium truncate leading-tight">{{ perk.name }}</span>
+                  <div class="relative flex-shrink-0 ml-0.5">
+                    <!-- Perk icon with ring indicator -->
+                    <div
+                      class="w-6 h-6 rounded-full overflow-hidden"
+                      :class="getPerkIconClasses(perk)"
+                    >
+                      <img
+                        v-if="perk.icon"
+                        :src="`https://www.bungie.net${perk.icon}`"
+                        class="w-full h-full object-cover"
+                      />
+                      <div v-else class="w-full h-full bg-gray-700"></div>
+                    </div>
+                  </div>
+                  <span class="text-[10px] font-medium truncate select-none leading-tight" :class="perk.isOwned ? 'text-gray-200' : 'text-gray-500'">{{ perk.name }}</span>
                 </div>
               </div>
             </div>
@@ -104,7 +109,7 @@
                  />
                  <p v-if="saveError" class="text-xs text-red-400 mt-1">{{ saveError }}</p>
                  <p class="text-xs text-gray-500 mt-1">
-                    Saves to your "My God Rolls" wishlist in DIM-compatible format
+                    {{ saveTargetText }}
                  </p>
               </div>
 
@@ -131,26 +136,19 @@
                  :class="{ 'ring-2 ring-blue-500/50 border-blue-500/50 bg-blue-900/10': isProfileActive(profile) }"
                  @click="loadProfile(profile)"
               >
-                 <div class="flex justify-between items-start">
-                    <div class="min-w-0 flex-1">
-                       <div class="flex items-center gap-1.5 mb-1">
-                          <svg v-if="profile.isFromCommunityPick" xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-purple-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" title="Community Pick">
-                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                          </svg>
-                          <span class="text-[10px] text-gray-500">
-                             {{ profile.item.perkHashes.length }} perks
-                          </span>
-                       </div>
-                       <p v-if="profile.item.notes" class="text-xs text-gray-300 line-clamp-2">
-                          {{ profile.item.notes }}
-                       </p>
-                       <p v-else class="text-xs text-gray-500 italic">
-                          No notes
-                       </p>
+                 <!-- Header row with community pick icon and actions -->
+                 <div class="flex justify-between items-start mb-2">
+                    <div class="flex items-center gap-1.5">
+                       <svg v-if="profile.isFromCommunityPick" xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-purple-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" title="Community Pick">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                       </svg>
+                       <span class="text-[10px] text-gray-500">
+                          {{ profile.item.perkHashes.length }} perks
+                       </span>
                     </div>
 
                     <!-- Actions -->
-                    <div class="flex items-center gap-2 ml-2" @click.stop>
+                    <div class="flex items-center gap-2" @click.stop>
                        <template v-if="profile.showDeleteConfirm">
                           <span class="text-[10px] text-red-400 font-bold">Sure?</span>
                           <button
@@ -179,30 +177,44 @@
                        </template>
                     </div>
                  </div>
+
+                 <!-- DIM-style perk matrix -->
+                 <WishlistPerkMatrix
+                    :weapon-hash="weapon.weaponHash"
+                    :perk-hashes="profile.item.perkHashes"
+                 />
+
+                 <!-- Notes (if any) -->
+                 <p v-if="profile.item.notes" class="text-xs text-gray-400 mt-2 line-clamp-2">
+                    {{ profile.item.notes }}
+                 </p>
               </div>
            </div>
         </div>
 
       </div>
 
-      <!-- Right: Matches List -->
+      <!-- Right: Instances List (matches Coverage tab styling) -->
       <div class="space-y-4">
-        <h4 class="font-bold text-lg">Your Owned Rolls</h4>
-        <div class="space-y-2">
+        <h4 class="font-bold text-lg">In Your Inventory ({{ weapon.instances.length }})</h4>
+        <div class="grid grid-cols-3 gap-2">
           <div
             v-for="(instance, index) in weapon.instances"
             :key="instance.itemInstanceId"
-            class="p-3 rounded-lg border transition-all duration-200"
+            class="p-2 rounded-lg border transition-all duration-200"
             :class="getMatchClasses(instance.itemInstanceId)"
           >
-            <div class="flex items-center justify-between mb-2">
-              <span class="font-bold text-sm">Roll {{ index + 1 }}</span>
-              <span
-                v-if="isMatch(instance.itemInstanceId)"
-                class="text-[10px] font-bold px-1.5 py-0.5 bg-green-900 text-green-300 rounded uppercase tracking-wide"
-              >
-                Match
-              </span>
+            <div class="flex items-center justify-between mb-1.5 gap-1">
+              <span class="font-bold text-xs">Copy {{ index + 1 }}</span>
+              <div class="flex items-center gap-1">
+                <span
+                  v-if="isMatch(instance.itemInstanceId)"
+                  class="text-[10px] font-bold px-1.5 py-0.5 bg-green-900 text-green-300 rounded uppercase tracking-wide"
+                >
+                  Match
+                </span>
+                <span :class="getTierClass(instance.gearTier)" class="text-[10px]">{{ formatTier(instance.gearTier) }}</span>
+              </div>
             </div>
 
             <!-- Instance Perk Grid with wishlist annotations -->
@@ -222,15 +234,17 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
-import type { DedupedWeapon } from '@/models/deduped-weapon'
+import type { DedupedWeapon, PerkColumn } from '@/models/deduped-weapon'
 import type { WeaponInstance } from '@/models/weapon-instance'
+import type { Perk } from '@/models/perk'
 import type { CommunityPick } from '@/models/community-pick'
-import type { WishlistItem } from '@/models/wishlist'
+import type { WishlistItem, Wishlist } from '@/models/wishlist'
 import { useWishlistsStore } from '@/stores/wishlists'
 import type { GodRollSelection, PerkColumnInfo } from '@/services/dim-wishlist-parser'
-import { getWishlistPerkAnnotations } from '@/services/dim-wishlist-parser'
+import { getWishlistPerkAnnotations, selectionToWishlistItem } from '@/services/dim-wishlist-parser'
 import CommunityPicks from './CommunityPicks.vue'
 import InstancePerkGrid from './InstancePerkGrid.vue'
+import WishlistPerkMatrix from '@/components/wishlists/WishlistPerkMatrix.vue'
 
 const props = defineProps<{
   weapon: DedupedWeapon
@@ -285,6 +299,7 @@ const toggleSelection = (perkHash: number, event: MouseEvent) => {
 const clearSelection = () => {
   selection.value = {}
   currentProfileId.value = null
+  sourceWishlistId.value = null
   profileNotesInput.value = ''
 }
 
@@ -359,6 +374,7 @@ interface DisplayProfile {
 
 const displayProfiles = ref<DisplayProfile[]>([])
 const currentProfileId = ref<string | null>(null)
+const sourceWishlistId = ref<string | null>(null) // Track which wishlist we're editing from
 const profileNotesInput = ref('')
 const saveError = ref<string | null>(null)
 
@@ -391,33 +407,69 @@ const handleSave = () => {
 
     saveError.value = null
 
-    // Save to wishlists store
-    const savedItem = wishlistsStore.saveGodRollSelection(
-        selection.value,
-        props.weapon.weaponHash,
-        perkColumnsForStore.value,
-        {
-            notes: trimmedNotes || undefined,
-            existingItemId: currentProfileId.value || undefined
-        }
-    )
+    let savedItem: WishlistItem
 
-    // Update local display state
-    if (currentProfileId.value) {
-        // Update existing
+    // If editing from a specific wishlist, update there instead of "My God Rolls"
+    if (sourceWishlistId.value && currentProfileId.value) {
+        // Convert selection to perk hashes using the helper that creates a full item
+        const tempItem = selectionToWishlistItem(
+            selection.value,
+            props.weapon.weaponHash,
+            perkColumnsForStore.value
+        )
+        const perkHashes = tempItem.perkHashes
+
+        wishlistsStore.updateItemInWishlist(
+            sourceWishlistId.value,
+            currentProfileId.value,
+            {
+                perkHashes,
+                notes: trimmedNotes || undefined
+            }
+        )
+
+        // Build the updated item for local state
+        savedItem = {
+            id: currentProfileId.value,
+            weaponHash: props.weapon.weaponHash,
+            perkHashes,
+            notes: trimmedNotes || undefined
+        }
+
+        // Update local display state
         const idx = displayProfiles.value.findIndex(p => p.id === currentProfileId.value)
         if (idx !== -1) {
             displayProfiles.value[idx].item = savedItem
         }
     } else {
-        // Add new
-        displayProfiles.value.push({
-            id: savedItem.id,
-            item: savedItem,
-            isFromCommunityPick: false,
-            showDeleteConfirm: false
-        })
-        currentProfileId.value = savedItem.id
+        // Save to default "My God Rolls" wishlist (existing behavior)
+        savedItem = wishlistsStore.saveGodRollSelection(
+            selection.value,
+            props.weapon.weaponHash,
+            perkColumnsForStore.value,
+            {
+                notes: trimmedNotes || undefined,
+                existingItemId: currentProfileId.value || undefined
+            }
+        )
+
+        // Update local display state
+        if (currentProfileId.value) {
+            // Update existing
+            const idx = displayProfiles.value.findIndex(p => p.id === currentProfileId.value)
+            if (idx !== -1) {
+                displayProfiles.value[idx].item = savedItem
+            }
+        } else {
+            // Add new
+            displayProfiles.value.push({
+                id: savedItem.id,
+                item: savedItem,
+                isFromCommunityPick: false,
+                showDeleteConfirm: false
+            })
+            currentProfileId.value = savedItem.id
+        }
     }
 }
 
@@ -508,6 +560,17 @@ const buttonLabel = computed(() => {
     return 'Update God Roll'
 })
 
+// Dynamic save target text
+const saveTargetText = computed(() => {
+    if (sourceWishlistId.value) {
+        const wishlist = wishlistsStore.getWishlistById(sourceWishlistId.value)
+        if (wishlist) {
+            return `Saves to "${wishlist.name}" wishlist`
+        }
+    }
+    return 'Saves to your "My God Rolls" wishlist in DIM-compatible format'
+})
+
 const buttonClasses = computed(() => {
     if (!currentProfileId.value) {
         return 'bg-green-700 hover:bg-green-600 text-white border border-green-600'
@@ -572,13 +635,15 @@ const loadWishlistItem = (item: WishlistItem) => {
 }
 
 // Edit an existing wishlist item in the Creator
-const editWishlistItem = (item: WishlistItem, _wishlist: unknown) => {
+const editWishlistItem = (item: WishlistItem, wishlist: Wishlist) => {
     selection.value = wishlistsStore.loadWishlistItemAsSelection(
         item,
         perkColumnsForStore.value
     )
     // Link to the existing item for update mode
     currentProfileId.value = item.id
+    // Track which wishlist we're editing from (for save-back)
+    sourceWishlistId.value = wishlist.id
     profileNotesInput.value = item.notes || ''
 
     // Make sure this item is in our display profiles
@@ -600,11 +665,49 @@ defineExpose({
 
 // --- Styles ---
 
-const getSelectionClasses = (perkHash: number) => {
-  const type = selection.value[perkHash]
-  if (type === 'OR') return 'bg-blue-600/30 border-blue-500/50'
-  if (type === 'AND') return 'bg-orange-600/30 border-orange-500/50'
-  return 'bg-gray-800 hover:bg-gray-700'
+// Filter out retired perks that can no longer roll on current weapon versions
+const getAvailablePerks = (column: PerkColumn) => {
+  return column.availablePerks.filter(perk => !perk.cannotCurrentlyRoll)
+}
+
+// Row background and border classes (matches Coverage tab styling + selection state)
+const getPerkRowClasses = (perk: Perk) => {
+  const selectionType = selection.value[perk.hash]
+
+  // Selected states take priority
+  if (selectionType === 'OR') {
+    return 'bg-blue-900/40 border-blue-500/70 ring-1 ring-blue-500/50'
+  }
+  if (selectionType === 'AND') {
+    return 'bg-orange-900/40 border-orange-500/70 ring-1 ring-orange-500/50'
+  }
+
+  // Unowned perks are dimmed
+  if (!perk.isOwned) return 'bg-gray-800/30 border-gray-700/50 hover:bg-gray-700/30'
+
+  // Default owned state
+  return 'bg-gray-800 border-gray-700 hover:bg-gray-700'
+}
+
+// Perk icon ring classes (matches Coverage tab styling + selection state)
+const getPerkIconClasses = (perk: Perk) => {
+  const selectionType = selection.value[perk.hash]
+
+  // Selected states
+  if (selectionType === 'AND') {
+    return 'ring-2 ring-orange-400 ring-offset-1 ring-offset-gray-900'
+  }
+  if (selectionType === 'OR') {
+    return 'ring-2 ring-blue-400 ring-offset-1 ring-offset-gray-900'
+  }
+
+  // Owned perk (white ring)
+  if (perk.isOwned) {
+    return 'ring-1 ring-white/80 ring-offset-1 ring-offset-gray-900'
+  }
+
+  // Not owned (dimmed with gray ring)
+  return 'ring-1 ring-gray-700 opacity-40'
 }
 
 const getMatchClasses = (instId: string) => {
@@ -612,6 +715,22 @@ const getMatchClasses = (instId: string) => {
   return isMatch(instId)
     ? 'bg-green-900/20 border-green-500/50 ring-1 ring-green-500/30'
     : 'bg-gray-800 border-gray-700 opacity-50'
+}
+
+// Tier display helpers (matching Coverage tab)
+function formatTier(tier: number | null | undefined): string {
+  if (!tier) {
+    return 'No Tier'
+  }
+  const stars = '★'.repeat(tier)
+  return `Tier ${tier} ${stars}`
+}
+
+function getTierClass(tier: number | null | undefined): string {
+  if (!tier) {
+    return 'text-gray-600'
+  }
+  return 'text-gray-400'
 }
 
 </script>
