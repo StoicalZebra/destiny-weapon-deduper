@@ -322,6 +322,55 @@ The wishlist system handles large datasets (Voltron wishlists contain 100k+ item
 
 ---
 
+## Wishlist Format: DIM vs Little Light JSON
+
+This app uses **DIM's `.txt` format** for wishlist storage. Here's why:
+
+### Format Comparison
+
+**DIM Format (`.txt`)** — One line per exact perk combination:
+```
+dimwishlist:item=2819552809&perks=1147230557,2126519017,1926441324,2541826827
+dimwishlist:item=2819552809&perks=1147230557,4273542183,1926441324,2541826827
+dimwishlist:item=2819552809&perks=2860123632,2126519017,1926441324,2541826827
+// ...9 lines for a 3×3×1×1 roll
+```
+
+**Little Light JSON** — One object per roll with arrays of acceptable perks:
+```json
+{
+  "hash": 2819552809,
+  "plugs": [
+    [1147230557, 2860123632, 111235976],  // Column 1: ANY of these
+    [2126519017, 4273542183, 3210123846], // Column 2: ANY of these
+    [1926441324],
+    [2541826827]
+  ]
+}
+// 1 object for the same 3×3×1×1 roll
+```
+
+### Comparison
+
+| Aspect | DIM `.txt` | Little Light JSON |
+|--------|------------|-------------------|
+| **Lines per roll** | Exponential (3×3×1×1 = 9 lines) | Linear (1 object) |
+| **Metadata** | Comments (`//notes:`, `//tags:`) | First-class fields |
+| **DIM compatibility** | Native | Requires conversion |
+| **Community standard** | Yes (Voltron, etc.) | No |
+| **Human readable** | Somewhat | Yes |
+
+### Why We Chose DIM Format
+
+1. **DIM is the ecosystem standard** — All major community wishlists (Voltron, Pandapaxxy, etc.) use DIM format
+2. **No conversion needed** — Import and export work directly with DIM
+3. **The "extra lines" cost is invisible** — Users don't see the file, they just see "roll matches" or not
+4. **Storage is cheap** — Even Voltron's 240K lines is only ~10MB
+
+The only scenario where JSON pays off is building a standalone wishlist editor where DIM compatibility is secondary. Since our primary use case is DIM integration, storing in DIM format avoids conversion overhead on both import and export.
+
+---
+
 ## Wishlist Types & Permissions
 
 | Type | Can Edit | Card Buttons | Notes |
