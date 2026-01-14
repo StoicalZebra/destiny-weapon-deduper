@@ -86,6 +86,22 @@
                 <span class="text-text-muted">Nice to Have / Optional Perk (Shift+Click)</span>
               </span>
             </div>
+             <!-- Enhance Toggle Button (only show if weapon has enhanceable perks) -->
+             <button
+                v-if="hasEnhanceablePerks"
+                @click="toggleEnhancedMode"
+                class="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded border transition-colors"
+                :class="enhancedMode
+                  ? 'bg-amber-900/50 border-amber-500/70 text-amber-300 hover:bg-amber-900/70'
+                  : 'bg-surface-elevated hover:bg-surface-overlay border-border text-text-muted hover:text-text'"
+                :title="enhancedMode ? 'Show base perks' : 'Show enhanced perks'"
+             >
+                <!-- Up arrow icon for enhanced -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" :class="enhancedMode ? 'text-amber-400' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                </svg>
+                <span>Enhance</span>
+             </button>
              <button
                 @click="clearSelection"
                 class="text-xs px-3 py-1.5 rounded bg-surface-elevated hover:bg-surface-overlay border border-border transition-colors text-text-muted hover:text-text"
@@ -121,29 +137,48 @@
                 v-for="perk in getAvailablePerks(column)"
                 :key="perk.hash"
                 class="relative px-2 py-1.5 rounded-lg border cursor-pointer group transition-all duration-200"
-                :class="getPerkRowClasses(perk)"
-                @click="toggleSelection(perk.hash, $event)"
+                :class="getPerkRowClasses(perk, column)"
+                @click="toggleSelection(perk, column, $event)"
               >
                 <!-- Content -->
                 <div
                   class="relative z-10 flex items-center gap-1.5"
-                  :title="perk.description || perk.name"
+                  :title="getPerkTooltip(perk, column)"
                 >
                   <div class="relative flex-shrink-0 ml-0.5 w-8 h-8">
                     <!-- Perk icon with ring indicator -->
                     <div
                       class="w-8 h-8 rounded-full overflow-hidden"
-                      :class="getPerkIconClasses(perk)"
+                      :class="getPerkIconClasses(perk, column)"
                     >
                       <img
-                        v-if="perk.icon"
-                        :src="`https://www.bungie.net${perk.icon}`"
+                        v-if="getPerkIcon(perk, column)"
+                        :src="`https://www.bungie.net${getPerkIcon(perk, column)}`"
                         class="w-full h-full object-cover"
                       />
                       <div v-else class="w-full h-full bg-surface-overlay"></div>
                     </div>
+
+                    <!-- Enhanced indicator overlay -->
+                    <div
+                      v-if="isEnhancedDisplay(perk, column)"
+                      class="absolute -top-1 -right-1 w-4 h-4 bg-amber-500 rounded-full flex items-center justify-center shadow-sm"
+                      title="Enhanced"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7" />
+                      </svg>
+                    </div>
                   </div>
-                  <span class="text-xs font-medium truncate select-none leading-tight" :class="perk.isOwned ? 'text-text' : 'text-text-subtle'">{{ perk.name }}</span>
+                  <span
+                    class="text-xs font-medium truncate select-none leading-tight"
+                    :class="[
+                      perk.isOwned ? 'text-text' : 'text-text-subtle',
+                      isEnhancedDisplay(perk, column) ? 'text-amber-200' : ''
+                    ]"
+                  >
+                    {{ isEnhancedDisplay(perk, column) ? perk.name.replace(/^Enhanced\s+/i, '') : perk.name }}
+                  </span>
                 </div>
               </div>
             </div>
@@ -270,20 +305,145 @@ const highlightedPerks = computed(() => {
   return new Set(Object.keys(selection.value).map(Number))
 })
 
+// --- Enhanced Mode State ---
+const enhancedMode = ref(false)
+
+// Build a lookup map for perks (hash -> Perk) for efficient mode conversion
+const perkLookup = computed(() => {
+  const map = new Map<number, Perk>()
+  for (const col of matrixColumns.value) {
+    for (const perk of col.availablePerks) {
+      // Map the primary hash
+      map.set(perk.hash, perk)
+      // Also map variant hashes to the same perk
+      if (perk.variantHashes) {
+        for (const variantHash of perk.variantHashes) {
+          map.set(variantHash, perk)
+        }
+      }
+    }
+  }
+  return map
+})
+
+// Check if any perks in trait columns have enhanced variants
+const hasEnhanceablePerks = computed(() => {
+  for (const col of matrixColumns.value) {
+    // Only trait columns have enhanced variants
+    if (col.columnName === 'Left Trait' || col.columnName === 'Right Trait') {
+      if (col.availablePerks.some(p => p.hasEnhancedVariant)) {
+        return true
+      }
+    }
+  }
+  return false
+})
+
+// Check if a column is a trait column (only trait columns support enhanced perks)
+const isTraitColumn = (columnName: string): boolean => {
+  return columnName === 'Left Trait' || columnName === 'Right Trait'
+}
+
+// Check if a perk should display as enhanced
+const isEnhancedDisplay = (perk: Perk, column: PerkColumn): boolean => {
+  return enhancedMode.value && isTraitColumn(column.columnName) && !!perk.hasEnhancedVariant
+}
+
+// Get the appropriate icon for a perk (enhanced or base depending on mode)
+const getPerkIcon = (perk: Perk, column: PerkColumn): string => {
+  if (isEnhancedDisplay(perk, column) && perk.enhancedIcon) {
+    return perk.enhancedIcon
+  }
+  return perk.icon
+}
+
+// Get the appropriate tooltip for a perk (enhanced or base depending on mode)
+const getPerkTooltip = (perk: Perk, column: PerkColumn): string => {
+  if (isEnhancedDisplay(perk, column) && perk.enhancedDescription) {
+    return perk.enhancedDescription
+  }
+  return perk.description || perk.name
+}
+
+// Toggle enhanced mode
+const toggleEnhancedMode = () => {
+  const newMode = !enhancedMode.value
+
+  // Convert existing selection to new mode
+  if (Object.keys(selection.value).length > 0) {
+    const newSelection: GodRollSelection = {}
+
+    for (const [hashStr, selType] of Object.entries(selection.value)) {
+      const hash = Number(hashStr)
+      const perk = perkLookup.value.get(hash)
+
+      if (perk && perk.hasEnhancedVariant) {
+        // Map to enhanced or base hash based on new mode
+        const targetHash = newMode
+          ? (perk.enhancedHash ?? hash)
+          : (perk.baseHash ?? hash)
+        newSelection[targetHash] = selType
+      } else {
+        // Keep unknown or non-enhanceable hashes as-is
+        newSelection[hash] = selType
+      }
+    }
+
+    selection.value = newSelection
+  }
+
+  enhancedMode.value = newMode
+}
+
+// Get selection state for a perk (checks both base and enhanced hashes)
+const getSelectionForPerk = (perk: Perk): 'AND' | 'OR' | undefined => {
+  // Check primary hash
+  if (selection.value[perk.hash]) {
+    return selection.value[perk.hash]
+  }
+  // Check variant hashes
+  if (perk.variantHashes) {
+    for (const variantHash of perk.variantHashes) {
+      if (selection.value[variantHash]) {
+        return selection.value[variantHash]
+      }
+    }
+  }
+  return undefined
+}
+
 // --- Selection State ---
 const selection = ref<GodRollSelection>({}) // Keyed by hash (number)
 
 const hasSelection = computed(() => Object.keys(selection.value).length > 0)
 
-const toggleSelection = (perkHash: number, event: MouseEvent) => {
-  const current = selection.value[perkHash]
-  
-  if (current) {
+const toggleSelection = (perk: Perk, column: PerkColumn, event: MouseEvent) => {
+  // Determine which hash to use based on enhanced mode and column type
+  const useEnhanced = enhancedMode.value &&
+                      isTraitColumn(column.columnName) &&
+                      perk.hasEnhancedVariant
+
+  const perkHash = useEnhanced
+    ? (perk.enhancedHash ?? perk.hash)
+    : (perk.baseHash ?? perk.hash)
+
+  // Check if there's already a selection for this perk (using either variant)
+  const currentSelection = getSelectionForPerk(perk)
+
+  if (currentSelection) {
+    // Find which hash is currently selected and remove it
+    const currentHash = perk.variantHashes?.find(h => selection.value[h]) ?? perk.hash
+
     if (event.shiftKey) {
-        if (current === 'AND') selection.value[perkHash] = 'OR'
-        else delete selection.value[perkHash]
+      if (currentSelection === 'AND') {
+        // Switch from AND to OR, using the current mode's hash
+        delete selection.value[currentHash]
+        selection.value[perkHash] = 'OR'
+      } else {
+        delete selection.value[currentHash]
+      }
     } else {
-        delete selection.value[perkHash]
+      delete selection.value[currentHash]
     }
   } else {
     // New selection: Click = AND, Shift+Click = OR
@@ -517,6 +677,13 @@ const loadProfile = (profile: DisplayProfile) => {
     )
     currentProfileId.value = profile.id
     profileNotesInput.value = profile.item.notes || ''
+
+    // Auto-detect enhanced mode based on loaded hashes
+    const hasEnhancedHashes = profile.item.perkHashes.some(hash => {
+        const perk = perkLookup.value.get(hash)
+        return perk?.isEnhanced === true
+    })
+    enhancedMode.value = hasEnhancedHashes
 }
 
 const deleteProfile = (id: string) => {
@@ -590,6 +757,13 @@ const loadWishlistItem = (item: WishlistItem) => {
     )
     currentProfileId.value = null
     profileNotesInput.value = item.notes || ''
+
+    // Auto-detect enhanced mode based on loaded hashes
+    const hasEnhancedHashes = item.perkHashes.some(hash => {
+        const perk = perkLookup.value.get(hash)
+        return perk?.isEnhanced === true
+    })
+    enhancedMode.value = hasEnhancedHashes
 }
 
 // Edit an existing wishlist item in the Creator
@@ -612,6 +786,13 @@ const editWishlistItem = (item: WishlistItem, wishlist: Wishlist) => {
             showDeleteConfirm: false
         })
     }
+
+    // Auto-detect enhanced mode based on loaded hashes
+    const hasEnhancedHashes = item.perkHashes.some(hash => {
+        const perk = perkLookup.value.get(hash)
+        return perk?.isEnhanced === true
+    })
+    enhancedMode.value = hasEnhancedHashes
 }
 
 // Expose methods for parent component access
@@ -628,10 +809,25 @@ const getAvailablePerks = (column: PerkColumn) => {
 }
 
 // Row background and border classes (matches Coverage tab styling + selection state)
-const getPerkRowClasses = (perk: Perk) => {
-  const selectionType = selection.value[perk.hash]
+const getPerkRowClasses = (perk: Perk, column: PerkColumn) => {
+  const selectionType = getSelectionForPerk(perk)
+  const enhanced = isEnhancedDisplay(perk, column)
 
-  // Selected states take priority
+  // Enhanced + selected states
+  if (enhanced && selectionType === 'AND') {
+    return 'bg-gradient-to-r from-amber-900/40 to-orange-900/40 border-amber-500/70 ring-1 ring-amber-500/50'
+  }
+  if (enhanced && selectionType === 'OR') {
+    return 'bg-gradient-to-r from-amber-900/30 to-blue-900/40 border-amber-500/50 ring-1 ring-blue-500/30'
+  }
+
+  // Enhanced but not selected - subtle gold tint
+  if (enhanced) {
+    if (!perk.isOwned) return 'bg-amber-900/20 border-amber-600/30 hover:bg-amber-900/30 opacity-60'
+    return 'bg-amber-900/20 border-amber-600/40 hover:bg-amber-900/30'
+  }
+
+  // Non-enhanced selected states
   if (selectionType === 'OR') {
     return 'bg-blue-900/40 border-blue-500/70 ring-1 ring-blue-500/50'
   }
@@ -647,10 +843,26 @@ const getPerkRowClasses = (perk: Perk) => {
 }
 
 // Perk icon ring classes (matches Coverage tab styling + selection state)
-const getPerkIconClasses = (perk: Perk) => {
-  const selectionType = selection.value[perk.hash]
+const getPerkIconClasses = (perk: Perk, column: PerkColumn) => {
+  const selectionType = getSelectionForPerk(perk)
+  const enhanced = isEnhancedDisplay(perk, column)
 
-  // Selected states
+  if (enhanced) {
+    // Gold ring for enhanced perks
+    if (selectionType === 'AND') {
+      return 'ring-2 ring-amber-400 ring-offset-1 ring-offset-surface'
+    }
+    if (selectionType === 'OR') {
+      return 'ring-2 ring-amber-400/70 ring-offset-1 ring-offset-surface'
+    }
+    // Enhanced but not selected
+    if (perk.isOwned) {
+      return 'ring-2 ring-amber-500/50 ring-offset-1 ring-offset-surface'
+    }
+    return 'ring-1 ring-amber-600/40 opacity-40'
+  }
+
+  // Non-enhanced selected states
   if (selectionType === 'AND') {
     return 'ring-2 ring-orange-400 ring-offset-1 ring-offset-surface'
   }

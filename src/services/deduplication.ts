@@ -72,6 +72,26 @@ export function isEnhancedPerkName(name: string): boolean {
   return /^enhanced\s+/i.test(name)
 }
 
+/**
+ * Check if a perk is an enhanced trait by looking at itemTypeDisplayName.
+ * Modern Destiny 2 perks don't have "Enhanced" in their name - instead they have
+ * itemTypeDisplayName === "Enhanced Trait" and a higher tierType.
+ */
+export function isEnhancedPerk(hash: number): boolean {
+  const perkDef = manifestService.getInventoryItem(hash)
+  if (!perkDef) return false
+
+  // Check itemTypeDisplayName first (most reliable)
+  const itemTypeDisplayName = perkDef.itemTypeDisplayName?.toLowerCase() || ''
+  if (itemTypeDisplayName === 'enhanced trait') return true
+
+  // Fallback: check name for legacy perks that might have "Enhanced" prefix
+  const name = perkDef.displayProperties?.name || ''
+  if (isEnhancedPerkName(name)) return true
+
+  return false
+}
+
 function isMasterworkPlug(hash: number): boolean {
   const perkDef = manifestService.getInventoryItem(hash)
   const name = perkDef?.displayProperties?.name?.toLowerCase() || ''
@@ -309,8 +329,9 @@ function buildPerkColumn(
   const availablePerks: Perk[] = []
 
   for (const variants of perkGroups.values()) {
-    const enhancedVariant = variants.find((variant) => isEnhancedPerkName(variant.name))
-    const chosen = enhancedVariant || variants[0]
+    const enhancedVariant = variants.find((variant) => isEnhancedPerk(variant.hash))
+    const baseVariant = variants.find((variant) => !isEnhancedPerk(variant.hash))
+    const chosen = baseVariant || variants[0] // Prefer base variant for display
     const perkDef = manifestService.getInventoryItem(chosen.hash)
 
     let isOwned = variants.some((variant) => ownedPerks.has(variant.hash))
@@ -334,6 +355,20 @@ function buildPerkColumn(
     // Collect all variant hashes (enhanced + non-enhanced) for hover matching
     const variantHashes = variants.map((v) => v.hash)
 
+    // Enhanced perk metadata
+    const hasEnhancedVariant = !!(enhancedVariant && baseVariant)
+
+    // Get enhanced variant's icon and description if available
+    let enhancedDescription: string | undefined
+    let enhancedIcon: string | undefined
+    if (enhancedVariant) {
+      const enhancedDef = manifestService.getInventoryItem(enhancedVariant.hash)
+      if (enhancedDef) {
+        enhancedDescription = enhancedDef.displayProperties?.description || undefined
+        enhancedIcon = enhancedDef.displayProperties?.icon || undefined
+      }
+    }
+
     availablePerks.push({
       hash: chosen.hash,
       name: perkDef?.displayProperties?.name || `Unknown Perk (${chosen.hash})`,
@@ -341,7 +376,13 @@ function buildPerkColumn(
       icon: perkDef?.displayProperties?.icon || '',
       isOwned,
       variantHashes,
-      cannotCurrentlyRoll: cannotCurrentlyRoll || undefined // Only set if true
+      cannotCurrentlyRoll: cannotCurrentlyRoll || undefined, // Only set if true
+      isEnhanced: isEnhancedPerk(chosen.hash),
+      baseHash: baseVariant?.hash,
+      enhancedHash: enhancedVariant?.hash,
+      hasEnhancedVariant,
+      enhancedDescription,
+      enhancedIcon
     })
   }
 

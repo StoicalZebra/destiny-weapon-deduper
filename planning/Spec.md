@@ -77,11 +77,8 @@ User: "I want to tidy up my inventory. I know what "god rolls" I want to keep, s
     - Shader slot (purely cosmetic)
     - Kill tracker slot (track kills in PVE vs PVP etc)
 - Basic vs Enhanced Traits
-    - Assume all traits are enhanced now that tier 5 weapons are raining down from the heavens
-    - Will readress if Bungie changes standard drops
-    - Do not distinguish in our app
-    - [ ] Make sure tooltip shows the definition from the Enhanced trait, not the Basic trait
-    - [ ] Make sure tooltip shows the icon from the Enhanced trait, not the Basic trait
+    - [x] Make sure tooltip shows the definition from the Enhanced trait, not the Basic trait
+    - [x] Make sure tooltip shows the icon from the Enhanced trait, not the Basic trait
 
 
 ## UI

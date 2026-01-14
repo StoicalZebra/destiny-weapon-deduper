@@ -557,6 +557,73 @@ Then take screenshot with descriptive filename:
 
 ---
 
+## Enhanced Perks: Manifest Detection Guide
+
+This section documents how to identify enhanced vs base perks in the Bungie Destiny 2 manifest. This knowledge is essential for the Enhanced Perks feature debugging.
+
+### Key Discovery
+
+**Modern Destiny 2 perks do NOT have "Enhanced" in their display name.** Both base and enhanced variants share the same `displayProperties.name` (e.g., both are "Rapid Hit"). They are differentiated by other manifest fields.
+
+### How to Identify Enhanced Perks
+
+| Field | Base Perk | Enhanced Perk |
+|-------|-----------|---------------|
+| `itemTypeDisplayName` | `"Trait"` | `"Enhanced Trait"` |
+| `tierType` | `2` (Common) | `3` (Uncommon) |
+| `displayProperties.name` | `"Rapid Hit"` | `"Rapid Hit"` (same!) |
+
+**Primary detection method:** Check `itemTypeDisplayName === "Enhanced Trait"`
+
+### Example: Aisha's Embrace Right Trait Perks
+
+The Right Trait plug set (hash `1580292161`) contains both base and enhanced variants:
+
+| Perk Name | Base Hash | Enhanced Hash |
+|-----------|-----------|---------------|
+| Rapid Hit | 247725512 | 2938480696 |
+| Dragonfly | 2848615171 | 1600202343 |
+| Explosive Payload | 3038247973 | 1824513213 |
+
+### Implementation
+
+The detection logic lives in [deduplication.ts](src/services/deduplication.ts):
+
+```typescript
+export function isEnhancedPerk(hash: number): boolean {
+  const perkDef = manifestService.getInventoryItem(hash)
+  if (!perkDef) return false
+
+  // Check itemTypeDisplayName first (most reliable)
+  const itemTypeDisplayName = perkDef.itemTypeDisplayName?.toLowerCase() || ''
+  if (itemTypeDisplayName === 'enhanced trait') return true
+
+  // Fallback: check name for legacy perks that might have "Enhanced" prefix
+  const name = perkDef.displayProperties?.name || ''
+  if (isEnhancedPerkName(name)) return true
+
+  return false
+}
+```
+
+### Debugging Tips
+
+1. **Query IndexedDB directly**: Open DevTools → Application → IndexedDB → `d3deduper` → `manifest`
+   - Look up perk definitions by hash
+   - Check `itemTypeDisplayName` and `tierType` fields
+
+2. **Find plug set hashes**: Weapon definitions contain `sockets.socketEntries[].randomizedPlugSetHash` which points to the plug set containing all possible perks for that column
+
+3. **Verify perk grouping**: Perks are grouped by normalized name (lowercase). Each group should have exactly 2 variants if enhanced exists (base + enhanced)
+
+4. **Console logging**: Add temporary logging in `buildPerkColumn()` to see all perks and their enhanced status
+
+### Historical Context
+
+Prior to ~2023, some enhanced perks DID have "Enhanced" in their name (e.g., "Enhanced Rapid Hit"). The `isEnhancedPerkName()` helper handles these legacy cases. Modern perks require the `isEnhancedPerk()` check using `itemTypeDisplayName`.
+
+---
+
 ## TODO / Future Improvements
 
 - [ ] **Wishlist toggle performance**: Toggle response is ~200-300ms. Goal is instant (<50ms). All obvious optimizations applied; further profiling needed to identify remaining bottleneck.
