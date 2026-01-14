@@ -380,6 +380,43 @@ The StoicalZebra preset wishlist is admin-editable, allowing in-app editing with
 
 ---
 
+## DIM Integration
+
+This app can generate search strings to help you find specific weapons in DIM (Destiny Item Manager).
+
+### Current Feature: Copy to DIM
+
+Each weapon instance has a "Copy to DIM" button that copies the item's instance ID. Paste into DIM's search bar to highlight that specific weapon.
+
+**Workflow:**
+1. Identify duplicates in Destiny Deduper
+2. Click copy button on instances you want to tag
+3. Paste into DIM search bar
+4. Right-click → Tag → Keep or Junk
+5. Repeat for other instances
+6. In DIM, filter `is:junk` → unlock → move to character
+7. Dismantle in-game
+
+### Future: Direct DIM Sync (Planned)
+
+Direct integration with DIM's API to set Keep/Junk tags without leaving this app. This would enable:
+- Click "Keep" or "Junk" directly in Destiny Deduper
+- Tags sync automatically to DIM
+- No copy-paste needed
+
+Requires obtaining a DIM API key (contact DIM team on Discord).
+
+### Other Integration Options Researched
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| **Bungie Lock/Unlock API** | Possible | Requires `MoveEquipDestinyItems` OAuth scope |
+| **DIM Loadout Shares** | Not ideal | Designed for armor builds, not duplicate management |
+| **DIM Tag API** | Planned | Best option for full Keep/Junk workflow |
+
+---
+
 ## TODO / Future Improvements
 
 - [ ] **Wishlist toggle performance**: Toggle response is ~200-300ms. Goal is instant (<50ms). All obvious optimizations applied; further profiling needed to identify remaining bottleneck.
+- [ ] **DIM API Integration**: Implement direct Keep/Junk tagging via DIM's API

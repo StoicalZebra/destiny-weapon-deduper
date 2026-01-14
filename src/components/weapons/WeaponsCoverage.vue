@@ -178,7 +178,22 @@
             @mouseleave="hoveredInstanceId = null"
           >
             <div class="flex items-center justify-between mb-2 gap-1">
-              <span class="font-bold text-xs">Copy {{ index + 1 }}</span>
+              <div class="flex items-center gap-1.5">
+                <!-- DIM selection checkbox -->
+                <button
+                  @click.stop="toggleDIMSelection(instance.itemInstanceId)"
+                  class="w-4 h-4 rounded border flex items-center justify-center transition-colors"
+                  :class="selectedForDIM.has(instance.itemInstanceId)
+                    ? 'bg-blue-500 border-blue-500 text-white'
+                    : 'border-border-subtle hover:border-text-muted'"
+                  title="Select for DIM export"
+                >
+                  <svg v-if="selectedForDIM.has(instance.itemInstanceId)" xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </button>
+                <span class="font-bold text-xs">Copy {{ index + 1 }}</span>
+              </div>
               <span :class="getTierClass(instance.gearTier)" class="text-xs">{{ formatTier(instance.gearTier) }}</span>
             </div>
 
@@ -241,6 +256,53 @@
         </div>
       </div>
     </div>
+
+    <!-- Spacer for sticky footer -->
+    <div v-if="selectedForDIM.size > 0" class="h-16"></div>
+
+    <!-- Sticky Footer for DIM Export -->
+    <Transition
+      enter-active-class="transition-transform duration-200 ease-out"
+      enter-from-class="translate-y-full"
+      enter-to-class="translate-y-0"
+      leave-active-class="transition-transform duration-150 ease-in"
+      leave-from-class="translate-y-0"
+      leave-to-class="translate-y-full"
+    >
+      <div
+        v-if="selectedForDIM.size > 0"
+        class="fixed bottom-0 left-0 right-0 bg-surface-elevated border-t border-border shadow-lg z-50"
+      >
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+          <span class="text-sm font-medium text-text">
+            {{ selectedForDIM.size }} {{ selectedForDIM.size === 1 ? 'item' : 'items' }} selected
+          </span>
+          <div class="flex items-center gap-2">
+            <button
+              @click="clearDIMSelection"
+              class="px-4 py-2 rounded-lg font-medium text-sm transition-colors bg-surface-overlay hover:bg-surface text-text-muted hover:text-text border border-border"
+            >
+              Clear
+            </button>
+            <button
+              @click="copySelectedToDIM"
+              class="px-4 py-2 rounded-lg font-medium text-sm transition-colors flex items-center gap-2"
+              :class="justCopied
+                ? 'bg-green-600 text-white'
+                : 'bg-blue-600 hover:bg-blue-700 text-white'"
+            >
+              <svg v-if="justCopied" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+              <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              {{ justCopied ? 'Copied!' : 'Copy to DIM' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -463,20 +525,22 @@ const instanceHasPerk = (instId: string, perkHash: number): boolean => {
 }
 
 const getInstanceClasses = (instId: string) => {
-  const base = 'bg-surface-elevated border-border'
+  const isSelected = selectedForDIM.value.has(instId)
+  const selectedClass = isSelected ? 'ring-2 ring-blue-500' : ''
+  const base = `bg-surface-elevated border-border ${selectedClass}`
 
   // Simple mode
   if (visualMode.value === 'simple') {
-    if (hoveredInstanceId.value === instId) return 'bg-surface-overlay border-orange-400 ring-1 ring-orange-400'
+    if (hoveredInstanceId.value === instId) return `bg-surface-overlay border-orange-400 ring-1 ring-orange-400 ${selectedClass}`
 
     // Highlight if hovered perk is on this instance (subtle orange border)
     if (hoveredPerkHash.value) {
-      if (instanceHasPerk(instId, hoveredPerkHash.value)) return 'bg-surface-overlay/50 border-orange-400/50'
-      return 'opacity-50'
+      if (instanceHasPerk(instId, hoveredPerkHash.value)) return `bg-surface-overlay/50 border-orange-400/50 ${selectedClass}`
+      return `opacity-50 ${selectedClass}`
     }
 
     if (hoveredInstanceId.value && hoveredInstanceId.value !== instId) {
-      return 'opacity-50'
+      return `opacity-50 ${selectedClass}`
     }
 
     return base
@@ -484,16 +548,16 @@ const getInstanceClasses = (instId: string) => {
 
   // Detailed mode
   if (hoveredInstanceId.value === instId) {
-    return 'ring-2 ring-white border-transparent'
+    return `ring-2 ring-white border-transparent ${isSelected ? 'ring-blue-500' : ''}`
   }
 
   if (hoveredPerkHash.value) {
-    if (instanceHasPerk(instId, hoveredPerkHash.value)) return 'bg-surface-overlay/50 border-orange-400/50'
-    return 'opacity-40 grayscale-[0.5]'
+    if (instanceHasPerk(instId, hoveredPerkHash.value)) return `bg-surface-overlay/50 border-orange-400/50 ${selectedClass}`
+    return `opacity-40 grayscale-[0.5] ${selectedClass}`
   }
 
   if (hoveredInstanceId.value && hoveredInstanceId.value !== instId) {
-    return 'opacity-40 grayscale-[0.5]'
+    return `opacity-40 grayscale-[0.5] ${selectedClass}`
   }
 
   return base
@@ -538,6 +602,43 @@ function toggleTier(tier: number | null) {
     enabledTiers.value.add(tier)
   }
   enabledTiers.value = new Set(enabledTiers.value) // trigger reactivity
+}
+
+// DIM multi-select state
+const selectedForDIM = ref<Set<string>>(new Set())
+const justCopied = ref(false)
+
+function toggleDIMSelection(instanceId: string) {
+  if (selectedForDIM.value.has(instanceId)) {
+    selectedForDIM.value.delete(instanceId)
+  } else {
+    selectedForDIM.value.add(instanceId)
+  }
+  selectedForDIM.value = new Set(selectedForDIM.value) // trigger reactivity
+}
+
+function clearDIMSelection() {
+  selectedForDIM.value = new Set()
+}
+
+async function copySelectedToDIM() {
+  if (selectedForDIM.value.size === 0) return
+
+  // Build search string: id:123 or id:456 or id:789
+  const searchString = Array.from(selectedForDIM.value)
+    .map(id => `id:${id}`)
+    .join(' or ')
+
+  try {
+    await navigator.clipboard.writeText(searchString)
+    justCopied.value = true
+    // Clear the "copied" feedback after 2 seconds
+    setTimeout(() => {
+      justCopied.value = false
+    }, 2000)
+  } catch (err) {
+    console.error('Failed to copy to clipboard:', err)
+  }
 }
 
 </script>
