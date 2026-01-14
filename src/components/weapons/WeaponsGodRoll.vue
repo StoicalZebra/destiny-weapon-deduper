@@ -148,7 +148,7 @@
                   <div class="relative flex-shrink-0 ml-0.5 w-8 h-8">
                     <!-- Perk icon with ring indicator -->
                     <div
-                      class="w-8 h-8 rounded-full overflow-hidden"
+                      class="w-8 h-8 rounded-full overflow-hidden bg-slate-800"
                       :class="getPerkIconClasses(perk, column)"
                     >
                       <img
