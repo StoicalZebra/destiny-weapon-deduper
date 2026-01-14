@@ -504,6 +504,59 @@ Requires obtaining a DIM API key (contact DIM team on Discord).
 
 ---
 
+## Theme Mode Detection (for Browser Testing)
+
+When testing with Playwright MCP or taking screenshots, always verify the current theme mode programmatically before making visual assertions.
+
+### Programmatic Detection
+
+```javascript
+// Check current theme mode
+const isDark = document.documentElement.classList.contains('dark');
+const mode = isDark ? 'DARK' : 'LIGHT';
+
+// Full check with background color verification
+const html = document.documentElement;
+const bgColor = window.getComputedStyle(document.body).backgroundColor;
+// Light mode: rgb(248, 250, 252) - slate-50
+// Dark mode: rgb(15, 23, 42) - slate-900
+```
+
+### Visual Markers by Theme
+
+| Element | Light Mode | Dark Mode |
+|---------|------------|-----------|
+| **Page background** | Light gray (`slate-50`) | Dark blue-gray (`slate-900`) |
+| **Header/nav** | Light with dark text | Dark with light text |
+| **Theme toggle icon** | Sun icon (☀️) | Moon icon (🌙) |
+| **Card backgrounds** | White/light gray | Dark gray (`slate-800`) |
+| **Text color** | Dark (`slate-900`) | Light (`slate-100`) |
+| **Perk icon circles** | Dark (`slate-800`) - **same in both modes** | Dark (`slate-800`) |
+
+### Why Perk Icons Use Dark Backgrounds in Both Modes
+
+Bungie's perk icons are designed for dark backgrounds. The icon images have transparent backgrounds with colored/white foreground elements. Using `bg-slate-800` ensures proper contrast and visibility regardless of the page theme.
+
+**Correct:** `bg-slate-800` (dark background, both modes)
+**Incorrect:** `bg-slate-200 dark:bg-slate-800` (light background in light mode breaks icon visibility)
+
+### Playwright MCP Verification Pattern
+
+Always verify theme before taking screenshots:
+
+```javascript
+// In Playwright MCP browser_evaluate:
+() => ({
+  mode: document.documentElement.classList.contains('dark') ? 'DARK' : 'LIGHT'
+})
+```
+
+Then take screenshot with descriptive filename:
+- `VERIFIED-LIGHT-MODE-feature.png`
+- `VERIFIED-DARK-MODE-feature.png`
+
+---
+
 ## TODO / Future Improvements
 
 - [ ] **Wishlist toggle performance**: Toggle response is ~200-300ms. Goal is instant (<50ms). All obvious optimizations applied; further profiling needed to identify remaining bottleneck.
