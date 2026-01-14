@@ -2,7 +2,10 @@
 """
 YouTube God Roll Agent
 Extracts Destiny 2 god roll recommendations from YouTube videos.
-Outputs DIM-compatible wishlist format (.txt) for import into DIM or D3 app.
+Outputs:
+  - DIM-compatible wishlist format (.txt) for import into DIM or D3 app
+  - Little Light JSON format (.json) for import into Little Light app
+  - Human-readable markdown (.md) for review
 """
 
 import os
@@ -710,10 +713,100 @@ def convert_to_dim_format(all_raw_rolls, wishlist_name, description):
     return "\n".join(lines), uncertain
 
 
+def convert_to_littlelight_format(all_raw_rolls, wishlist_name, description):
+    """Convert raw god rolls to Little Light JSON format.
+
+    Little Light format uses arrays of acceptable perks per column (OR logic),
+    rather than expanding every combination like DIM format.
+
+    Args:
+        all_raw_rolls: List of {'video_info': {...}, 'rolls': [...]} dicts
+        wishlist_name: Name for the wishlist
+        description: Description for the wishlist
+
+    Returns:
+        tuple: (json_string, uncertain_items_list)
+    """
+    data = []
+    uncertain = []
+
+    for item in all_raw_rolls:
+        video_info = item.get('video_info', {})
+        video_title = video_info.get('title', '')
+        video_url = video_info.get('url', '')
+        channel = video_info.get('channel', '')
+
+        for roll in item['rolls']:
+            weapon_name = roll.get('weapon', '')
+            weapon_hash, exact_weapon = lookup_hash(weapon_name, WEAPON_LOOKUP)
+
+            if not weapon_hash:
+                uncertain.append(f"❓ Unknown weapon: '{weapon_name}'")
+                continue
+
+            if not exact_weapon:
+                uncertain.append(f"⚠️ Fuzzy weapon match: '{weapon_name}'")
+
+            # Build plugs array (4 columns: barrel, magazine, trait1, trait2)
+            plugs = []
+
+            for column_key in ['barrel', 'magazine', 'trait1', 'trait2']:
+                column_hashes = []
+                for perk in (roll.get(column_key) or []):
+                    if perk and perk != 'null':
+                        h, exact = lookup_hash(perk, PERK_LOOKUP)
+                        if h:
+                            column_hashes.append(int(h))
+                            if not exact:
+                                uncertain.append(f"⚠️ Fuzzy perk match: '{perk}'")
+                        else:
+                            uncertain.append(f"❓ Unknown perk: '{perk}'")
+                plugs.append(column_hashes)
+
+            # Build tags from mode (Little Light uses GodPVE, GodPVP, PVE, PVP)
+            mode = roll.get('mode', 'Both')
+            tags = []
+            if mode == 'PvE':
+                tags.append('GodPVE')
+            elif mode == 'PvP':
+                tags.append('GodPVP')
+            elif mode == 'Both':
+                tags.extend(['GodPVE', 'GodPVP'])
+
+            # Build roll name from weapon and mode
+            roll_name = f"{weapon_name} - {mode}"
+
+            # Build description with reasoning and source
+            reasoning = roll.get('reasoning', '')
+            desc_parts = []
+            if reasoning:
+                desc_parts.append(reasoning)
+            if video_title:
+                source = f"Source: {channel} - {video_url}" if channel else f"Source: {video_url}"
+                desc_parts.append(source)
+
+            entry = {
+                'hash': int(weapon_hash),
+                'name': roll_name,
+                'description': ' '.join(desc_parts),
+                'plugs': plugs,
+                'tags': tags
+            }
+            data.append(entry)
+
+    result = {
+        'name': wishlist_name,
+        'description': description,
+        'data': data
+    }
+
+    return json.dumps(result, indent=2), uncertain
+
+
 # --- MAIN EXECUTION ---
 if __name__ == "__main__":
     print("=" * 50)
-    print("YouTube God Roll Agent → DIM Wishlist Format")
+    print("YouTube God Roll Agent → DIM + Little Light Formats")
     print("=" * 50)
 
     # Check for lookup files
@@ -855,6 +948,7 @@ if __name__ == "__main__":
 
     # Generate output filenames with weapon name
     dim_filename = os.path.join(OUTPUT_DIR, f"God_Rolls_{timestamp}_{safe_weapon_name}.txt")
+    littlelight_filename = os.path.join(OUTPUT_DIR, f"God_Rolls_{timestamp}_{safe_weapon_name}.json")
     markdown_filename = os.path.join(OUTPUT_DIR, f"God_Rolls_{timestamp}_{safe_weapon_name}.md")
 
     # Generate DIM wishlist format
@@ -870,7 +964,23 @@ if __name__ == "__main__":
 
     # Count dimwishlist lines
     dim_line_count = sum(1 for line in dim_content.split('\n') if line.startswith('dimwishlist:'))
-    print(f"\n✅ Saved {dim_line_count} wishlist entries to {os.path.basename(dim_filename)}")
+    print(f"\n✅ DIM: Saved {dim_line_count} wishlist entries to {os.path.basename(dim_filename)}")
+
+    # Generate Little Light JSON format
+    littlelight_content, ll_uncertain = convert_to_littlelight_format(
+        all_raw_rolls,
+        wishlist_name=wishlist_title,
+        description=wishlist_desc
+    )
+    # Don't duplicate uncertain items (already captured in DIM conversion)
+
+    with open(littlelight_filename, 'w', encoding='utf-8') as f:
+        f.write(littlelight_content)
+
+    # Count entries in Little Light format
+    ll_data = json.loads(littlelight_content)
+    ll_entry_count = len(ll_data.get('data', []))
+    print(f"✅ Little Light: Saved {ll_entry_count} roll entries to {os.path.basename(littlelight_filename)}")
 
     # Human-readable markdown (with review section at bottom)
     with open(markdown_filename, 'w', encoding='utf-8') as f:
@@ -889,4 +999,6 @@ if __name__ == "__main__":
             f.write("## ✅ All items matched successfully!\n")
 
     print(f"📖 Markdown: {os.path.basename(markdown_filename)}")
-    print(f"\n🎉 Done! Import {os.path.basename(dim_filename)} into DIM or D3 app.")
+    print(f"\n🎉 Done!")
+    print(f"   → Import .txt into DIM or D3 app")
+    print(f"   → Import .json into Little Light app")

@@ -369,6 +369,45 @@ dimwishlist:item=2819552809&perks=2860123632,2126519017,1926441324,2541826827
 
 The only scenario where JSON pays off is building a standalone wishlist editor where DIM compatibility is secondary. Since our primary use case is DIM integration, storing in DIM format avoids conversion overhead on both import and export.
 
+### Little Light Import/Export
+
+**Important:** Little Light only supports **JSON import** and **TXT export**. It cannot import DIM `.txt` files directly.
+
+| Direction | Format | Notes |
+|-----------|--------|-------|
+| **Import into Little Light** | `.json` | Must use Little Light JSON schema |
+| **Export from Little Light** | `.txt` | DIM-compatible format |
+
+**Workflow for Little Light users:**
+1. Create wishlist in DIM `.txt` format (or use YouTube agent output)
+2. Convert to Little Light JSON format (manually or with a script)
+3. Import `.json` into Little Light app
+4. Little Light can export back to `.txt` if needed
+
+**Little Light JSON Schema:**
+```json
+{
+  "name": "Wishlist Name",
+  "description": "Description",
+  "data": [
+    {
+      "hash": 2819552809,
+      "name": "Roll name (optional)",
+      "description": "Notes about this roll",
+      "plugs": [
+        [hash1, hash2],       // Barrel/Frame options
+        [hash1],              // Magazine/Battery options
+        [hash1, hash2, hash3], // Perk column 1 options
+        [hash1, hash2]        // Perk column 2 options
+      ],
+      "tags": ["GodPVE", "PVP"]  // PVE, GodPVE, PVP, GodPVP
+    }
+  ]
+}
+```
+
+Reference: [LittleLight Wishlists GitHub](https://github.com/LittleLightForDestiny/littlelight_wishlists)
+
 ---
 
 ## Wishlist Types & Permissions
