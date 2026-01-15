@@ -576,11 +576,13 @@ This section documents how to identify enhanced vs base perks in the Bungie Dest
 
 | Field | Base Perk | Enhanced Perk |
 |-------|-----------|---------------|
-| `itemTypeDisplayName` | `"Trait"` | `"Enhanced Trait"` |
+| `itemTypeDisplayName` | `"Trait"`, `"Barrel"`, etc. | `"Enhanced Trait"`, `"Enhanced Barrel"`, etc. |
 | `tierType` | `2` (Common) | `3` (Uncommon) |
 | `displayProperties.name` | `"Rapid Hit"` | `"Rapid Hit"` (same!) |
 
-**Primary detection method:** Check `itemTypeDisplayName === "Enhanced Trait"`
+**Primary detection method:** Check `itemTypeDisplayName.startsWith("Enhanced ")`
+
+**Known enhanced types:** Enhanced Trait, Enhanced Barrel, Enhanced Magazine, Enhanced Origin Trait, Enhanced Battery, Enhanced Bolt, Enhanced Bowstring, Enhanced Arrow, Enhanced Guard, Enhanced Haft, Enhanced Blade, Enhanced Rail, Enhanced Launcher Barrel, Enhanced Intrinsic
 
 ### Example: Aisha's Embrace Right Trait Perks
 
@@ -601,9 +603,9 @@ export function isEnhancedPerk(hash: number): boolean {
   const perkDef = manifestService.getInventoryItem(hash)
   if (!perkDef) return false
 
-  // Check itemTypeDisplayName first (most reliable)
+  // Check itemTypeDisplayName - all enhanced variants start with "Enhanced "
   const itemTypeDisplayName = perkDef.itemTypeDisplayName?.toLowerCase() || ''
-  if (itemTypeDisplayName === 'enhanced trait') return true
+  if (itemTypeDisplayName.startsWith('enhanced ')) return true
 
   // Fallback: check name for legacy perks that might have "Enhanced" prefix
   const name = perkDef.displayProperties?.name || ''
@@ -612,6 +614,8 @@ export function isEnhancedPerk(hash: number): boolean {
   return false
 }
 ```
+
+**Columns with enhanced support:** Barrel, Magazine, Left Trait, Right Trait, Origin Trait (all columns except Masterwork and Intrinsic)
 
 ### Debugging Tips
 
@@ -635,3 +639,4 @@ Prior to ~2023, some enhanced perks DID have "Enhanced" in their name (e.g., "En
 
 - [ ] **Wishlist toggle performance**: Toggle response is ~200-300ms. Goal is instant (<50ms). All obvious optimizations applied; further profiling needed to identify remaining bottleneck.
 - [ ] **DIM API Integration**: Implement direct Keep/Junk tagging via DIM's API
+- [ ] **Enhanced Origin Traits**: Some origin traits (e.g., "Roar of Battle" on The Martlet) don't show enhanced badge even though Enhanced variants exist in the manifest. The enhanced hash exists but isn't in the weapon's plug set. Need to investigate if this is a Bungie manifest issue or if we need to look up enhanced variants differently (possibly via a global perk → enhanced perk mapping rather than per-weapon plug sets).
