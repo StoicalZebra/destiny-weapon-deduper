@@ -12,6 +12,7 @@
           />
           <div>
             <h1 class="text-2xl font-bold">{{ weapon.weaponName }}</h1>
+            <p v-if="weapon.seasonName" class="text-xs text-text-subtle">{{ weapon.seasonName }}</p>
             <p class="text-xs text-text-subtle">Hash: {{ weapon.weaponHash }}</p>
             <p class="text-xs text-text-subtle">
               {{ weapon.instances.length }} {{ weapon.instances.length === 1 ? 'Copy' : 'Copies' }}<span v-if="subtitle"> {{ subtitle }}</span>

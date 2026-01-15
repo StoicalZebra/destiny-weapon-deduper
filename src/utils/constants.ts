@@ -95,13 +95,14 @@ export const REQUIRED_MANIFEST_TABLES = [
   'DestinyPlugSetDefinition',
   'DestinyStatDefinition',
   'DestinySandboxPerkDefinition',
+  'DestinySeasonDefinition',
 ] as const
 
 export type ManifestTableName = typeof REQUIRED_MANIFEST_TABLES[number]
 
 // IndexedDB configuration
 export const DB_NAME = 'd3deduper'
-export const DB_VERSION = 2 // Incremented for wishlists store
+export const DB_VERSION = 3 // Incremented for DestinySeasonDefinition table
 export const MANIFEST_STORE_NAME = 'manifest'
 export const WISHLIST_STORE_NAME = 'wishlists'
 

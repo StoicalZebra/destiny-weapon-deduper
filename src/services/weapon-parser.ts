@@ -249,6 +249,22 @@ export class WeaponParser {
     // Fall back to the base watermark
     return weaponDef.iconWatermark || undefined
   }
+
+  /**
+   * Get weapon season display name (e.g., "Season 28")
+   * Uses DIM's watermark-to-season mapping since Bungie's JSON manifest
+   * doesn't include seasonHash on weapon definitions
+   */
+  getWeaponSeasonName(itemHash: number): string | undefined {
+    const watermark = this.getWeaponIconWatermark(itemHash)
+    const seasonNumber = manifestService.getSeasonFromWatermark(watermark)
+
+    if (seasonNumber === undefined) {
+      return undefined
+    }
+
+    return `Season ${seasonNumber}`
+  }
 }
 
 export const weaponParser = new WeaponParser()

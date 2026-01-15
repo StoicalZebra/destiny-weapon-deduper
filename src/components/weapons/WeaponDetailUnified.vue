@@ -44,10 +44,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
             </svg>
             <span class="font-medium text-sm text-text">
-              <template v-if="wishlistsAppliedRef">
-                {{ wishlistsAppliedRef.enabledCount }} of {{ wishlistsAppliedRef.totalCount }}
-              </template>
-              Wishlists Applied
+              Wishlists that include this weapon<template v-if="wishlistsAppliedRef">: {{ wishlistsAppliedRef.enabledCount }} of {{ wishlistsAppliedRef.totalCount }} applied</template>
             </span>
           </div>
           <span v-if="!wishlistsExpanded && wishlistsAppliedRef" class="text-xs text-text-subtle truncate ml-2">

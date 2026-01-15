@@ -42,17 +42,34 @@ export const useManifestStore = defineStore('manifest', () => {
 
       if (cachedVersion) {
         console.log('Found cached manifest version:', cachedVersion)
-        version.value = cachedVersion
 
-        // Load tables into memory
-        await manifestService.loadAllTables([...REQUIRED_MANIFEST_TABLES])
+        // Verify all required tables exist in cache
+        let allTablesExist = true
+        for (const tableName of REQUIRED_MANIFEST_TABLES) {
+          const tableData = await indexedDBStorage.getManifestTable(tableName)
+          if (!tableData) {
+            console.log(`Missing required table: ${tableName}, will re-download manifest`)
+            allTablesExist = false
+            break
+          }
+        }
 
-        // Build the global trait-to-enhanced mapping
-        manifestService.buildTraitMapping()
+        if (allTablesExist) {
+          version.value = cachedVersion
 
-        isInitialized.value = true
-        loading.value = false
-        return
+          // Load tables into memory
+          await manifestService.loadAllTables([...REQUIRED_MANIFEST_TABLES])
+
+          // Build the global trait-to-enhanced mapping
+          manifestService.buildTraitMapping()
+
+          isInitialized.value = true
+          loading.value = false
+          return
+        }
+
+        // Missing tables - clear and re-download
+        await indexedDBStorage.clearManifest()
       }
 
       // No cached manifest, need to download

@@ -1,5 +1,6 @@
 import { indexedDBStorage } from '@/utils/storage'
 import type { ManifestTableName } from '@/utils/constants'
+import watermarkToSeason from '@/data/watermark-to-season.json'
 
 /**
  * Generic manifest definition interface
@@ -77,6 +78,21 @@ export interface DestinyPlugSetDefinition extends ManifestDefinition {
     currentlyCanRoll?: boolean
     craftingRequirements?: any
   }>
+}
+
+/**
+ * Season definition
+ */
+export interface DestinySeasonDefinition extends ManifestDefinition {
+  displayProperties: {
+    name: string
+    description: string
+    hasIcon: boolean
+    icon?: string
+  }
+  seasonNumber: number
+  startDate?: string
+  endDate?: string
 }
 
 /**
@@ -165,6 +181,25 @@ class ManifestService {
       'DestinyPlugSetDefinition',
       hash
     )
+  }
+
+  /**
+   * Get season definition
+   */
+  getSeason(hash: number): DestinySeasonDefinition | null {
+    return this.getDefinition<DestinySeasonDefinition>(
+      'DestinySeasonDefinition',
+      hash
+    )
+  }
+
+  /**
+   * Get season number from watermark icon path
+   * Uses DIM's watermark-to-season mapping
+   */
+  getSeasonFromWatermark(watermark: string | undefined): number | undefined {
+    if (!watermark) return undefined
+    return (watermarkToSeason as Record<string, number>)[watermark]
   }
 
   /**

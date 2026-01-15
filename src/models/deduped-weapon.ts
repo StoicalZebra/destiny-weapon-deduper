@@ -7,6 +7,8 @@ export interface DedupedWeapon {
   weaponIcon: string
   // Season/version watermark overlay (small badge in upper-left corner)
   iconWatermark?: string
+  // Season display name (e.g., "Season 28")
+  seasonName?: string
 
   // Merged perk data
   perkMatrix: PerkColumn[]

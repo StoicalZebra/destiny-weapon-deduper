@@ -713,6 +713,7 @@ export function buildDedupedWeapon(
     weaponName: weaponParser.getWeaponName(weaponHash),
     weaponIcon: weaponParser.getWeaponIcon(weaponHash),
     iconWatermark: weaponParser.getWeaponIconWatermark(weaponHash),
+    seasonName: weaponParser.getWeaponSeasonName(weaponHash),
     perkMatrix: matrix,
     intrinsicPerks,
     masterworkPerks,
