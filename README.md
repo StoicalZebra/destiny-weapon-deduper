@@ -222,6 +222,29 @@ destiny_deduper/
 
 The weapon detail view uses a consistent **blue-centric color language** across both Wishlist Editor and Coverage Analysis modes.
 
+### Centralized Style Constants
+
+All UI state styling is defined in a single source of truth: **`src/styles/ui-states.ts`**
+
+This prevents style drift between modes and makes theme changes easy. Import from this file instead of hardcoding Tailwind classes:
+
+```typescript
+import {
+  INSTANCE_CARD_STYLES,  // base, match, dimmed, hovered
+  PERK_RING_STYLES,      // default, selected, hovered, owned, unowned
+  PERK_ROW_STYLES,       // base, selected, hovered, highlighted
+  BADGE_STYLES,          // success, warning, info, error
+  INDICATOR_STYLES,      // wishlist, enhanced (icon badges)
+  BUTTON_STYLES,         // primary, success, warning, danger, ghost
+  INSTANCE_PALETTE,      // colors for coverage visualization
+} from '@/styles/ui-states'
+```
+
+**Key files using centralized styles:**
+- `WeaponDetailUnified.vue` - All instance card and perk styling
+- `PerkIcon.vue` - Ring variant styling
+- `InstancePerkGrid.vue` - Wishlist indicator badges
+
 ### Color Scheme Philosophy
 
 The UI uses only **3 primary perk states** for clarity:
@@ -234,26 +257,26 @@ The UI uses only **3 primary perk states** for clarity:
 
 ### Perk Matrix States
 
-Each perk is displayed as a rounded rectangle card:
+Each perk is displayed as a rounded rectangle card. Use `PERK_ROW_STYLES` and `PERK_RING_STYLES`:
 
-| State | Perk Row | Icon Ring |
-|-------|----------|-----------|
-| **Owned (default)** | `bg-surface-elevated border-border` | `ring-1 ring-white/80` |
-| **Unowned** | `bg-surface-elevated/30 border-border/50` | `ring-1 ring-border opacity-40` |
-| **Hovered** | `bg-surface-overlay border-blue-300` | `ring-2 ring-blue-300` |
-| **Selected** | `bg-blue-900/40 border-blue-500/70` | `ring-2 ring-blue-400` |
+| State | Constant | Visual |
+|-------|----------|--------|
+| **Owned (default)** | `PERK_ROW_STYLES.ownedHover` | Light bg, white ring |
+| **Unowned** | `PERK_ROW_STYLES.unowned` | Faded bg, gray ring |
+| **Hovered** | `PERK_ROW_STYLES.hovered` | Blue border highlight |
+| **Selected** | `PERK_ROW_STYLES.selected` | Dark blue bg, blue ring |
 
 ### Inventory Card States
 
-Instance cards in "In Your Inventory" section:
+Instance cards use `INSTANCE_CARD_STYLES`:
 
-| State | Classes |
-|-------|---------|
-| **Default** | `bg-surface-elevated border-border` |
-| **Hovered** | `bg-surface-overlay border-blue-300 ring-1 ring-blue-300/50` |
-| **Match** (has selected perks) | `bg-blue-900/50 border-blue-400 ring-2 ring-blue-400` |
-| **Non-match** (when selection active) | `opacity-40 grayscale-[0.3]` |
-| **DIM selected** | `ring-2 ring-blue-500` (checkbox checked) |
+| State | Constant | Visual |
+|-------|----------|--------|
+| **Default** | `INSTANCE_CARD_STYLES.base` | Elevated surface |
+| **Hovered** | `INSTANCE_CARD_STYLES.hovered` | Light blue highlight |
+| **Match** | `INSTANCE_CARD_STYLES.match` | Dark blue bg, blue ring |
+| **Non-match** | `INSTANCE_CARD_STYLES.dimmed` | Grayed out |
+| **DIM selected** | `INSTANCE_CARD_STYLES.dimSelected` | Blue selection ring |
 
 ### Instance Sorting
 
@@ -269,12 +292,19 @@ Instance labels show `#XXXX` (last 4 digits of instance ID) with tooltip for ful
 
 ### Special Indicators
 
-| Indicator | Color | Usage |
-|-----------|-------|-------|
-| **Enhanced perk** | Gold arrow (`bg-amber-500`) | Marks enhanced variant |
-| **Wishlist thumbs-up** | Green badge (`bg-green-600`) | Perk recommended by wishlist |
-| **Preset wishlist badge** | Green pill (`bg-green-900/50`) | Built-in wishlist |
-| **Custom wishlist badge** | Blue pill (`bg-blue-900/50`) | User-created wishlist |
+Use `INDICATOR_STYLES` for icon badges:
+
+| Indicator | Constant | Usage |
+|-----------|----------|-------|
+| **Enhanced perk** | `INDICATOR_STYLES.enhanced` | Gold arrow badge |
+| **Wishlist thumbs-up** | `INDICATOR_STYLES.wishlist` | Green badge |
+
+Use `BADGE_STYLES` for text badges:
+
+| Badge | Constant | Usage |
+|-------|----------|-------|
+| **Match** | `BADGE_STYLES.success` | Green "Match" pill |
+| **Warning** | `BADGE_STYLES.warning` | Amber warning text |
 
 ### Mode-Specific Behavior
 

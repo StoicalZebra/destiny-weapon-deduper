@@ -225,7 +225,7 @@
                   <!-- Enhanced indicator badge (upper-left) -->
                   <div
                     v-if="isEnhancedDisplay(perk, column)"
-                    class="absolute -top-0.5 -left-0.5 w-4 h-4 bg-amber-500 rounded-full flex items-center justify-center shadow-lg"
+                    :class="[INDICATOR_STYLES.enhanced, 'absolute -top-0.5 -left-0.5 w-4 h-4 rounded-full flex items-center justify-center shadow-lg']"
                     title="Enhanced Perk"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-2.5 w-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
@@ -236,7 +236,7 @@
                   <!-- Wishlist thumbs-up indicator (upper-right) -->
                   <div
                     v-if="isWishlistPerk(perk.hash)"
-                    class="absolute -top-0.5 -right-0.5 w-4 h-4 bg-green-600 rounded-full flex items-center justify-center shadow-lg"
+                    :class="[INDICATOR_STYLES.wishlist, 'absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center shadow-lg']"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-2.5 w-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
@@ -361,7 +361,7 @@
               <!-- Match badge (when perks selected) -->
               <span
                 v-if="hasSelection && isMatch(instance.itemInstanceId)"
-                class="text-xs font-bold px-1.5 py-0.5 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded uppercase tracking-wide"
+                :class="[BADGE_STYLES.success, 'text-xs font-bold px-1.5 py-0.5 rounded uppercase tracking-wide']"
               >
                 Match
               </span>
@@ -504,7 +504,7 @@
                     <!-- Enhanced indicator badge (upper-left) -->
                     <div
                       v-if="isEnhancedDisplay(perk, column)"
-                      class="absolute -top-0.5 -left-0.5 w-4 h-4 bg-amber-500 rounded-full flex items-center justify-center shadow-lg"
+                      :class="[INDICATOR_STYLES.enhanced, 'absolute -top-0.5 -left-0.5 w-4 h-4 rounded-full flex items-center justify-center shadow-lg']"
                       title="Enhanced Perk"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-2.5 w-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
@@ -515,7 +515,7 @@
                     <!-- Wishlist thumbs-up indicator (upper-right) -->
                     <div
                       v-if="isWishlistPerk(perk.hash)"
-                      class="absolute -top-0.5 -right-0.5 w-4 h-4 bg-green-600 rounded-full flex items-center justify-center shadow-lg"
+                      :class="[INDICATOR_STYLES.wishlist, 'absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center shadow-lg']"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-2.5 w-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
@@ -714,7 +714,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, watchEffect } from 'vue'
 import type { DedupedWeapon, PerkColumn } from '@/models/deduped-weapon'
 import type { WeaponInstance } from '@/models/weapon-instance'
 import type { Perk } from '@/models/perk'
@@ -725,6 +725,15 @@ import { getWishlistPerkAnnotations, selectionToWishlistItem } from '@/services/
 import InstancePerkGrid from './InstancePerkGrid.vue'
 import WishlistPerkMatrix from '@/components/wishlists/WishlistPerkMatrix.vue'
 import WishlistsApplied from './WishlistsApplied.vue'
+import {
+  INSTANCE_CARD_STYLES,
+  PERK_RING_STYLES,
+  PERK_ROW_STYLES,
+  BADGE_STYLES,
+  INDICATOR_STYLES,
+  BUTTON_STYLES,
+  INSTANCE_PALETTE,
+} from '@/styles/ui-states'
 
 const props = defineProps<{
   weapon: DedupedWeapon
@@ -753,6 +762,35 @@ const wishlistsAppliedRef = ref<InstanceType<typeof WishlistsApplied> | null>(nu
 const visualMode = ref<'simple' | 'detailed'>('simple')
 const hoveredPerkHash = ref<number | null>(null)
 const hoveredInstanceId = ref<string | null>(null)
+
+// Debounced hover state for expensive sorting operations (150ms delay)
+const debouncedHoveredPerkHash = ref<number | null>(null)
+let hoverDebounceTimer: ReturnType<typeof setTimeout> | null = null
+
+watchEffect((onCleanup) => {
+  const currentHover = hoveredPerkHash.value
+
+  if (currentHover === null) {
+    // Clear immediately when unhovered
+    debouncedHoveredPerkHash.value = null
+    if (hoverDebounceTimer) {
+      clearTimeout(hoverDebounceTimer)
+      hoverDebounceTimer = null
+    }
+  } else {
+    // Debounce when hovering
+    hoverDebounceTimer = setTimeout(() => {
+      debouncedHoveredPerkHash.value = currentHover
+    }, 150)
+  }
+
+  onCleanup(() => {
+    if (hoverDebounceTimer) {
+      clearTimeout(hoverDebounceTimer)
+      hoverDebounceTimer = null
+    }
+  })
+})
 
 // Instance sorting and filtering
 const sortOrder = ref<'desc' | 'asc' | 'none'>('desc')
@@ -892,11 +930,11 @@ const filteredAndSortedInstances = computed(() => {
     })
   }
 
-  // Coverage mode: sort instances with hovered perk first
-  if (viewMode.value === 'coverage' && hoveredPerkHash.value) {
+  // Coverage mode: sort instances with hovered perk first (uses debounced state to avoid jank)
+  if (viewMode.value === 'coverage' && debouncedHoveredPerkHash.value) {
     instances = [...instances].sort((a, b) => {
-      const aHasPerk = instanceHasPerkAny(a.itemInstanceId, hoveredPerkHash.value!) ? 0 : 1
-      const bHasPerk = instanceHasPerkAny(b.itemInstanceId, hoveredPerkHash.value!) ? 0 : 1
+      const aHasPerk = instanceHasPerkAny(a.itemInstanceId, debouncedHoveredPerkHash.value!) ? 0 : 1
+      const bHasPerk = instanceHasPerkAny(b.itemInstanceId, debouncedHoveredPerkHash.value!) ? 0 : 1
       if (aHasPerk !== bHasPerk) return aHasPerk - bHasPerk
       // Within each group, sort by instance ID
       return compareInstanceIds(a, b)
@@ -1033,15 +1071,17 @@ const getInstancesWithPerk = (perkHash: number, colIndex: number): string[] => {
 }
 
 // ============ INSTANCE HELPERS ============
-const PALETTE = [
-  '#EF4444', '#F97316', '#F59E0B', '#10B981', '#06B6D4', '#3B82F6', '#6366F1', '#8B5CF6', '#EC4899', '#F43F5E',
-  '#84CC16', '#22C55E', '#14B8A6', '#0EA5E9', '#64748B'
-]
+// Cached instance color map - O(1) lookup instead of O(n) findIndex
+const instanceColorMap = computed(() => {
+  const map = new Map<string, string>()
+  props.weapon.instances.forEach((inst, idx) => {
+    map.set(inst.itemInstanceId, INSTANCE_PALETTE[idx % INSTANCE_PALETTE.length])
+  })
+  return map
+})
 
 const getInstanceColor = (instId: string) => {
-  const idx = props.weapon.instances.findIndex(i => i.itemInstanceId === instId)
-  if (idx === -1) return '#6B7280'
-  return PALETTE[idx % PALETTE.length]
+  return instanceColorMap.value.get(instId) ?? '#6B7280'
 }
 
 const isPerkHighlighted = (perkHash: number) => {
@@ -1129,95 +1169,78 @@ const getPerkRowClassesWishlist = (perk: Perk, _column: PerkColumn) => {
   const isSelected = isPerkSelected(perk)
   const isHovered = hoveredPerkHash.value === perk.hash
 
-  // Selected state (highest priority)
-  if (isSelected) {
-    return 'bg-blue-900/40 border-blue-500/70 ring-1 ring-blue-500/50'
-  }
-  // Hovered state (light blue)
-  if (isHovered) {
-    return 'bg-surface-overlay border-blue-300 ring-1 ring-blue-300/50'
-  }
-  // Unowned
-  if (!perk.isOwned) return 'bg-surface-elevated/30 border-border/50 hover:bg-surface-overlay/30'
-  // Owned (default)
-  return 'bg-surface-elevated border-border hover:bg-surface-overlay'
+  if (isSelected) return PERK_ROW_STYLES.selected
+  if (isHovered) return PERK_ROW_STYLES.hovered
+  if (!perk.isOwned) return PERK_ROW_STYLES.unownedHover
+  return PERK_ROW_STYLES.ownedHover
 }
 
 const getPerkIconClassesWishlist = (perk: Perk, _column: PerkColumn) => {
   const isSelected = isPerkSelected(perk)
   const isHovered = hoveredPerkHash.value === perk.hash
 
-  // Selected state (highest priority)
-  if (isSelected) return 'ring-2 ring-blue-400 ring-offset-1 ring-offset-surface'
-  // Hovered state (light blue)
-  if (isHovered) return 'ring-2 ring-blue-300 ring-offset-1 ring-offset-surface'
-  // Owned
-  if (perk.isOwned) return 'ring-1 ring-white/80 ring-offset-1 ring-offset-surface'
-  // Unowned
-  return 'ring-1 ring-border opacity-40'
+  if (isSelected) return PERK_RING_STYLES.selected
+  if (isHovered) return PERK_RING_STYLES.hovered
+  if (perk.isOwned) return PERK_RING_STYLES.owned
+  return PERK_RING_STYLES.unowned
 }
 
 const getInstanceClassesWishlist = (instId: string) => {
   const isSelected = selectedForDIM.value.has(instId)
-  const selectedClass = isSelected ? 'ring-2 ring-blue-500' : ''
+  const selectedClass = isSelected ? INSTANCE_CARD_STYLES.dimSelected : ''
 
-  if (!hasSelection.value) return `bg-surface-elevated border-border ${selectedClass}`
+  if (!hasSelection.value) return `${INSTANCE_CARD_STYLES.base} ${selectedClass}`
   return isMatch(instId)
-    ? `bg-blue-900/50 border-blue-400 ring-2 ring-blue-400 ${selectedClass}`
-    : `bg-surface/50 border-border/50 opacity-40 grayscale-[0.3] ${selectedClass}`
+    ? `${INSTANCE_CARD_STYLES.match} ${selectedClass}`
+    : `${INSTANCE_CARD_STYLES.dimmed} ${selectedClass}`
 }
 
 // ============ STYLING - COVERAGE MODE ============
 // Uses same color language as Wishlist mode: white=owned, blue=hover/highlight
 const getPerkRowClassesCoverage = (perk: Perk, _column: PerkColumn) => {
-  if (hoveredPerkHash.value === perk.hash) return 'bg-surface-overlay border-blue-300 ring-1 ring-blue-300/50'
+  if (hoveredPerkHash.value === perk.hash) return PERK_ROW_STYLES.hovered
   if (hoveredInstanceId.value) {
-    if (isPerkHighlighted(perk.hash)) return 'bg-surface-overlay/50 border-blue-300/50'
-    return 'bg-surface-elevated border-border opacity-40'
+    if (isPerkHighlighted(perk.hash)) return PERK_ROW_STYLES.highlighted
+    return PERK_ROW_STYLES.dimmed
   }
-  if (!perk.isOwned) return 'bg-surface-elevated/30 border-border/50'
-  return 'bg-surface-elevated border-border'
+  if (!perk.isOwned) return PERK_ROW_STYLES.unowned
+  return PERK_ROW_STYLES.base
 }
 
 const getPerkIconClassesCoverage = (perk: Perk) => {
-  if (hoveredPerkHash.value === perk.hash) {
-    return 'ring-2 ring-blue-300 ring-offset-1 ring-offset-surface'
-  }
-  if (perk.isOwned) {
-    return 'ring-1 ring-white/80 ring-offset-1 ring-offset-surface'
-  }
-  return 'ring-1 ring-border opacity-40'
+  if (hoveredPerkHash.value === perk.hash) return PERK_RING_STYLES.hovered
+  if (perk.isOwned) return PERK_RING_STYLES.owned
+  return PERK_RING_STYLES.unowned
 }
 
 const getInstanceClassesCoverage = (instId: string) => {
   const isSelected = selectedForDIM.value.has(instId)
-  const selectedClass = isSelected ? 'ring-2 ring-blue-500' : ''
-  const base = `bg-surface-elevated border-border ${selectedClass}`
+  const selectedClass = isSelected ? INSTANCE_CARD_STYLES.dimSelected : ''
 
   if (visualMode.value === 'simple') {
-    if (hoveredInstanceId.value === instId) return `bg-surface-overlay border-blue-300 ring-1 ring-blue-300/50 ${selectedClass}`
+    if (hoveredInstanceId.value === instId) return `${INSTANCE_CARD_STYLES.hovered} ${selectedClass}`
     if (hoveredPerkHash.value) {
-      if (instanceHasPerk(instId, hoveredPerkHash.value)) return `bg-surface-overlay/50 border-blue-300/50 ${selectedClass}`
-      return `opacity-50 ${selectedClass}`
+      if (instanceHasPerk(instId, hoveredPerkHash.value)) return `${INSTANCE_CARD_STYLES.match} ${selectedClass}`
+      return `${INSTANCE_CARD_STYLES.dimmed} ${selectedClass}`
     }
     if (hoveredInstanceId.value && hoveredInstanceId.value !== instId) {
-      return `opacity-50 ${selectedClass}`
+      return `${INSTANCE_CARD_STYLES.unfocused} ${selectedClass}`
     }
-    return base
+    return `${INSTANCE_CARD_STYLES.base} ${selectedClass}`
   }
 
   // Detailed mode
   if (hoveredInstanceId.value === instId) {
-    return `ring-2 ring-white border-transparent ${isSelected ? 'ring-blue-500' : ''}`
+    return `${INSTANCE_CARD_STYLES.detailedHovered} ${isSelected ? INSTANCE_CARD_STYLES.dimSelected : ''}`
   }
   if (hoveredPerkHash.value) {
-    if (instanceHasPerk(instId, hoveredPerkHash.value)) return `bg-surface-overlay/50 border-blue-300/50 ${selectedClass}`
-    return `opacity-40 grayscale-[0.5] ${selectedClass}`
+    if (instanceHasPerk(instId, hoveredPerkHash.value)) return `${INSTANCE_CARD_STYLES.match} ${selectedClass}`
+    return `${INSTANCE_CARD_STYLES.dimmed} ${selectedClass}`
   }
   if (hoveredInstanceId.value && hoveredInstanceId.value !== instId) {
-    return `opacity-40 grayscale-[0.5] ${selectedClass}`
+    return `${INSTANCE_CARD_STYLES.unfocusedDetailed} ${selectedClass}`
   }
-  return base
+  return `${INSTANCE_CARD_STYLES.base} ${selectedClass}`
 }
 
 const getInstanceStyleCoverage = (instId: string) => {
@@ -1469,9 +1492,9 @@ const saveTargetText = computed(() => {
 
 const buttonClasses = computed(() => {
   if (!currentProfileId.value) {
-    return 'bg-green-700 hover:bg-green-600 text-white border border-green-600'
+    return BUTTON_STYLES.success
   }
-  return 'bg-orange-600 hover:bg-orange-500 text-white border border-orange-500'
+  return BUTTON_STYLES.warning
 })
 
 // Clear message when user types

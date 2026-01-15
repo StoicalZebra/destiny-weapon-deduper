@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, shallowRef } from 'vue'
 import { useAuthStore } from './auth'
 import { inventoryAPI } from '@/api/inventory'
 import { weaponParser } from '@/services/weapon-parser'
@@ -8,9 +8,10 @@ import type { DedupedWeapon } from '@/models/deduped-weapon'
 import type { WeaponInstance } from '@/models/weapon-instance'
 
 export const useWeaponsStore = defineStore('weapons', () => {
-  // State
-  const weapons = ref<DedupedWeapon[]>([])
-  const weaponInstances = ref<WeaponInstance[]>([])
+  // State - use shallowRef for large arrays that are replaced wholesale (not mutated)
+  // This avoids Vue creating deep reactive proxies for hundreds of nested weapon objects
+  const weapons = shallowRef<DedupedWeapon[]>([])
+  const weaponInstances = shallowRef<WeaponInstance[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
 

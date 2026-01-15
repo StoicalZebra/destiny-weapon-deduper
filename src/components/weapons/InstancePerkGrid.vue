@@ -19,7 +19,7 @@
           <!-- Wishlist thumbs-up indicator badge -->
           <template #badge v-if="isWishlistPerk(perkHash)">
             <div
-              class="absolute -top-0.5 -right-0.5 w-4 h-4 bg-green-600 rounded-full flex items-center justify-center shadow-lg"
+              :class="[INDICATOR_STYLES.wishlist, 'absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center shadow-lg']"
               :title="getWishlistTooltip(perkHash)"
             >
               <svg xmlns="http://www.w3.org/2000/svg" class="h-2.5 w-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -39,6 +39,7 @@ import type { WeaponInstance } from '@/models/weapon-instance'
 import type { PerkColumn } from '@/models/deduped-weapon'
 import { manifestService } from '@/services/manifest-service'
 import PerkIcon from '@/components/common/PerkIcon.vue'
+import { INDICATOR_STYLES } from '@/styles/ui-states'
 
 const props = defineProps<{
   instance: WeaponInstance

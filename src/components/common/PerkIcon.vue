@@ -34,6 +34,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { manifestService } from '@/services/manifest-service'
+import { PERK_RING_STYLES, type PerkRingStyle } from '@/styles/ui-states'
 
 const props = withDefaults(defineProps<{
   /** Perk hash to look up from manifest */
@@ -79,22 +80,9 @@ const placeholderTextClass = computed(() => {
   return 'text-xs'
 })
 
-// Ring classes based on variant
+// Ring classes based on variant - uses centralized style constants
 const ringClasses = computed(() => {
-  switch (props.variant) {
-    case 'highlighted':
-      return 'ring-2 ring-orange-500 ring-offset-1 ring-offset-surface'
-    case 'selected':
-      return 'ring-2 ring-blue-400 ring-offset-1 ring-offset-surface'
-    case 'wishlist':
-      return 'ring-2 ring-yellow-500 ring-offset-1 ring-offset-surface'
-    case 'owned':
-      return 'ring-2 ring-emerald-500 ring-offset-1 ring-offset-surface'
-    case 'none':
-      return ''
-    default:
-      return 'ring-1 ring-slate-400 dark:ring-slate-500 ring-offset-1 ring-offset-surface'
-  }
+  return PERK_RING_STYLES[props.variant as PerkRingStyle] ?? PERK_RING_STYLES.default
 })
 
 // Expose computed values for parent components that need them
