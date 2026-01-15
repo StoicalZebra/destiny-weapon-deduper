@@ -86,7 +86,7 @@ src/
 - `WeaponsGodRoll.vue` - God roll selection interface
 - `WeaponsCoverage.vue` - Coverage/completion tracking
 - Single-button save with smart state detection
-- Click/Shift-click interaction for perk selection
+- Click to toggle perk selection (selected perks highlighted in orange)
 
 **UX Features:**
 - Perk tooltips (native `title` attribute) showing descriptions on hover
@@ -150,7 +150,7 @@ npm run test:watch # Run tests in watch mode
 
 - **Framework**: Vitest
 - **Test files**: `src/services/*.test.ts`
-- **Coverage**: 83 tests across 3 service files (manifest-service, weapon-parser, deduplication)
+- **Coverage**: 124 tests across 4 service files (manifest-service, weapon-parser, deduplication, dim-wishlist-parser)
 
 ## Important Notes for Claude
 

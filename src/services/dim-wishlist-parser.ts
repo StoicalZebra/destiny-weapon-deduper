@@ -265,17 +265,10 @@ export async function computeContentHash(content: string): Promise<string> {
 // ==================== God Roll Creator Integration ====================
 
 /**
- * Selection type for God Roll Creator UI
- * AND = required perk (must have)
- * OR = optional/alternative perk (nice to have)
- */
-export type GodRollSelectionType = 'AND' | 'OR'
-
-/**
  * God Roll Creator selection state
- * Maps perk hash to selection type
+ * Set of selected perk hashes
  */
-export type GodRollSelection = Record<number, GodRollSelectionType>
+export type GodRollSelection = Set<number>
 
 /**
  * Perk column info for grouping perks by column
@@ -289,14 +282,9 @@ export interface PerkColumnInfo {
 /**
  * Convert God Roll Creator selection to a WishlistItem
  *
- * Logic:
- * - AND perks are always included in perkHashes
- * - OR perks in the same column are pipe-separated in DIM format
- * - The resulting perkHashes array contains all perk combos
- *
- * @param selection - The AND/OR selection map from God Roll Creator
+ * @param selection - Set of selected perk hashes
  * @param weaponHash - The weapon's hash
- * @param perkColumns - Column info to group perks by column
+ * @param perkColumns - Column info (used to filter to valid perks only)
  * @param options - Optional notes and tags
  */
 export function selectionToWishlistItem(
@@ -309,38 +297,16 @@ export function selectionToWishlistItem(
     existingId?: string
   }
 ): WishlistItem {
-  // Group selected perks by column
-  const perksByColumn = new Map<number, { andPerks: number[]; orPerks: number[] }>()
-
+  // Build set of valid perk hashes for this weapon
+  const validPerkHashes = new Set<number>()
   for (const col of perkColumns) {
-    const andPerks: number[] = []
-    const orPerks: number[] = []
-
     for (const perk of col.availablePerks) {
-      const selType = selection[perk.hash]
-      if (selType === 'AND') {
-        andPerks.push(perk.hash)
-      } else if (selType === 'OR') {
-        orPerks.push(perk.hash)
-      }
-    }
-
-    if (andPerks.length > 0 || orPerks.length > 0) {
-      perksByColumn.set(col.columnIndex, { andPerks, orPerks })
+      validPerkHashes.add(perk.hash)
     }
   }
 
-  // Build perkHashes array
-  // DIM format: perks separated by comma, alternatives in same "slot" by pipe
-  // For our purposes, we flatten AND perks + OR perks per column
-  const perkHashes: number[] = []
-
-  for (const [, { andPerks, orPerks }] of perksByColumn) {
-    // AND perks are required - add them all
-    perkHashes.push(...andPerks)
-    // OR perks are alternatives - also add them (DIM will match if ANY perk in list matches)
-    perkHashes.push(...orPerks)
-  }
+  // Filter selection to only valid perks
+  const perkHashes = [...selection].filter((hash) => validPerkHashes.has(hash))
 
   return {
     id: options?.existingId || crypto.randomUUID(),
@@ -354,9 +320,6 @@ export function selectionToWishlistItem(
 /**
  * Convert a WishlistItem back to God Roll Creator selection format
  *
- * Since DIM format loses AND vs OR distinction, we treat all perks as AND (required)
- * The user can adjust in the Creator UI if needed
- *
  * @param item - The wishlist item to convert
  * @param perkColumns - Column info to validate perks belong to this weapon
  */
@@ -364,8 +327,6 @@ export function wishlistItemToSelection(
   item: WishlistItem,
   perkColumns: PerkColumnInfo[]
 ): GodRollSelection {
-  const selection: GodRollSelection = {}
-
   // Build a set of valid perk hashes for this weapon
   const validPerkHashes = new Set<number>()
   for (const col of perkColumns) {
@@ -374,15 +335,8 @@ export function wishlistItemToSelection(
     }
   }
 
-  // Add all perk hashes from the wishlist item as AND selections
-  // (since DIM format doesn't preserve AND vs OR distinction)
-  for (const hash of item.perkHashes) {
-    if (validPerkHashes.has(hash)) {
-      selection[hash] = 'AND'
-    }
-  }
-
-  return selection
+  // Return set of valid perk hashes from the wishlist item
+  return new Set(item.perkHashes.filter((hash) => validPerkHashes.has(hash)))
 }
 
 /**
