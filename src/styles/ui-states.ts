@@ -89,6 +89,28 @@ export const MASTERWORK_ICON_STYLES = {
   ring: 'ring-1 ring-slate-400 dark:ring-slate-500 ring-offset-1 ring-offset-surface',
   // Filters to standardize all MW icons to white glyphs (removes gold/colored variants)
   image: 'w-full h-full object-cover brightness-[1.75] contrast-125 saturate-0',
+  // Smaller variant for dropdown selectors
+  containerSmall: 'w-5 h-5 rounded-full overflow-hidden bg-black',
+} as const
+
+// Dropdown selector styling (used by MW selector, potentially other dropdowns)
+export const DROPDOWN_STYLES = {
+  // Column header label style (matches perk matrix headers)
+  label: 'text-xs uppercase font-bold text-center text-text-muted tracking-wider',
+  // Trigger button base
+  triggerBase: 'w-full flex items-center justify-between gap-1.5 px-2 py-1.5 rounded-lg border transition-colors text-xs',
+  // Trigger button states
+  triggerSelected: 'bg-blue-900/40 border-blue-500/70 text-text',
+  triggerUnselected: 'bg-surface-elevated border-border text-text-muted hover:bg-surface-overlay',
+  // Dropdown panel
+  panel: 'absolute z-20 w-full mt-1 bg-surface-elevated border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto',
+  // Option base
+  optionBase: 'w-full flex items-center gap-1.5 px-2 py-1.5 text-xs text-left transition-colors hover:bg-surface-overlay',
+  // Option selected state
+  optionSelected: 'bg-blue-900/30',
+  // "None" option placeholder icon
+  noneIcon: 'w-5 h-5 rounded-full border border-dashed border-text-muted/50 flex items-center justify-center',
+  noneIconText: 'text-text-muted/50 text-[10px]',
 } as const
 
 // Type export for consumers (PerkRingStyle is used by PerkIcon.vue)

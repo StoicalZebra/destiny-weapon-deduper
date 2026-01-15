@@ -252,6 +252,87 @@
                 </span>
               </div>
             </div>
+
+            <!-- Masterwork Selector (in Origin Trait column only, Wishlist mode) -->
+            <div
+              v-if="viewMode === 'wishlist' && column.columnName === 'Origin Trait' && availableMasterworks.length > 0"
+              class="relative mt-8 mw-dropdown-container"
+            >
+              <div :class="[DROPDOWN_STYLES.label, 'mb-1']">
+                Masterwork
+              </div>
+              <button
+                @click.stop="mwDropdownOpen = !mwDropdownOpen"
+                :class="[
+                  DROPDOWN_STYLES.triggerBase,
+                  selectedMasterworkHash ? DROPDOWN_STYLES.triggerSelected : DROPDOWN_STYLES.triggerUnselected
+                ]"
+              >
+                <span class="flex items-center gap-1.5 truncate">
+                  <template v-if="selectedMasterworkHash">
+                    <div :class="[MASTERWORK_ICON_STYLES.containerSmall, MASTERWORK_ICON_STYLES.ring]">
+                      <img
+                        v-if="getMasterworkByHash(selectedMasterworkHash)?.icon"
+                        :src="`https://www.bungie.net${getMasterworkByHash(selectedMasterworkHash)?.icon}`"
+                        :class="MASTERWORK_ICON_STYLES.image"
+                      />
+                    </div>
+                    <span>{{ formatMasterworkName(getMasterworkByHash(selectedMasterworkHash)?.name || '') }}</span>
+                  </template>
+                  <span v-else class="text-text-subtle">Select MW...</span>
+                </span>
+                <svg
+                  class="w-3 h-3 text-text-muted transition-transform flex-shrink-0"
+                  :class="{ 'rotate-180': mwDropdownOpen }"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              <!-- Dropdown options -->
+              <div
+                v-if="mwDropdownOpen"
+                :class="DROPDOWN_STYLES.panel"
+              >
+                <!-- None option to clear MW selection -->
+                <button
+                  @click="clearMasterworkSelection"
+                  :class="[
+                    DROPDOWN_STYLES.optionBase,
+                    'border-b border-border',
+                    !selectedMasterworkHash ? DROPDOWN_STYLES.optionSelected : ''
+                  ]"
+                >
+                  <div :class="DROPDOWN_STYLES.noneIcon">
+                    <span :class="DROPDOWN_STYLES.noneIconText">—</span>
+                  </div>
+                  <span :class="!selectedMasterworkHash ? 'text-text' : 'text-text-muted'">None</span>
+                </button>
+                <button
+                  v-for="mw in availableMasterworks"
+                  :key="mw.hash"
+                  @click="toggleMasterworkSelection(mw.hash)"
+                  :class="[
+                    DROPDOWN_STYLES.optionBase,
+                    selectedMasterworkHash === mw.hash ? DROPDOWN_STYLES.optionSelected : ''
+                  ]"
+                >
+                  <div :class="[MASTERWORK_ICON_STYLES.containerSmall, MASTERWORK_ICON_STYLES.ring]">
+                    <img
+                      v-if="mw.icon"
+                      :src="`https://www.bungie.net${mw.icon}`"
+                      :class="MASTERWORK_ICON_STYLES.image"
+                    />
+                  </div>
+                  <span :class="selectedMasterworkHash === mw.hash ? 'text-text' : 'text-text-muted'">
+                    {{ formatMasterworkName(mw.name) }}
+                  </span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -690,6 +771,8 @@ import {
   INDICATOR_STYLES,
   BUTTON_STYLES,
   INSTANCE_PALETTE,
+  MASTERWORK_ICON_STYLES,
+  DROPDOWN_STYLES,
 } from '@/styles/ui-states'
 import { TOOLTIP_STRINGS, getWishlistBadgeTooltip, formatWishlistTooltipSuffix } from '@/utils/tooltip-helpers'
 
@@ -700,12 +783,21 @@ const props = defineProps<{
 // Initialize wishlists store
 const wishlistsStore = useWishlistsStore()
 
+// Click-outside handler for MW dropdown
+const handleClickOutside = (e: MouseEvent) => {
+  const target = e.target as HTMLElement
+  if (!target.closest('.mw-dropdown-container')) {
+    mwDropdownOpen.value = false
+  }
+}
+
 // Initialize store on mount
 onMounted(async () => {
   if (!wishlistsStore.initialized) {
     await wishlistsStore.initialize(false)
   }
   loadProfilesFromStore()
+  document.addEventListener('click', handleClickOutside)
 })
 
 // ============ MODE STATE ============
@@ -750,12 +842,13 @@ watchEffect((onCleanup) => {
   })
 })
 
-// Safety net: clear timer on unmount
+// Safety net: clear timer and event listeners on unmount
 onBeforeUnmount(() => {
   if (hoverDebounceTimer) {
     clearTimeout(hoverDebounceTimer)
     hoverDebounceTimer = null
   }
+  document.removeEventListener('click', handleClickOutside)
 })
 
 // Instance sorting and filtering
@@ -785,6 +878,30 @@ const sourceWishlistId = ref<string | null>(null)
 // ============ COMPUTED ============
 const matrixColumns = computed(() => props.weapon.perkMatrix)
 const hasSelection = computed(() => selection.value.size > 0)
+
+// Masterwork selector state
+const mwDropdownOpen = ref(false)
+// Dedupe masterworks by formatted name (e.g., multiple "Stability" entries become one)
+const availableMasterworks = computed(() => {
+  const perks = props.weapon.masterworkPerks || []
+  const seen = new Map<string, typeof perks[0]>()
+  for (const mw of perks) {
+    const name = mw.name
+      .replace(/^Tier\s+\d+:\s*/i, '')
+      .replace(/^Masterworked:\s*/i, '')
+      .replace(/^Enhanced\s+/i, '')
+    if (!seen.has(name)) {
+      seen.set(name, mw)
+    }
+  }
+  return Array.from(seen.values())
+})
+const selectedMasterworkHash = computed(() => {
+  for (const mw of availableMasterworks.value) {
+    if (selection.value.has(mw.hash)) return mw.hash
+  }
+  return null
+})
 
 // Convert perkMatrix to PerkColumnInfo format for store helpers
 const perkColumnsForStore = computed<PerkColumnInfo[]>(() => {
@@ -981,6 +1098,38 @@ const clearSelection = () => {
   sourceWishlistId.value = null
   profileNotesInput.value = ''
   saveMessage.value = null
+}
+
+// ============ MASTERWORK SELECTION ============
+const getMasterworkByHash = (hash: number) =>
+  availableMasterworks.value.find(m => m.hash === hash)
+
+// Normalize MW name to just the stat (e.g., "Tier 3: Stability" → "Stability")
+const formatMasterworkName = (name: string) =>
+  name
+    .replace(/^Tier\s+\d+:\s*/i, '')
+    .replace(/^Masterworked:\s*/i, '')
+    .replace(/^Enhanced\s+/i, '')
+
+const toggleMasterworkSelection = (mwHash: number) => {
+  // Remove any previously selected MW
+  for (const mw of availableMasterworks.value) {
+    selection.value.delete(mw.hash)
+  }
+  // Add new selection (unless clicking to deselect same one)
+  if (selectedMasterworkHash.value !== mwHash) {
+    selection.value.add(mwHash)
+  }
+  triggerRef(selection)
+  mwDropdownOpen.value = false
+}
+
+const clearMasterworkSelection = () => {
+  for (const mw of availableMasterworks.value) {
+    selection.value.delete(mw.hash)
+  }
+  triggerRef(selection)
+  mwDropdownOpen.value = false
 }
 
 // ============ ENHANCED MODE ============
