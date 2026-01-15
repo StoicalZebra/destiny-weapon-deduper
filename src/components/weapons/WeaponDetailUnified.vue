@@ -714,7 +714,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, watchEffect } from 'vue'
+import { ref, computed, onMounted, watch, watchEffect, triggerRef, onBeforeUnmount } from 'vue'
 import type { DedupedWeapon, PerkColumn } from '@/models/deduped-weapon'
 import type { WeaponInstance } from '@/models/weapon-instance'
 import type { Perk } from '@/models/perk'
@@ -790,6 +790,14 @@ watchEffect((onCleanup) => {
       hoverDebounceTimer = null
     }
   })
+})
+
+// Safety net: clear timer on unmount
+onBeforeUnmount(() => {
+  if (hoverDebounceTimer) {
+    clearTimeout(hoverDebounceTimer)
+    hoverDebounceTimer = null
+  }
 })
 
 // Instance sorting and filtering
@@ -901,6 +909,35 @@ const compareInstanceIds = (a: WeaponInstance, b: WeaponInstance): number => {
   return idA < idB ? -1 : idA > idB ? 1 : 0
 }
 
+// Pre-compute instance match status to avoid O(n×m) during sort
+// This computed only recalculates when selection or instances change
+const instanceMatchCache = computed(() => {
+  const cache = new Map<string, boolean>()
+  if (!hasSelection.value) return cache
+
+  for (const instance of props.weapon.instances) {
+    let matches = true
+    for (const col of matrixColumns.value) {
+      const colPerks = col.availablePerks.map(p => p.hash)
+      const selectedInCol = colPerks.filter(h => selection.value.has(h))
+      if (selectedInCol.length === 0) continue
+
+      for (const h of selectedInCol) {
+        if (instance.sockets.sockets[col.columnIndex]?.plugHash !== h) {
+          const reusables = instance.socketPlugsByIndex?.[col.columnIndex]
+          if (!reusables || !reusables.includes(h)) {
+            matches = false
+            break
+          }
+        }
+      }
+      if (!matches) break
+    }
+    cache.set(instance.itemInstanceId, matches)
+  }
+  return cache
+})
+
 // Filtered and sorted instances
 const filteredAndSortedInstances = computed(() => {
   let instances = props.weapon.instances.filter(i => {
@@ -920,10 +957,12 @@ const filteredAndSortedInstances = computed(() => {
   }
 
   // Wishlist mode: sort matches first when perks are selected
+  // Uses pre-computed cache for O(1) lookup instead of O(m) per instance
   if (viewMode.value === 'wishlist' && hasSelection.value) {
+    const cache = instanceMatchCache.value
     instances = [...instances].sort((a, b) => {
-      const aMatches = isMatchInstance(a) ? 0 : 1
-      const bMatches = isMatchInstance(b) ? 0 : 1
+      const aMatches = cache.get(a.itemInstanceId) ? 0 : 1
+      const bMatches = cache.get(b.itemInstanceId) ? 0 : 1
       if (aMatches !== bMatches) return aMatches - bMatches
       // Within each group, sort by instance ID
       return compareInstanceIds(a, b)
@@ -972,11 +1011,10 @@ const toggleSelection = (perk: Perk, _column: PerkColumn) => {
   if (isSelected) {
     const currentHash = perk.variantHashes?.find(h => selection.value.has(h)) ?? perk.hash
     selection.value.delete(currentHash)
-    selection.value = new Set(selection.value)
   } else {
     selection.value.add(perkHash)
-    selection.value = new Set(selection.value)
   }
+  triggerRef(selection) // Trigger reactivity without recreating Set
 }
 
 const clearSelection = () => {
@@ -1110,32 +1148,6 @@ const getHighlightedPerksForInstance = (): Set<number> | undefined => {
   return undefined
 }
 
-// ============ MATCHING LOGIC (Edit Mode) ============
-const doesInstanceHavePerkForMatch = (instance: WeaponInstance, perkHash: number, colIndex: number): boolean => {
-  if (instance.sockets.sockets[colIndex]?.plugHash === perkHash) return true
-  const reusables = instance.socketPlugsByIndex?.[colIndex]
-  if (reusables && reusables.includes(perkHash)) return true
-  return false
-}
-
-// Helper for sorting: check if instance matches selection (takes instance object)
-const isMatchInstance = (instance: WeaponInstance): boolean => {
-  if (!hasSelection.value) return false
-
-  for (const col of matrixColumns.value) {
-    const colPerks = col.availablePerks.map(p => p.hash)
-    const selectedInCol = colPerks.filter(h => selection.value.has(h))
-
-    if (selectedInCol.length === 0) continue
-
-    for (const h of selectedInCol) {
-      if (!doesInstanceHavePerkForMatch(instance, h, col.columnIndex)) return false
-    }
-  }
-
-  return true
-}
-
 // Helper for sorting: check if instance has a specific perk (for Coverage mode hover)
 const instanceHasPerkAny = (instId: string, perkHash: number): boolean => {
   for (const col of matrixColumns.value) {
@@ -1144,24 +1156,10 @@ const instanceHasPerkAny = (instId: string, perkHash: number): boolean => {
   return false
 }
 
+// Check if instance matches selection - uses pre-computed cache for O(1) lookup
 const isMatch = (instId: string) => {
   if (!hasSelection.value) return false
-
-  const instance = props.weapon.instances.find(i => i.itemInstanceId === instId)
-  if (!instance) return false
-
-  for (const col of matrixColumns.value) {
-    const colPerks = col.availablePerks.map(p => p.hash)
-    const selectedInCol = colPerks.filter(h => selection.value.has(h))
-
-    if (selectedInCol.length === 0) continue
-
-    for (const h of selectedInCol) {
-      if (!doesInstanceHavePerkForMatch(instance, h, col.columnIndex)) return false
-    }
-  }
-
-  return true
+  return instanceMatchCache.value.get(instId) ?? false
 }
 
 // ============ STYLING - WISHLIST MODE ============

@@ -48,19 +48,14 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
 import { RouterView } from 'vue-router'
 import { useManifestStore } from './stores/manifest'
 import AppHeader from './components/layout/AppHeader.vue'
 import AppFooter from './components/layout/AppFooter.vue'
 import LoadingSpinner from './components/common/LoadingSpinner.vue'
 
+// Manifest is pre-initialized in main.ts for faster startup
 const manifestStore = useManifestStore()
-
-onMounted(async () => {
-  // Initialize manifest on app load
-  await manifestStore.initialize()
-})
 
 const retryManifest = async () => {
   await manifestStore.initialize()

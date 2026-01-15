@@ -105,7 +105,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import type { DedupedWeapon } from '@/models/deduped-weapon'
 import WeaponCompactCard from './WeaponCompactCard.vue'
 
@@ -172,34 +172,43 @@ const clearRecentSearches = () => {
   saveRecentSearches()
 }
 
+let hideRecentSearchesTimer: ReturnType<typeof setTimeout> | null = null
+
 const hideRecentSearchesDelayed = () => {
   // Small delay to allow click events on dropdown items
-  setTimeout(() => {
+  hideRecentSearchesTimer = setTimeout(() => {
     showRecentSearches.value = false
+    hideRecentSearchesTimer = null
   }, 150)
 }
 
-// --- Filtering & Sorting ---
-const duplicateFilteredWeapons = computed(() => {
-  if (!showDuplicatesOnly.value) return props.weapons
-  return props.weapons.filter(w => w.instances.length >= 2)
+// Cleanup timer on unmount
+onBeforeUnmount(() => {
+  if (hideRecentSearchesTimer) {
+    clearTimeout(hideRecentSearchesTimer)
+    hideRecentSearchesTimer = null
+  }
 })
 
-const filteredWeapons = computed(() => {
-  if (!searchQuery.value) return duplicateFilteredWeapons.value
-
-  const query = searchQuery.value.toLowerCase()
-  return duplicateFilteredWeapons.value.filter(weapon =>
-    weapon.weaponName.toLowerCase().includes(query)
-  )
-})
-
+// --- Filtering & Sorting (combined into single pass) ---
 const sortedWeapons = computed(() => {
-  const weapons = [...filteredWeapons.value]
+  // Filter: duplicates only
+  let weapons = showDuplicatesOnly.value
+    ? props.weapons.filter(w => w.instances.length >= 2)
+    : props.weapons
 
+  // Filter: search query
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase()
+    weapons = weapons.filter(weapon =>
+      weapon.weaponName.toLowerCase().includes(query)
+    )
+  }
+
+  // Sort (creates single copy)
   if (sortBy.value === 'copies') {
     // Most copies first, then alphabetical
-    return weapons.sort((a, b) => {
+    return [...weapons].sort((a, b) => {
       const copyDiff = b.instances.length - a.instances.length
       if (copyDiff !== 0) return copyDiff
       return a.weaponName.localeCompare(b.weaponName)
@@ -207,7 +216,7 @@ const sortedWeapons = computed(() => {
   }
 
   // Default: alphabetical
-  return weapons.sort((a, b) => a.weaponName.localeCompare(b.weaponName))
+  return [...weapons].sort((a, b) => a.weaponName.localeCompare(b.weaponName))
 })
 
 onMounted(() => {

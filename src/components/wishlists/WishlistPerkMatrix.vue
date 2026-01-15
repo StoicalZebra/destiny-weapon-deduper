@@ -38,39 +38,33 @@ interface PerkColumnDisplay {
   perks: number[]
 }
 
-/**
- * Organize wishlist perks into columns based on weapon definition.
- * This maps flat perkHashes back to their socket column positions.
- */
-const organizedPerks = computed((): PerkColumnDisplay[] => {
-  const weaponDef = manifestService.getInventoryItem(props.weaponHash)
-  if (!weaponDef?.sockets?.socketEntries) {
-    // Fallback: just show perks in a single column
-    return props.perkHashes.length > 0
-      ? [{ label: 'Perks', columnIndex: 0, perks: props.perkHashes }]
-      : []
-  }
+interface WeaponSocketInfo {
+  perkToColumn: Map<number, number>
+  columnLabels: Map<number, string>
+}
 
-  // Build a map of perkHash -> columnIndex by scanning weapon sockets
+/**
+ * Cache expensive socket scanning per weapon hash.
+ * Only recalculates when weaponHash changes, not when perkHashes change.
+ */
+const weaponSocketInfo = computed((): WeaponSocketInfo | null => {
+  const weaponDef = manifestService.getInventoryItem(props.weaponHash)
+  if (!weaponDef?.sockets?.socketEntries) return null
+
   const perkToColumn = new Map<number, number>()
   const columnLabels = new Map<number, string>()
-
   const socketEntries = weaponDef.sockets.socketEntries
 
-  // Determine column indices for main perk sockets (typically indices 1-4 for weapons)
-  // Socket 0 is usually intrinsic, 1-2 are barrel/magazine, 3-4 are traits, 5+ are origin/mod
+  // Scan sockets once to build perk-to-column mapping
   for (let socketIdx = 0; socketIdx < socketEntries.length; socketIdx++) {
     const socketEntry = socketEntries[socketIdx]
     if (!socketEntry) continue
 
-    // Get perks from randomized and reusable plug sets
-    const randomPlugSetHash = socketEntry.randomizedPlugSetHash
-    const reusablePlugSetHash = socketEntry.reusablePlugSetHash
-
     const plugHashes: number[] = []
 
-    if (randomPlugSetHash) {
-      const plugSet = manifestService.getPlugSet(randomPlugSetHash)
+    // Get perks from randomized and reusable plug sets
+    if (socketEntry.randomizedPlugSetHash) {
+      const plugSet = manifestService.getPlugSet(socketEntry.randomizedPlugSetHash)
       if (plugSet?.reusablePlugItems) {
         for (const item of plugSet.reusablePlugItems) {
           plugHashes.push(item.plugItemHash)
@@ -78,8 +72,8 @@ const organizedPerks = computed((): PerkColumnDisplay[] => {
       }
     }
 
-    if (reusablePlugSetHash) {
-      const plugSet = manifestService.getPlugSet(reusablePlugSetHash)
+    if (socketEntry.reusablePlugSetHash) {
+      const plugSet = manifestService.getPlugSet(socketEntry.reusablePlugSetHash)
       if (plugSet?.reusablePlugItems) {
         for (const item of plugSet.reusablePlugItems) {
           if (!plugHashes.includes(item.plugItemHash)) {
@@ -89,30 +83,46 @@ const organizedPerks = computed((): PerkColumnDisplay[] => {
       }
     }
 
-    // Also check initial item
     if (socketEntry.singleInitialItemHash && !plugHashes.includes(socketEntry.singleInitialItemHash)) {
       plugHashes.push(socketEntry.singleInitialItemHash)
     }
 
-    // Map each perk to this column
     for (const hash of plugHashes) {
       if (!perkToColumn.has(hash)) {
         perkToColumn.set(hash, socketIdx)
       }
     }
 
-    // Determine column label based on socket index (simplified mapping)
+    // Column labels
     let label = `Column ${socketIdx}`
     if (socketIdx === 1) label = 'Barrel'
     else if (socketIdx === 2) label = 'Magazine'
     else if (socketIdx === 3) label = 'Left Trait'
     else if (socketIdx === 4) label = 'Right Trait'
     else if (socketIdx === 5) label = 'Origin'
-
     columnLabels.set(socketIdx, label)
   }
 
-  // Group wishlist perks by their column
+  return { perkToColumn, columnLabels }
+})
+
+/**
+ * Organize wishlist perks into columns using cached socket info.
+ * Only the grouping logic runs when perkHashes change.
+ */
+const organizedPerks = computed((): PerkColumnDisplay[] => {
+  const socketInfo = weaponSocketInfo.value
+
+  // Fallback: no socket info, show perks in single column
+  if (!socketInfo) {
+    return props.perkHashes.length > 0
+      ? [{ label: 'Perks', columnIndex: 0, perks: props.perkHashes }]
+      : []
+  }
+
+  const { perkToColumn, columnLabels } = socketInfo
+
+  // Group wishlist perks by their column (cheap operation)
   const columnMap = new Map<number, number[]>()
   const unknownPerks: number[] = []
 
@@ -140,7 +150,6 @@ const organizedPerks = computed((): PerkColumnDisplay[] => {
     })
   }
 
-  // Add any unknown perks at the end
   if (unknownPerks.length > 0) {
     result.push({
       label: 'Other',

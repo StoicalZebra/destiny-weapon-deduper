@@ -8,7 +8,7 @@
  */
 
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, triggerRef } from 'vue'
 import type { Wishlist, WishlistItem, WishlistUpdateStatus, WishlistTag } from '@/models/wishlist'
 import { wishlistStorageService } from '@/services/wishlist-storage-service'
 import {
@@ -177,6 +177,7 @@ export const useWishlistsStore = defineStore('wishlists', () => {
       for (const status of statuses) {
         updateStatuses.value.set(status.wishlistId, status)
       }
+      triggerRef(updateStatuses)
     } catch (err) {
       console.warn('Failed to check for updates:', err)
     }
@@ -476,15 +477,14 @@ export const useWishlistsStore = defineStore('wishlists', () => {
    * Only updates the separate enabledStates Map for instant reactivity
    */
   function setWishlistEnabled(wishlistId: string, enabled: boolean): void {
-    // Update the separate reactive Map (doesn't touch wishlist objects)
-    const newMap = new Map(enabledStates.value)
+    // Mutate map directly and trigger reactivity (avoids recreating Map)
     if (enabled) {
       // Remove from map when enabled (default is true)
-      newMap.delete(wishlistId)
+      enabledStates.value.delete(wishlistId)
     } else {
-      newMap.set(wishlistId, false)
+      enabledStates.value.set(wishlistId, false)
     }
-    enabledStates.value = newMap
+    triggerRef(enabledStates)
 
     // Persist to localStorage
     wishlistStorageService.setEnabledState(wishlistId, enabled)
