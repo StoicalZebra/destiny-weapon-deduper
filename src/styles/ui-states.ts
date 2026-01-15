@@ -83,5 +83,13 @@ export const INSTANCE_PALETTE = [
   '#64748B',
 ] as const
 
+// Masterwork icon styling (simplified display - just shows stat name, no enhanced distinction)
+export const MASTERWORK_ICON_STYLES = {
+  container: 'w-7 h-7 rounded-full overflow-hidden bg-black',
+  ring: 'ring-1 ring-slate-400 dark:ring-slate-500 ring-offset-1 ring-offset-surface',
+  // Filters to standardize all MW icons to white glyphs (removes gold/colored variants)
+  image: 'w-full h-full object-cover brightness-[1.75] contrast-125 saturate-0',
+} as const
+
 // Type export for consumers (PerkRingStyle is used by PerkIcon.vue)
 export type PerkRingStyle = keyof typeof PERK_RING_STYLES

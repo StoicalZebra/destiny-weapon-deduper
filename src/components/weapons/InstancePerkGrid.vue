@@ -44,31 +44,16 @@
     </div>
 
     <!-- Masterwork indicator -->
-    <div v-if="masterworkInfo" class="mt-1.5 flex items-center gap-1.5" :title="masterworkInfo.name">
-      <div class="relative">
-        <div
-          class="w-5 h-5 rounded-full overflow-hidden bg-perk-background ring-1"
-          :class="masterworkInfo.isEnhanced ? 'ring-amber-500' : 'ring-yellow-600'"
-        >
-          <img
-            v-if="masterworkInfo.icon"
-            :src="`https://www.bungie.net${masterworkInfo.icon}`"
-            class="w-full h-full object-cover"
-            :alt="masterworkInfo.name"
-          />
-        </div>
-        <!-- Enhanced badge -->
-        <div
-          v-if="masterworkInfo.isEnhanced"
-          class="absolute -top-0.5 -left-0.5 w-3 h-3 rounded-full bg-amber-500 flex items-center justify-center"
-          :title="TOOLTIP_STRINGS.ENHANCED_MASTERWORK"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-2 w-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
-          </svg>
-        </div>
+    <div v-if="masterworkInfo" class="mt-1.5 flex items-center gap-1.5" :title="masterworkStatName">
+      <div :class="[MASTERWORK_ICON_STYLES.container, MASTERWORK_ICON_STYLES.ring]">
+        <img
+          v-if="masterworkInfo.icon"
+          :src="`https://www.bungie.net${masterworkInfo.icon}`"
+          :class="MASTERWORK_ICON_STYLES.image"
+          :alt="masterworkStatName"
+        />
       </div>
-      <span class="text-xs text-text-muted truncate">Masterwork: {{ masterworkStatName }}</span>
+      <span class="text-xs text-text-muted truncate">MW: {{ masterworkStatName }}</span>
     </div>
   </div>
 </template>
@@ -81,7 +66,7 @@ import { manifestService } from '@/services/manifest-service'
 import { getInstanceMasterwork, isEnhancedPerk } from '@/services/deduplication'
 import { TOOLTIP_STRINGS, getWishlistBadgeTooltip, formatWishlistTooltipSuffix } from '@/utils/tooltip-helpers'
 import PerkIcon from '@/components/common/PerkIcon.vue'
-import { INDICATOR_STYLES } from '@/styles/ui-states'
+import { INDICATOR_STYLES, MASTERWORK_ICON_STYLES } from '@/styles/ui-states'
 
 const props = defineProps<{
   instance: WeaponInstance
@@ -96,11 +81,14 @@ const masterworkInfo = computed(() =>
   getInstanceMasterwork(props.instance, props.masterworkSocketIndex)
 )
 
-// Strip "Tier X: " prefix from masterwork name to get just the stat name
+// Strip prefixes from masterwork name to get just the stat name
 const masterworkStatName = computed(() => {
   const name = masterworkInfo.value?.name || ''
   // Remove "Tier X: " prefix (e.g., "Tier 3: Stability" -> "Stability")
-  return name.replace(/^Tier\s+\d+:\s*/i, '')
+  // Remove "Masterworked: " prefix (e.g., "Masterworked: Range" -> "Range")
+  return name
+    .replace(/^Tier\s+\d+:\s*/i, '')
+    .replace(/^Masterworked:\s*/i, '')
 })
 
 // Get all perks for this instance organized by column
