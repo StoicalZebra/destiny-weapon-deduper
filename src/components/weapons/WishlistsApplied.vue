@@ -1,15 +1,7 @@
 <template>
   <div class="space-y-3">
-    <!-- Header -->
-    <div class="flex items-center justify-between">
-      <h4 class="font-bold text-lg text-text">Wishlists Applied</h4>
-      <span class="text-xs text-text-subtle">
-        {{ enabledCount }} of {{ totalCount }} active
-      </span>
-    </div>
-
-    <!-- Wishlist cards grid -->
-    <div v-if="wishlistsWithCounts.length > 0" class="grid grid-cols-3 gap-2">
+    <!-- Wishlist cards grid (2 columns) -->
+    <div v-if="wishlistsWithCounts.length > 0" class="grid grid-cols-2 gap-2">
       <div
         v-for="{ wishlist, itemCount } in wishlistsWithCounts"
         :key="wishlist.id"
