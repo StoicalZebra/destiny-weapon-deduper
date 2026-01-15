@@ -16,9 +16,21 @@
           :variant="getPerkVariant(perkHash)"
           :custom-tooltip="getTooltip(perkHash)"
         >
-          <!-- Wishlist thumbs-up indicator badge -->
-          <template #badge v-if="isWishlistPerk(perkHash)">
+          <!-- Badge slot: enhanced indicator (top-left) and/or wishlist indicator (top-right) -->
+          <template #badge v-if="isEnhancedPerk(perkHash) || isWishlistPerk(perkHash)">
+            <!-- Enhanced perk badge (top-left) -->
             <div
+              v-if="isEnhancedPerk(perkHash)"
+              class="absolute -top-0.5 -left-0.5 w-3 h-3 rounded-full bg-amber-500 flex items-center justify-center"
+              title="Enhanced Perk"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-2 w-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+              </svg>
+            </div>
+            <!-- Wishlist thumbs-up indicator badge (top-right) -->
+            <div
+              v-if="isWishlistPerk(perkHash)"
               :class="[INDICATOR_STYLES.wishlist, 'absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center shadow-lg']"
               :title="getWishlistTooltip(perkHash)"
             >
@@ -66,7 +78,7 @@ import { computed } from 'vue'
 import type { WeaponInstance } from '@/models/weapon-instance'
 import type { PerkColumn } from '@/models/deduped-weapon'
 import { manifestService } from '@/services/manifest-service'
-import { getInstanceMasterwork } from '@/services/deduplication'
+import { getInstanceMasterwork, isEnhancedPerk } from '@/services/deduplication'
 import PerkIcon from '@/components/common/PerkIcon.vue'
 import { INDICATOR_STYLES } from '@/styles/ui-states'
 
