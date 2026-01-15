@@ -1,9 +1,6 @@
 <template>
   <div class="rounded-xl border border-border bg-surface-elevated p-5">
-    <h3 class="text-lg font-semibold text-text">Import Wishlist</h3>
-    <p class="mt-1 text-sm text-text-muted">
-      Import a DIM-compatible wishlist (.txt format)
-    </p>
+    <h3 class="text-lg font-semibold text-text">Import DIM Wishlist</h3>
 
     <!-- Drop zone -->
     <div
@@ -22,7 +19,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
         </svg>
         <p class="mt-2 text-sm text-text-muted">
-          Drag & drop a .txt file here, or
+          Drag & drop a DIM-formatted wishlist (.txt) here, or
           <label class="cursor-pointer text-blue-500 dark:text-blue-400 hover:text-blue-400 dark:hover:text-blue-300">
             browse
             <input
