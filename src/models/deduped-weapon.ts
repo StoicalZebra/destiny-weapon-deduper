@@ -28,6 +28,9 @@ export interface DedupedWeapon {
   // null means all instances are pre-9.0.0 (no tier data)
   minGearTier: number | null
   maxGearTier: number | null
+
+  // Socket index for the masterwork slot (used to look up per-instance masterwork)
+  masterworkSocketIndex?: number
 }
 
 export interface PerkColumn {

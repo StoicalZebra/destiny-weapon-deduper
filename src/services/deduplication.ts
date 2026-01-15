@@ -655,7 +655,12 @@ function buildPerkMatrix(
     perkColumns.push(column)
   }
 
-  return { matrix: perkColumns, intrinsicPerks, masterworkPerks }
+  return {
+    matrix: perkColumns,
+    intrinsicPerks,
+    masterworkPerks,
+    masterworkSocketIndex: masterworkCandidate?.socketIndex
+  }
 }
 
 export function countOwnedPerks(columns: PerkColumn[]): number {
@@ -695,7 +700,7 @@ export function buildDedupedWeapon(
   weaponHash: number,
   instances: WeaponInstance[]
 ): DedupedWeapon {
-  const { matrix, intrinsicPerks, masterworkPerks } = buildPerkMatrix(weaponHash, instances)
+  const { matrix, intrinsicPerks, masterworkPerks, masterworkSocketIndex } = buildPerkMatrix(weaponHash, instances)
   const totalPerksOwned = countOwnedPerks(matrix)
   const totalPerksPossible = countPossiblePerks(matrix)
   const completionPercentage = totalPerksPossible > 0
@@ -717,6 +722,38 @@ export function buildDedupedWeapon(
     completionPercentage,
     tierType: weaponParser.getWeaponTierType(weaponHash),
     minGearTier,
-    maxGearTier
+    maxGearTier,
+    masterworkSocketIndex
+  }
+}
+
+/**
+ * Get masterwork info for a specific weapon instance.
+ * Returns the equipped masterwork perk details including enhanced status.
+ */
+export function getInstanceMasterwork(
+  instance: WeaponInstance,
+  masterworkSocketIndex: number | undefined
+): { hash: number; name: string; icon: string; isEnhanced: boolean } | null {
+  if (masterworkSocketIndex === undefined) return null
+
+  const socket = instance.sockets.sockets[masterworkSocketIndex]
+  if (!socket?.plugHash) return null
+
+  const hash = socket.plugHash
+  if (!isMasterworkDisplayCandidate(hash)) return null
+
+  const perkDef = manifestService.getInventoryItem(hash)
+  if (!perkDef) return null
+
+  // Enhanced masterwork detection via itemTypeDisplayName
+  const itemTypeDisplayName = perkDef.itemTypeDisplayName?.toLowerCase() || ''
+  const isEnhanced = itemTypeDisplayName.startsWith('enhanced ')
+
+  return {
+    hash,
+    name: perkDef.displayProperties?.name || 'Unknown',
+    icon: perkDef.displayProperties?.icon || '',
+    isEnhanced
   }
 }

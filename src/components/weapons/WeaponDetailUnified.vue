@@ -373,6 +373,7 @@
           <InstancePerkGrid
             :instance="instance"
             :perk-matrix="weapon.perkMatrix"
+            :masterwork-socket-index="weapon.masterworkSocketIndex"
             :wishlist-perk-annotations="wishlistPerkAnnotations"
             :highlighted-perks="getHighlightedPerksForInstance()"
           />
@@ -609,6 +610,7 @@
             <InstancePerkGrid
               :instance="instance"
               :perk-matrix="weapon.perkMatrix"
+              :masterwork-socket-index="weapon.masterworkSocketIndex"
               :wishlist-perk-annotations="wishlistPerkAnnotations"
               :highlighted-perks="getHighlightedPerksForInstanceCoverage()"
             />
@@ -616,53 +618,6 @@
         </div>
       </div>
     </template>
-
-    <!-- Notes Section -->
-    <div class="rounded-lg border border-border bg-surface/40 p-3">
-      <h4 class="text-xs font-semibold uppercase tracking-wide text-text-muted">Notes</h4>
-      <div class="mt-2 space-y-2 text-sm">
-        <div>
-          <p class="text-xs text-text-subtle">Intrinsic Trait</p>
-          <div v-if="weapon.intrinsicPerks.length" class="mt-1 flex flex-wrap gap-2">
-            <span
-              v-for="perk in weapon.intrinsicPerks"
-              :key="perk.hash"
-              :title="perk.description || perk.name"
-              class="inline-flex items-center gap-2 rounded border border-border bg-surface/60 px-2 py-1 text-xs text-text cursor-help"
-            >
-              <img
-                v-if="perk.icon"
-                :src="`https://www.bungie.net${perk.icon}`"
-                :alt="perk.name"
-                class="h-4 w-4 rounded bg-perk-background"
-              />
-              <span>{{ perk.name }}</span>
-            </span>
-          </div>
-          <p v-else class="mt-1 text-xs text-text-subtle">None detected</p>
-        </div>
-        <div>
-          <p class="text-xs text-text-subtle">Masterwork</p>
-          <div v-if="weapon.masterworkPerks.length" class="mt-1 flex flex-wrap gap-2">
-            <span
-              v-for="perk in weapon.masterworkPerks"
-              :key="perk.hash"
-              :title="perk.description || perk.name"
-              class="inline-flex items-center gap-2 rounded border border-border bg-surface/60 px-2 py-1 text-xs text-text cursor-help"
-            >
-              <img
-                v-if="perk.icon"
-                :src="`https://www.bungie.net${perk.icon}`"
-                :alt="perk.name"
-                class="h-4 w-4 rounded bg-perk-background"
-              />
-              <span>{{ perk.name }}</span>
-            </span>
-          </div>
-          <p v-else class="mt-1 text-xs text-text-subtle">None detected</p>
-        </div>
-      </div>
-    </div>
 
     <!-- Spacer for sticky footer -->
     <div v-if="selectedForDIM.size > 0" class="h-16"></div>

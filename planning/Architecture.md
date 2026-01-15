@@ -491,5 +491,73 @@ function isEnhancedPerkName(name: string): boolean {
 | Left Trait (Weapon Perk 1) | Yes |
 | Right Trait (Weapon Perk 2) | Yes |
 | Origin Trait | Yes |
-| Masterwork | No |
+| Masterwork | Yes (see below) |
 | Intrinsic | No |
+
+---
+
+## Masterwork System
+
+Masterwork stats provide bonus stats to weapons. Each weapon instance has one equipped masterwork, and this section documents how we detect and display them.
+
+### How Bungie Represents Masterworks
+
+Masterwork plugs are identified by multiple signals:
+
+| Property | Value/Pattern |
+|----------|---------------|
+| `plug.plugCategoryIdentifier` | Contains `'masterworks.stat'` (most reliable) |
+| `itemTypeDisplayName` | `"Masterwork"` or `"Enhanced Masterwork"` |
+| `displayProperties.name` | Stat name like `"Range Masterwork"`, `"Tier 3: Stability"` |
+
+**False positives to filter:**
+- `"Tier X"` - tier tracking perks, not actual masterworks
+- `"Random Masterwork"` - placeholder
+- `"Empty Mod Socket"` - empty slot
+
+### Enhanced Masterwork Detection
+
+Enhanced masterworks follow the same pattern as enhanced perks:
+
+| Property | Base Masterwork | Enhanced Masterwork |
+|----------|-----------------|---------------------|
+| `itemTypeDisplayName` | `"Masterwork"` | `"Enhanced Masterwork"` |
+| `inventory.tierType` | 2 (Basic) | 3 (Common) |
+
+Detection in code:
+```typescript
+const isEnhanced = itemTypeDisplayName.toLowerCase().startsWith('enhanced ')
+```
+
+### Per-Instance Masterwork Display
+
+Unlike the perk matrix (which shows merged perks across all instances), masterwork is displayed **per weapon instance** since users need to know which specific masterwork stat is on each copy.
+
+**Data flow:**
+1. `buildPerkMatrix()` identifies the masterwork socket index during deduplication
+2. `DedupedWeapon.masterworkSocketIndex` stores this index
+3. `getInstanceMasterwork(instance, socketIndex)` looks up the equipped masterwork for a specific instance
+4. `InstancePerkGrid.vue` displays the masterwork below the perk grid
+
+**Key functions in `deduplication.ts`:**
+```typescript
+// Detect if a plug hash is a masterwork
+function isMasterworkPlug(hash: number): boolean
+
+// Filter for display (excludes tier trackers, placeholders)
+function isMasterworkDisplayCandidate(hash: number): boolean
+
+// Get masterwork info for a specific instance
+export function getInstanceMasterwork(
+  instance: WeaponInstance,
+  masterworkSocketIndex: number | undefined
+): { hash: number; name: string; icon: string; isEnhanced: boolean } | null
+```
+
+### UI Display
+
+Each instance card shows its equipped masterwork below the perk grid:
+- Small icon (20px) with colored ring
+- Gold ring (`ring-yellow-600`) for base masterwork
+- Amber ring (`ring-amber-500`) + up-arrow badge for enhanced masterwork
+- Stat name displayed next to icon (e.g., "Tier 3: Cooling Efficiency")

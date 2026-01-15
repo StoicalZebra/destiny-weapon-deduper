@@ -1,14 +1,17 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import {
   normalizePerkName,
   isEnhancedPerkName,
   getColumnKind,
   isTrackerColumn,
   countOwnedPerks,
-  countPossiblePerks
+  countPossiblePerks,
+  getInstanceMasterwork
 } from './deduplication'
 import type { PerkColumn } from '@/models/deduped-weapon'
 import type { Perk } from '@/models/perk'
+import type { WeaponInstance } from '@/models/weapon-instance'
+import { manifestService } from '@/services/manifest-service'
 
 describe('normalizePerkName', () => {
   it('removes "Enhanced" prefix and lowercases', () => {
@@ -304,5 +307,100 @@ describe('countPossiblePerks', () => {
       createColumn(5),
       createColumn(0)
     ])).toBe(5)
+  })
+})
+
+describe('getInstanceMasterwork', () => {
+  const createInstance = (sockets: Array<{ plugHash: number; isEnabled: boolean }>): WeaponInstance => ({
+    itemInstanceId: 'test-123',
+    itemHash: 12345,
+    sockets: { sockets }
+  })
+
+  beforeEach(() => {
+    vi.spyOn(manifestService, 'getInventoryItem')
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('returns null when masterworkSocketIndex is undefined', () => {
+    const instance = createInstance([{ plugHash: 123, isEnabled: true }])
+    expect(getInstanceMasterwork(instance, undefined)).toBeNull()
+  })
+
+  it('returns null when socket at index has no plugHash', () => {
+    const instance = createInstance([{ plugHash: 0, isEnabled: false }])
+    expect(getInstanceMasterwork(instance, 0)).toBeNull()
+  })
+
+  it('returns null when socket index is out of bounds', () => {
+    const instance = createInstance([{ plugHash: 123, isEnabled: true }])
+    expect(getInstanceMasterwork(instance, 5)).toBeNull()
+  })
+
+  it('returns null when manifest lookup fails', () => {
+    vi.mocked(manifestService.getInventoryItem).mockReturnValue(undefined)
+    const instance = createInstance([{ plugHash: 123, isEnabled: true }])
+    expect(getInstanceMasterwork(instance, 0)).toBeNull()
+  })
+
+  it('returns masterwork info for valid masterwork perk', () => {
+    vi.mocked(manifestService.getInventoryItem).mockReturnValue({
+      displayProperties: { name: 'Range Masterwork', description: 'Increases range', icon: '/icons/range.png' },
+      itemTypeDisplayName: 'Masterwork',
+      plug: { plugCategoryIdentifier: 'masterworks.stat.range' }
+    } as any)
+
+    const instance = createInstance([{ plugHash: 123, isEnabled: true }])
+    const result = getInstanceMasterwork(instance, 0)
+
+    expect(result).toEqual({
+      hash: 123,
+      name: 'Range Masterwork',
+      icon: '/icons/range.png',
+      isEnhanced: false
+    })
+  })
+
+  it('detects enhanced masterwork via itemTypeDisplayName', () => {
+    vi.mocked(manifestService.getInventoryItem).mockReturnValue({
+      displayProperties: { name: 'Range Masterwork', description: 'Greatly increases range', icon: '/icons/range.png' },
+      itemTypeDisplayName: 'Enhanced Masterwork',
+      plug: { plugCategoryIdentifier: 'masterworks.stat.range' }
+    } as any)
+
+    const instance = createInstance([{ plugHash: 456, isEnabled: true }])
+    const result = getInstanceMasterwork(instance, 0)
+
+    expect(result).toEqual({
+      hash: 456,
+      name: 'Range Masterwork',
+      icon: '/icons/range.png',
+      isEnhanced: true
+    })
+  })
+
+  it('filters out tier tracking perks', () => {
+    vi.mocked(manifestService.getInventoryItem).mockReturnValue({
+      displayProperties: { name: 'Tier 5', description: '', icon: '' },
+      itemTypeDisplayName: 'Masterwork',
+      plug: { plugCategoryIdentifier: '' }
+    } as any)
+
+    const instance = createInstance([{ plugHash: 789, isEnabled: true }])
+    expect(getInstanceMasterwork(instance, 0)).toBeNull()
+  })
+
+  it('filters out random masterwork placeholder', () => {
+    vi.mocked(manifestService.getInventoryItem).mockReturnValue({
+      displayProperties: { name: 'Random Masterwork', description: '', icon: '' },
+      itemTypeDisplayName: 'Masterwork',
+      plug: { plugCategoryIdentifier: '' }
+    } as any)
+
+    const instance = createInstance([{ plugHash: 999, isEnabled: true }])
+    expect(getInstanceMasterwork(instance, 0)).toBeNull()
   })
 })
