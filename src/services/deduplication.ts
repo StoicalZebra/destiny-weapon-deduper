@@ -336,7 +336,7 @@ function buildPerkColumn(
   // Check for missing enhanced variants using the global trait mapping
   // This handles cases where the enhanced variant exists in the manifest
   // but isn't listed in this weapon's plug set (e.g., "Roar of Battle" on The Martlet)
-  for (const [normalized, variants] of perkGroups) {
+  for (const [, variants] of perkGroups) {
     const hasEnhanced = variants.some((v) => isEnhancedPerk(v.hash))
     const baseVariant = variants.find((v) => !isEnhancedPerk(v.hash))
 
@@ -461,7 +461,7 @@ function buildOwnedPerksList(
 function buildPerkMatrix(
   weaponHash: number,
   instances: WeaponInstance[]
-): { matrix: PerkColumn[]; intrinsicPerks: Perk[]; masterworkPerks: Perk[] } {
+): { matrix: PerkColumn[]; intrinsicPerks: Perk[]; masterworkPerks: Perk[]; masterworkSocketIndex?: number } {
   const weaponDef = manifestService.getInventoryItem(weaponHash)
   const socketData = weaponDef?.sockets
 

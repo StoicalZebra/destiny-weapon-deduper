@@ -341,7 +341,7 @@ describe('getInstanceMasterwork', () => {
   })
 
   it('returns null when manifest lookup fails', () => {
-    vi.mocked(manifestService.getInventoryItem).mockReturnValue(undefined)
+    vi.mocked(manifestService.getInventoryItem).mockReturnValue(null)
     const instance = createInstance([{ plugHash: 123, isEnabled: true }])
     expect(getInstanceMasterwork(instance, 0)).toBeNull()
   })
