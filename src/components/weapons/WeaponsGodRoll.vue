@@ -315,27 +315,20 @@ const perkLookup = computed(() => {
   return map
 })
 
-// Check if any perks in trait columns have enhanced variants
+// Check if any perks have enhanced variants (all column types can have enhanced perks now)
 const hasEnhanceablePerks = computed(() => {
   for (const col of matrixColumns.value) {
-    // Only trait columns have enhanced variants
-    if (col.columnName === 'Left Trait' || col.columnName === 'Right Trait') {
-      if (col.availablePerks.some(p => p.hasEnhancedVariant)) {
-        return true
-      }
+    if (col.availablePerks.some(p => p.hasEnhancedVariant)) {
+      return true
     }
   }
   return false
 })
 
-// Check if a column is a trait column (only trait columns support enhanced perks)
-const isTraitColumn = (columnName: string): boolean => {
-  return columnName === 'Left Trait' || columnName === 'Right Trait'
-}
-
 // Check if a perk should display as enhanced
-const isEnhancedDisplay = (perk: Perk, column: PerkColumn): boolean => {
-  return enhancedMode.value && isTraitColumn(column.columnName) && !!perk.hasEnhancedVariant
+// All column types (Barrel, Magazine, Trait, Origin) can have enhanced variants
+const isEnhancedDisplay = (perk: Perk, _column: PerkColumn): boolean => {
+  return enhancedMode.value && !!perk.hasEnhancedVariant
 }
 
 // Get the appropriate icon for a perk (enhanced or base depending on mode)
@@ -405,11 +398,10 @@ const selection = ref<Set<number>>(new Set())
 
 const hasSelection = computed(() => selection.value.size > 0)
 
-const toggleSelection = (perk: Perk, column: PerkColumn, _event: MouseEvent) => {
-  // Determine which hash to use based on enhanced mode and column type
-  const useEnhanced = enhancedMode.value &&
-                      isTraitColumn(column.columnName) &&
-                      perk.hasEnhancedVariant
+const toggleSelection = (perk: Perk, _column: PerkColumn, _event: MouseEvent) => {
+  // Determine which hash to use based on enhanced mode
+  // All column types can have enhanced variants now
+  const useEnhanced = enhancedMode.value && perk.hasEnhancedVariant
 
   const perkHash = useEnhanced
     ? (perk.enhancedHash ?? perk.hash)

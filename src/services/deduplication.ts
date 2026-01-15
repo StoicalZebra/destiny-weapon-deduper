@@ -73,17 +73,24 @@ export function isEnhancedPerkName(name: string): boolean {
 }
 
 /**
- * Check if a perk is an enhanced trait by looking at itemTypeDisplayName.
+ * Check if a perk is an enhanced variant by looking at itemTypeDisplayName.
  * Modern Destiny 2 perks don't have "Enhanced" in their name - instead they have
- * itemTypeDisplayName === "Enhanced Trait" and a higher tierType.
+ * itemTypeDisplayName starting with "Enhanced " (e.g., "Enhanced Trait", "Enhanced Barrel",
+ * "Enhanced Magazine", "Enhanced Origin Trait", etc.) and a higher tierType.
+ *
+ * Known enhanced types from the manifest:
+ * - Enhanced Trait, Enhanced Barrel, Enhanced Magazine, Enhanced Origin Trait
+ * - Enhanced Battery, Enhanced Bolt, Enhanced Bowstring, Enhanced Arrow
+ * - Enhanced Guard, Enhanced Haft, Enhanced Blade, Enhanced Rail
+ * - Enhanced Launcher Barrel, Enhanced Intrinsic
  */
 export function isEnhancedPerk(hash: number): boolean {
   const perkDef = manifestService.getInventoryItem(hash)
   if (!perkDef) return false
 
-  // Check itemTypeDisplayName first (most reliable)
+  // Check itemTypeDisplayName - all enhanced variants start with "Enhanced "
   const itemTypeDisplayName = perkDef.itemTypeDisplayName?.toLowerCase() || ''
-  if (itemTypeDisplayName === 'enhanced trait') return true
+  if (itemTypeDisplayName.startsWith('enhanced ')) return true
 
   // Fallback: check name for legacy perks that might have "Enhanced" prefix
   const name = perkDef.displayProperties?.name || ''

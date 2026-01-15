@@ -76,9 +76,12 @@ User: "I want to tidy up my inventory. I know what "god rolls" I want to keep, s
     - Ornament slot (purely cosmetic)
     - Shader slot (purely cosmetic)
     - Kill tracker slot (track kills in PVE vs PVP etc)
-- Basic vs Enhanced Traits
-    - [x] Make sure tooltip shows the definition from the Enhanced trait, not the Basic trait
-    - [x] Make sure tooltip shows the icon from the Enhanced trait, not the Basic trait
+- Basic vs Enhanced Perks
+    - [x] Make sure tooltip shows the definition from the Enhanced perk, not the Basic perk
+    - [x] Make sure tooltip shows the icon from the Enhanced perk, not the Basic perk
+    - [x] Support enhanced variants for ALL perk columns (Barrel, Magazine, Left Trait, Right Trait, Origin Trait)
+        - Detection uses `itemTypeDisplayName` starting with "Enhanced " (e.g., "Enhanced Trait", "Enhanced Barrel", "Enhanced Magazine", "Enhanced Origin Trait")
+        - Known enhanced types: Enhanced Trait, Enhanced Barrel, Enhanced Magazine, Enhanced Origin Trait, Enhanced Battery, Enhanced Bolt, Enhanced Bowstring, Enhanced Arrow, Enhanced Guard, Enhanced Haft, Enhanced Blade, Enhanced Rail, Enhanced Launcher Barrel, Enhanced Intrinsic
 
 
 ## UI
