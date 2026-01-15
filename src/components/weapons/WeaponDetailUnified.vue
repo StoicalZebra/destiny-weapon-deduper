@@ -1,37 +1,10 @@
 <template>
   <div class="space-y-6 text-text">
-    <!-- Wishlists Applied (collapsible, at top) -->
-    <div class="bg-surface-elevated/30 rounded-lg border border-border/50">
-      <button
-        @click="wishlistsExpanded = !wishlistsExpanded"
-        class="flex items-center justify-between w-full p-3 text-left"
-      >
-        <div class="flex items-center gap-2">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-4 w-4 transition-transform"
-            :class="{ 'rotate-90': wishlistsExpanded }"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-          </svg>
-          <h4 class="font-bold text-sm text-text-muted uppercase tracking-wider">Wishlists Applied</h4>
-        </div>
-        <span v-if="!wishlistsExpanded && wishlistsAppliedRef" class="text-xs text-text-subtle truncate max-w-[50%]">
-          {{ wishlistsAppliedRef.summaryText }}
-        </span>
-      </button>
-
-      <div v-show="wishlistsExpanded" class="px-4 pb-4">
-        <WishlistsApplied ref="wishlistsAppliedRef" :weapon-hash="weapon.weaponHash" />
-      </div>
-    </div>
-
-    <!-- Mode Toggle -->
-    <div class="flex items-center justify-center">
-      <div class="flex items-center gap-1 bg-surface-overlay rounded-lg p-1">
+    <!-- Mode Toggle + Wishlists Applied Row -->
+    <div class="flex items-center justify-between gap-4">
+      <!-- Left: Mode Toggle (centered vertically and horizontally in its column) -->
+      <div class="flex-1 flex items-center justify-center self-stretch">
+        <div class="flex items-center gap-1 bg-surface-overlay rounded-lg p-1">
         <button
           @click="viewMode = 'wishlist'"
           class="px-4 py-2 text-sm font-medium rounded-md transition-colors"
@@ -50,6 +23,41 @@
         >
           Coverage Analysis
         </button>
+        </div>
+      </div>
+
+      <!-- Right: Wishlists Applied (collapsible) -->
+      <div class="flex-1 max-w-md bg-surface-elevated/30 rounded-lg border border-border/50">
+        <button
+          @click="wishlistsExpanded = !wishlistsExpanded"
+          class="flex items-center justify-between w-full px-3 py-2 text-left"
+        >
+          <div class="flex items-center gap-2">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-4 w-4 transition-transform flex-shrink-0"
+              :class="{ 'rotate-90': wishlistsExpanded }"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+            <span class="font-medium text-sm text-text">
+              <template v-if="wishlistsAppliedRef">
+                {{ wishlistsAppliedRef.enabledCount }} of {{ wishlistsAppliedRef.totalCount }}
+              </template>
+              Wishlists Applied
+            </span>
+          </div>
+          <span v-if="!wishlistsExpanded && wishlistsAppliedRef" class="text-xs text-text-subtle truncate ml-2">
+            {{ wishlistsAppliedRef.summaryText.split(': ')[1] || '' }}
+          </span>
+        </button>
+
+        <div v-show="wishlistsExpanded" class="px-3 pb-3">
+          <WishlistsApplied ref="wishlistsAppliedRef" :weapon-hash="weapon.weaponHash" />
+        </div>
       </div>
     </div>
 
@@ -803,7 +811,7 @@ onMounted(async () => {
 // ============ MODE STATE ============
 const viewMode = ref<'wishlist' | 'coverage'>('wishlist')
 const savedRollsExpanded = ref(true)
-const wishlistsExpanded = ref(false)
+const wishlistsExpanded = ref(true)
 
 // Ref to WishlistsApplied component for accessing summaryText
 const wishlistsAppliedRef = ref<InstanceType<typeof WishlistsApplied> | null>(null)
@@ -990,8 +998,13 @@ const instanceMatchCache = computed(() => {
   const cache = new Map<string, boolean>()
   if (!hasSelection.value) return cache
 
+  const mwSocketIndex = props.weapon.masterworkSocketIndex
+  const selectedMW = selectedMasterworkHash.value
+
   for (const instance of props.weapon.instances) {
     let matches = true
+
+    // Check perk columns
     for (const col of matrixColumns.value) {
       const colPerks = col.availablePerks.map(p => p.hash)
       const selectedInCol = colPerks.filter(h => selection.value.has(h))
@@ -1008,6 +1021,15 @@ const instanceMatchCache = computed(() => {
       }
       if (!matches) break
     }
+
+    // Check masterwork selection
+    if (matches && selectedMW !== null && mwSocketIndex !== undefined) {
+      const instanceMWHash = instance.sockets.sockets[mwSocketIndex]?.plugHash
+      if (instanceMWHash !== selectedMW) {
+        matches = false
+      }
+    }
+
     cache.set(instance.itemInstanceId, matches)
   }
   return cache
