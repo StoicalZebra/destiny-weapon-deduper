@@ -630,3 +630,45 @@ interface WeaponInstance {
 - **No watermark data**: Uses "no-watermark" as fallback key
 - **Mixed ownership**: Could own only holofoil OR only normal (both tracked)
 - **Only one variant owned**: Card displays single hash without labels
+
+---
+
+## Local Development with Mock Data
+
+Due to Bungie OAuth limitations (single redirect URI per app), local development uses mock inventory data instead of live API calls.
+
+### Why Mock Mode?
+
+Bungie OAuth only allows one redirect URI per registered application. Our app uses the production Vercel URL (`https://destiny-weapon-deduper.vercel.app/callback`), so local dev at `localhost:5173` cannot complete OAuth authentication.
+
+**Solution**: Set `VITE_USE_MOCK=true` in `.env.local` to load from `data/mock-inventory.json` instead of the live API.
+
+### Syncing Mock Data with Your Account
+
+When your in-game inventory changes (acquired/dismantled weapons), sync the mock data:
+
+1. Go to production app: https://destiny-weapon-deduper.vercel.app
+2. Log in with Bungie
+3. Navigate to About page, scroll to bottom
+4. Expand "Developer Tools" section
+5. Click "Export Inventory JSON"
+6. Copy downloaded file to `data/mock-inventory.json`
+7. Restart local dev server: `npm run dev`
+
+### When to Sync
+
+Sync your mock data when:
+- You've acquired new weapons in-game
+- You've dismantled weapons since last sync
+- Local app shows weapons you no longer have
+- You want to add new weapons to your wishlist
+
+### Admin Wishlist Editing
+
+With `VITE_ADMIN_MODE=true` in `.env.local`:
+
+1. Edit StoicalZebra wishlist via weapon detail pages
+2. Export changes: Wishlists → StoicalZebra → Export & Mark Saved
+3. Publish: `./scripts/publish-wishlist.sh`
+
+The publish script copies the exported file to `data/wishlists/StoicalZebra-wishlist.txt` and pushes to GitHub.

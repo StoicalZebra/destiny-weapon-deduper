@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, shallowRef } from 'vue'
 import { useAuthStore } from './auth'
-import { inventoryAPI } from '@/api/inventory'
+import { inventoryAPI, type DestinyProfileResponse } from '@/api/inventory'
 import { weaponParser } from '@/services/weapon-parser'
 import { buildDedupedWeapon } from '@/services/deduplication'
 import type { DedupedWeapon } from '@/models/deduped-weapon'
@@ -14,6 +14,9 @@ export const useWeaponsStore = defineStore('weapons', () => {
   const weaponInstances = shallowRef<WeaponInstance[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
+
+  // Raw API response for export (used to sync mock data for local dev)
+  const rawProfileResponse = shallowRef<DestinyProfileResponse | null>(null)
 
   // Actions
   async function loadWeapons() {
@@ -43,6 +46,9 @@ export const useWeaponsStore = defineStore('weapons', () => {
         membershipId,
         authStore.accessToken
       )
+
+      // Store raw response for export (local dev mock data sync)
+      rawProfileResponse.value = profile
 
       console.log('Profile fetched successfully')
 
@@ -79,15 +85,27 @@ export const useWeaponsStore = defineStore('weapons', () => {
   function clearWeapons() {
     weapons.value = []
     weaponInstances.value = []
+    rawProfileResponse.value = null
     error.value = null
+  }
+
+  /**
+   * Export raw API response as JSON for local dev mock data
+   * Returns JSON string in the format expected by mock-inventory.json
+   */
+  function exportRawInventory(): string | null {
+    if (!rawProfileResponse.value) return null
+    return JSON.stringify({ Response: rawProfileResponse.value }, null, 2)
   }
 
   return {
     weapons,
     weaponInstances,
+    rawProfileResponse,
     loading,
     error,
     loadWeapons,
-    clearWeapons
+    clearWeapons,
+    exportRawInventory
   }
 })
