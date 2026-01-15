@@ -80,10 +80,19 @@ export interface DestinyPlugSetDefinition extends ManifestDefinition {
 }
 
 /**
+ * Bidirectional mapping between base and enhanced trait hashes
+ */
+interface TraitMapping {
+  baseToEnhanced: Map<number, number>
+  enhancedToBase: Map<number, number>
+}
+
+/**
  * Service for looking up manifest definitions
  */
 class ManifestService {
   private cache: Map<ManifestTableName, Record<string, any>> = new Map()
+  private traitMapping: TraitMapping | null = null
 
   /**
    * Load a manifest table into memory cache
@@ -159,10 +168,11 @@ class ManifestService {
   }
 
   /**
-   * Clear memory cache
+   * Clear memory cache and trait mapping
    */
   clearCache(): void {
     this.cache.clear()
+    this.traitMapping = null
   }
 
   /**
@@ -170,6 +180,100 @@ class ManifestService {
    */
   isTableLoaded(tableName: ManifestTableName): boolean {
     return this.cache.has(tableName)
+  }
+
+  /**
+   * Build the global trait-to-enhanced-trait mapping by scanning all plug sets.
+   * This is called once after manifest tables are loaded.
+   *
+   * The algorithm matches base and enhanced perks by:
+   * 1. Scanning all plug sets for perks
+   * 2. Separating perks by tier type (Basic = base, Common = enhanced)
+   * 3. Matching by display name (exact match or base name + " Enhanced")
+   */
+  buildTraitMapping(): void {
+    if (this.traitMapping) {
+      return // Already built
+    }
+
+    const baseToEnhanced = new Map<number, number>()
+    const enhancedToBase = new Map<number, number>()
+
+    const plugSetTable = this.cache.get('DestinyPlugSetDefinition')
+    if (!plugSetTable) {
+      console.warn('PlugSet table not loaded, cannot build trait mapping')
+      this.traitMapping = { baseToEnhanced, enhancedToBase }
+      return
+    }
+
+    // Iterate all plug sets
+    for (const plugSetHash of Object.keys(plugSetTable)) {
+      const plugSet = plugSetTable[plugSetHash] as DestinyPlugSetDefinition
+      if (!plugSet?.reusablePlugItems) continue
+
+      const basicTraits: Array<{ hash: number; name: string }> = []
+      const enhancedTraits: Array<{ hash: number; name: string }> = []
+
+      // Separate perks by tier type
+      for (const plugItem of plugSet.reusablePlugItems) {
+        const def = this.getInventoryItem(plugItem.plugItemHash)
+        if (!def) continue
+
+        const tierType = def.inventory?.tierType
+        const name = def.displayProperties?.name
+        if (!name) continue
+
+        // TierType 2 = Basic (base trait), TierType 3 = Common (enhanced trait)
+        if (tierType === 2) {
+          basicTraits.push({ hash: plugItem.plugItemHash, name })
+        } else if (tierType === 3) {
+          enhancedTraits.push({ hash: plugItem.plugItemHash, name })
+        }
+      }
+
+      // Match enhanced traits to base traits by name
+      for (const enhanced of enhancedTraits) {
+        // Look for exact name match or legacy "Name Enhanced" format
+        const base = basicTraits.find(
+          (b) => b.name === enhanced.name || enhanced.name === b.name + ' Enhanced'
+        )
+
+        if (base && !baseToEnhanced.has(base.hash)) {
+          baseToEnhanced.set(base.hash, enhanced.hash)
+          enhancedToBase.set(enhanced.hash, base.hash)
+        }
+      }
+    }
+
+    this.traitMapping = { baseToEnhanced, enhancedToBase }
+  }
+
+  /**
+   * Get the enhanced variant hash for a base perk
+   */
+  getEnhancedVariant(baseHash: number): number | undefined {
+    return this.traitMapping?.baseToEnhanced.get(baseHash)
+  }
+
+  /**
+   * Get the base variant hash for an enhanced perk
+   */
+  getBaseVariant(enhancedHash: number): number | undefined {
+    return this.traitMapping?.enhancedToBase.get(enhancedHash)
+  }
+
+  /**
+   * Check if the trait mapping has been built
+   */
+  isTraitMappingBuilt(): boolean {
+    return this.traitMapping !== null
+  }
+
+  /**
+   * Get the size of the trait mapping (for debugging/stats)
+   */
+  getTraitMappingSize(): number {
+    return this.traitMapping?.baseToEnhanced.size ?? 0
   }
 }
 

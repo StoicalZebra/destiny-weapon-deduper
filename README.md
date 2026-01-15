@@ -70,6 +70,8 @@ npm run dev
 
 The Bungie Manifest contains all Destiny 2 game definitions (weapons, perks, stats, etc.). It's approximately 200MB+ and updated with each game patch.
 
+For detailed architecture (version checking, caching layers, data flow), see [planning/Architecture.md](planning/Architecture.md).
+
 ### How the Main App Uses the Manifest
 
 The main Vue app downloads the manifest **dynamically at runtime**:
@@ -687,4 +689,4 @@ Prior to ~2023, some enhanced perks DID have "Enhanced" in their name (e.g., "En
 
 - [ ] **Wishlist toggle performance**: Toggle response is ~200-300ms. Goal is instant (<50ms). All obvious optimizations applied; further profiling needed to identify remaining bottleneck.
 - [ ] **DIM API Integration**: Implement direct Keep/Junk tagging via DIM's API
-- [ ] **Enhanced Origin Traits**: Some origin traits (e.g., "Roar of Battle" on The Martlet) don't show enhanced badge even though Enhanced variants exist in the manifest. The enhanced hash exists but isn't in the weapon's plug set. Need to investigate if this is a Bungie manifest issue or if we need to look up enhanced variants differently (possibly via a global perk → enhanced perk mapping rather than per-weapon plug sets).
+- [x] **Enhanced Origin Traits**: ~~Some origin traits (e.g., "Roar of Battle" on The Martlet) don't show enhanced badge even though Enhanced variants exist in the manifest.~~ Fixed via global trait-to-enhanced mapping generated at runtime. See [Architecture.md](planning/Architecture.md#enhanced-perk-system) for details.

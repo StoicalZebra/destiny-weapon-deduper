@@ -179,4 +179,186 @@ describe('ManifestService', () => {
       expect(manifestService.isTableLoaded('DestinyStatDefinition')).toBe(true)
     })
   })
+
+  describe('buildTraitMapping', () => {
+    it('builds mapping between base and enhanced traits by name', async () => {
+      // Setup: Create mock inventory items with base and enhanced traits
+      const baseTraitHash = 1000
+      const enhancedTraitHash = 1001
+      const baseOnlyHash = 2000
+
+      const mockInventoryItems = {
+        [baseTraitHash]: {
+          hash: baseTraitHash,
+          displayProperties: { name: 'Rampage', description: '', icon: '', hasIcon: true },
+          inventory: { tierType: 2 } // Basic = base trait
+        },
+        [enhancedTraitHash]: {
+          hash: enhancedTraitHash,
+          displayProperties: { name: 'Rampage', description: '', icon: '', hasIcon: true },
+          inventory: { tierType: 3 } // Common = enhanced trait
+        },
+        [baseOnlyHash]: {
+          hash: baseOnlyHash,
+          displayProperties: { name: 'Outlaw', description: '', icon: '', hasIcon: true },
+          inventory: { tierType: 2 }
+        }
+      }
+
+      const mockPlugSets = {
+        '100': {
+          hash: 100,
+          reusablePlugItems: [
+            { plugItemHash: baseTraitHash },
+            { plugItemHash: enhancedTraitHash },
+            { plugItemHash: baseOnlyHash }
+          ]
+        }
+      }
+
+      // Load both tables
+      vi.mocked(indexedDBStorage.getManifestTable)
+        .mockResolvedValueOnce(mockInventoryItems)
+        .mockResolvedValueOnce(mockPlugSets)
+
+      await manifestService.loadTable('DestinyInventoryItemDefinition')
+      await manifestService.loadTable('DestinyPlugSetDefinition')
+
+      // Build the mapping
+      manifestService.buildTraitMapping()
+
+      // Verify mapping was built correctly
+      expect(manifestService.getEnhancedVariant(baseTraitHash)).toBe(enhancedTraitHash)
+      expect(manifestService.getBaseVariant(enhancedTraitHash)).toBe(baseTraitHash)
+
+      // Base-only trait should have no enhanced variant
+      expect(manifestService.getEnhancedVariant(baseOnlyHash)).toBeUndefined()
+    })
+
+    it('handles legacy "Name Enhanced" format', async () => {
+      const baseHash = 3000
+      const enhancedHash = 3001
+
+      const mockInventoryItems = {
+        [baseHash]: {
+          hash: baseHash,
+          displayProperties: { name: 'Kill Clip', description: '', icon: '', hasIcon: true },
+          inventory: { tierType: 2 }
+        },
+        [enhancedHash]: {
+          hash: enhancedHash,
+          displayProperties: { name: 'Kill Clip Enhanced', description: '', icon: '', hasIcon: true },
+          inventory: { tierType: 3 }
+        }
+      }
+
+      const mockPlugSets = {
+        '200': {
+          hash: 200,
+          reusablePlugItems: [
+            { plugItemHash: baseHash },
+            { plugItemHash: enhancedHash }
+          ]
+        }
+      }
+
+      vi.mocked(indexedDBStorage.getManifestTable)
+        .mockResolvedValueOnce(mockInventoryItems)
+        .mockResolvedValueOnce(mockPlugSets)
+
+      await manifestService.loadTable('DestinyInventoryItemDefinition')
+      await manifestService.loadTable('DestinyPlugSetDefinition')
+
+      manifestService.buildTraitMapping()
+
+      expect(manifestService.getEnhancedVariant(baseHash)).toBe(enhancedHash)
+      expect(manifestService.getBaseVariant(enhancedHash)).toBe(baseHash)
+    })
+
+    it('does not rebuild if already built', async () => {
+      const mockInventoryItems = {
+        '1000': {
+          hash: 1000,
+          displayProperties: { name: 'Test', description: '', icon: '', hasIcon: true },
+          inventory: { tierType: 2 }
+        }
+      }
+
+      const mockPlugSets = {
+        '100': {
+          hash: 100,
+          reusablePlugItems: [{ plugItemHash: 1000 }]
+        }
+      }
+
+      vi.mocked(indexedDBStorage.getManifestTable)
+        .mockResolvedValueOnce(mockInventoryItems)
+        .mockResolvedValueOnce(mockPlugSets)
+
+      await manifestService.loadTable('DestinyInventoryItemDefinition')
+      await manifestService.loadTable('DestinyPlugSetDefinition')
+
+      manifestService.buildTraitMapping()
+      expect(manifestService.isTraitMappingBuilt()).toBe(true)
+
+      // Call again - should not rebuild
+      manifestService.buildTraitMapping()
+      expect(manifestService.isTraitMappingBuilt()).toBe(true)
+    })
+
+    it('returns empty mapping when plug set table not loaded', () => {
+      manifestService.buildTraitMapping()
+
+      expect(manifestService.isTraitMappingBuilt()).toBe(true)
+      expect(manifestService.getTraitMappingSize()).toBe(0)
+    })
+
+    it('clears mapping when cache is cleared', async () => {
+      const mockInventoryItems = {
+        '1000': {
+          hash: 1000,
+          displayProperties: { name: 'Test', description: '', icon: '', hasIcon: true },
+          inventory: { tierType: 2 }
+        },
+        '1001': {
+          hash: 1001,
+          displayProperties: { name: 'Test', description: '', icon: '', hasIcon: true },
+          inventory: { tierType: 3 }
+        }
+      }
+
+      const mockPlugSets = {
+        '100': {
+          hash: 100,
+          reusablePlugItems: [{ plugItemHash: 1000 }, { plugItemHash: 1001 }]
+        }
+      }
+
+      vi.mocked(indexedDBStorage.getManifestTable)
+        .mockResolvedValueOnce(mockInventoryItems)
+        .mockResolvedValueOnce(mockPlugSets)
+
+      await manifestService.loadTable('DestinyInventoryItemDefinition')
+      await manifestService.loadTable('DestinyPlugSetDefinition')
+
+      manifestService.buildTraitMapping()
+      expect(manifestService.getEnhancedVariant(1000)).toBe(1001)
+
+      manifestService.clearCache()
+      expect(manifestService.isTraitMappingBuilt()).toBe(false)
+      expect(manifestService.getEnhancedVariant(1000)).toBeUndefined()
+    })
+  })
+
+  describe('getEnhancedVariant', () => {
+    it('returns undefined when mapping not built', () => {
+      expect(manifestService.getEnhancedVariant(12345)).toBeUndefined()
+    })
+  })
+
+  describe('getBaseVariant', () => {
+    it('returns undefined when mapping not built', () => {
+      expect(manifestService.getBaseVariant(12345)).toBeUndefined()
+    })
+  })
 })
