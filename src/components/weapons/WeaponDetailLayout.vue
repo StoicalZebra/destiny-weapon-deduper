@@ -143,8 +143,8 @@ const activeTab = ref<'coverage' | 'editrolls'>(props.initialTab)
 const godRollRef = ref<InstanceType<typeof WeaponsGodRoll> | null>(null)
 
 const tabs = [
-  { id: 'coverage', label: 'Perk Coverage' },
-  { id: 'editrolls', label: 'Edit Wishlist Rolls' }
+  { id: 'editrolls', label: 'Edit Wishlist Rolls' },
+  { id: 'coverage', label: 'Perk Coverage' }
 ] as const
 
 // Handle loading a wishlist item into the God Roll Creator

@@ -1,14 +1,15 @@
 <template>
   <div class="space-y-6 text-text">
-    <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+    <!-- Unified Vertical Layout (matches Coverage tab) -->
+    <div class="space-y-8">
 
-      <!-- Left: Selection Grid -->
-      <div class="xl:col-span-2 space-y-4">
+      <!-- Top: Selection Grid -->
+      <div class="space-y-4">
 
         <!-- Saved Profiles List -->
         <div v-if="displayProfiles.length > 0" class="space-y-3">
            <h4 class="font-bold text-sm text-text-muted uppercase tracking-wider">Saved on Your Custom Wishlist</h4>
-           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               <div
                  v-for="profile in displayProfiles"
                  :key="profile.id"
@@ -74,13 +75,6 @@
           <h4 class="font-bold text-lg text-text">Wishlist Roll Editor</h4>
 
           <div class="flex items-center gap-4">
-             <!-- Legend -->
-            <div class="flex items-center gap-3 text-xs bg-surface-elevated/50 px-3 py-1.5 rounded-full border border-border/50">
-              <span class="flex items-center gap-1.5">
-                <span class="w-2 h-2 rounded-full bg-orange-500"></span>
-                <span class="text-text-muted">Selected Perk</span>
-              </span>
-            </div>
              <!-- Enhance Toggle Button (only show if weapon has enhanceable perks) -->
              <button
                 v-if="hasEnhanceablePerks"
@@ -95,7 +89,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" :class="enhancedMode ? 'text-amber-400' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
                 </svg>
-                <span>Enhance</span>
+                <span>Enhanced Perks</span>
              </button>
              <button
                 @click="clearSelection"
@@ -219,17 +213,17 @@
 
       </div>
 
-      <!-- Right: Instances List (matches Coverage tab styling) -->
+      <!-- Bottom: Instances List (matches Coverage tab styling) -->
       <div class="space-y-4">
         <h4 class="font-bold text-lg text-text">In Your Inventory ({{ weapon.instances.length }})</h4>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
           <div
             v-for="(instance, index) in weapon.instances"
             :key="instance.itemInstanceId"
-            class="p-2 rounded-lg border transition-all duration-200"
+            class="p-3 rounded-lg border transition-all duration-200"
             :class="getMatchClasses(instance.itemInstanceId)"
           >
-            <div class="flex items-center justify-between mb-1.5 gap-1">
+            <div class="flex items-center justify-between mb-2 gap-1">
               <span class="font-bold text-xs">Copy {{ index + 1 }}</span>
               <div class="flex items-center gap-1">
                 <span
@@ -786,9 +780,9 @@ const getPerkRowClasses = (perk: Perk, column: PerkColumn) => {
     return 'bg-amber-900/20 border-amber-600/40 hover:bg-amber-900/30'
   }
 
-  // Non-enhanced selected state
+  // Non-enhanced selected state (blue)
   if (isSelected) {
-    return 'bg-orange-900/40 border-orange-500/70 ring-1 ring-orange-500/50'
+    return 'bg-blue-900/40 border-blue-500/70 ring-1 ring-blue-500/50'
   }
 
   // Unowned perks are dimmed
@@ -815,9 +809,9 @@ const getPerkIconClasses = (perk: Perk, column: PerkColumn) => {
     return 'ring-1 ring-amber-600/40 opacity-40'
   }
 
-  // Non-enhanced selected state
+  // Non-enhanced selected state (blue)
   if (isSelected) {
-    return 'ring-2 ring-orange-400 ring-offset-1 ring-offset-surface'
+    return 'ring-2 ring-blue-400 ring-offset-1 ring-offset-surface'
   }
 
   // Owned perk (white ring)
