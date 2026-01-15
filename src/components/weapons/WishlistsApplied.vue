@@ -112,6 +112,24 @@ const enabledCount = computed(() =>
   wishlistsWithCounts.value.filter(({ wishlist }) => isEnabled(wishlist)).length
 )
 
+// Summary text for collapsed view (e.g., "3 of 5 active: PandaPaxxy, Voltron, ...")
+const summaryText = computed(() => {
+  const enabled = wishlistsWithCounts.value.filter(({ wishlist }) => isEnabled(wishlist))
+  if (enabled.length === 0) {
+    return `0 of ${totalCount.value} active`
+  }
+  const names = enabled.slice(0, 3).map(({ wishlist }) => wishlist.name)
+  const suffix = enabled.length > 3 ? `, +${enabled.length - 3} more` : ''
+  return `${enabledCount.value} of ${totalCount.value} active: ${names.join(', ')}${suffix}`
+})
+
+// Expose summary for parent component to use in collapsed state
+defineExpose({
+  summaryText,
+  enabledCount,
+  totalCount
+})
+
 // Check if wishlist is enabled (uses store's reactive Map for instant updates)
 function isEnabled(wishlist: Wishlist): boolean {
   return store.isWishlistEnabled(wishlist.id)

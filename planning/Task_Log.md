@@ -243,6 +243,40 @@ Focus
 - wishlist management
 - finding rolls that meet wishlist
 
+Feature changes
+- [x] Weapon Detail View UI merge
+
+I want 2 main modes / functions for this page
+1) (DEFAULT) I am editing my God rolls
+2) I want to see my analysis or my perk coverage adn 1 modal / pop up
+- both modes show advice / thumbs up from Wishlists Applied
+
+To do
+- separate "Wishlists Applied" section from the "Coverage Analysis" dropdown
+- Move "Wishlists Applied" section above Perk Matrix and make it collapsible
+  - When collapsed show summary of how many wishlists selected and their names
+
+Wishlist Mode - DEFAULT mode
+- components:  
+-- Wish lists Applied
+-- Perk Matrix
+-- Save to wishlist section (as needed when click perks) - **UNIQUE TO THIS MODE**
+-- In your Inventory
+
+Perk Coverage Analysis - secondary mode
+- components:  
+-- Wish lists Applied
+-- Coverage Analysis toggle (Simple / Detailed) - **UNIQUE TO THIS MODE**
+-- Perk Matrix
+-- In your Inventory
+
+As for how the user changes from Wishlist Mode → Perk Analysis mode - I am open to ideas but I had some ideas
+- Toggle / slider between modes
+  - Start in Wishlist mode
+  - SLide toggle to analysis mode
+  - Hit "Cancel analysis mode" to return to main WIshlist mode
+- Wishlist is primary mode but Analysis is an overlay / modal pop-up?
+
 
 
 

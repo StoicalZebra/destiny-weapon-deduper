@@ -60,55 +60,24 @@
       <!-- Legacy Migration Banner -->
       <LegacyMigrationBanner />
 
-      <!-- Tabs -->
-      <div class="mb-6 border-b border-border">
-        <nav class="-mb-px flex space-x-8" aria-label="Tabs">
-          <button
-            v-for="tab in tabs"
-            :key="tab.id"
-            @click="activeTab = tab.id"
-            class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors"
-            :class="[
-              activeTab === tab.id
-                ? 'border-accent-primary text-accent-primary'
-                : 'border-transparent text-text-subtle hover:text-text-muted hover:border-border-subtle'
-            ]"
-          >
-            {{ tab.label }}
-          </button>
-        </nav>
-      </div>
-
-      <!-- Tab Content -->
-      <div v-if="activeTab === 'coverage'">
-        <WeaponsCoverage
-          :weapon="weapon"
-          @load-wishlist-item="handleLoadWishlistItem"
-          @edit-wishlist-item="handleEditWishlistItem"
-        />
-      </div>
-
-      <div v-else-if="activeTab === 'editrolls'">
-        <WeaponsGodRoll
-          ref="godRollRef"
-          :weapon="weapon"
-        />
-      </div>
+      <!-- Unified Weapon Detail View -->
+      <WeaponDetailUnified
+        ref="unifiedRef"
+        :weapon="weapon"
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, nextTick, onMounted, watch } from 'vue'
-import WeaponsCoverage from '@/components/weapons/WeaponsCoverage.vue'
-import WeaponsGodRoll from '@/components/weapons/WeaponsGodRoll.vue'
+import WeaponDetailUnified from '@/components/weapons/WeaponDetailUnified.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import ErrorMessage from '@/components/common/ErrorMessage.vue'
 import WeaponIcon from '@/components/common/WeaponIcon.vue'
 import LegacyMigrationBanner from '@/components/common/LegacyMigrationBanner.vue'
 import { useWishlistsStore } from '@/stores/wishlists'
 import type { DedupedWeapon } from '@/models/deduped-weapon'
-import type { WishlistItem, Wishlist } from '@/models/wishlist'
 
 interface Props {
   weapon: DedupedWeapon | null
@@ -119,7 +88,6 @@ interface Props {
   fallbackTitle?: string
   loadingMessage?: string
   notFoundMessage?: string
-  initialTab?: 'coverage' | 'editrolls'
   editItemId?: string
   editWishlistId?: string
 }
@@ -131,35 +99,14 @@ const props = withDefaults(defineProps<Props>(), {
   subtitle: '',
   fallbackTitle: 'Weapon Details',
   loadingMessage: 'Loading...',
-  notFoundMessage: 'Weapon not found. Try returning to the list.',
-  initialTab: 'coverage'
+  notFoundMessage: 'Weapon not found. Try returning to the list.'
 })
 
 defineEmits<{
   back: []
 }>()
 
-const activeTab = ref<'coverage' | 'editrolls'>(props.initialTab)
-const godRollRef = ref<InstanceType<typeof WeaponsGodRoll> | null>(null)
-
-const tabs = [
-  { id: 'editrolls', label: 'Edit Wishlist Rolls' },
-  { id: 'coverage', label: 'Perk Coverage' }
-] as const
-
-// Handle loading a wishlist item into the God Roll Creator
-async function handleLoadWishlistItem(item: WishlistItem, _wishlist: Wishlist) {
-  activeTab.value = 'editrolls'
-  await nextTick()
-  godRollRef.value?.loadWishlistItem(item)
-}
-
-// Handle editing a wishlist item in the God Roll Creator
-async function handleEditWishlistItem(item: WishlistItem, wishlist: Wishlist) {
-  activeTab.value = 'editrolls'
-  await nextTick()
-  godRollRef.value?.editWishlistItem(item, wishlist)
-}
+const unifiedRef = ref<InstanceType<typeof WeaponDetailUnified> | null>(null)
 
 // Load edit item from URL params
 const wishlistsStore = useWishlistsStore()
@@ -179,8 +126,9 @@ async function loadEditItem() {
   const item = wishlist.items.find(i => i.id === props.editItemId)
   if (!item) return
 
-  // Trigger edit mode
-  await handleEditWishlistItem(item, wishlist)
+  // Trigger edit mode in unified component
+  await nextTick()
+  unifiedRef.value?.editWishlistItem(item, wishlist)
 }
 
 // Trigger edit when component mounts with edit params

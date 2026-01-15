@@ -77,11 +77,12 @@ const organizedPerks = computed(() => {
 })
 
 // Determine variant based on highlight state
-function getPerkVariant(perkHash: number): 'highlighted' | 'owned' {
+function getPerkVariant(perkHash: number): 'selected' | 'default' {
   if (props.highlightedPerks?.has(perkHash)) {
-    return 'highlighted'
+    return 'selected'  // Blue ring for matching perks
   }
-  return 'owned'
+  // Use default (white ring) to match Perk Matrix styling
+  return 'default'
 }
 
 // Check if perk is in wishlist recommendations

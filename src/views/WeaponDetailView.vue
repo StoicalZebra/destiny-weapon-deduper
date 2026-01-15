@@ -5,7 +5,6 @@
     :weapon="selectedWeapon"
     :loading="weaponsStore.loading"
     :error="weaponsStore.error"
-    :initial-tab="initialTab"
     :edit-item-id="editItemId"
     :edit-wishlist-id="editWishlistId"
     back-label="Back to all weapons"
@@ -62,10 +61,6 @@ const authStore = useAuthStore()
 const weaponHash = computed(() => {
   const raw = route.params.weaponHash
   return typeof raw === 'string' ? Number(raw) : Array.isArray(raw) ? Number(raw[0]) : NaN
-})
-
-const initialTab = computed<'coverage' | 'editrolls'>(() => {
-  return route.query.tab === 'editrolls' ? 'editrolls' : 'coverage'
 })
 
 // Edit mode params from wishlist detail page

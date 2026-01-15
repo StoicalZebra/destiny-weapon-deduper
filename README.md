@@ -220,55 +220,73 @@ destiny_deduper/
 
 ## UI Styling Guide
 
-The weapon detail view uses consistent styling patterns across the Perk Matrix and Inventory sections.
+The weapon detail view uses a consistent **blue-centric color language** across both Wishlist Editor and Coverage Analysis modes.
 
-### Perk Matrix
+### Color Scheme Philosophy
 
-Each perk is displayed as a rounded rectangle card with the following states:
+The UI uses only **3 primary perk states** for clarity:
 
-| State | Background | Border | Icon Ring |
-|-------|-----------|--------|-----------|
-| **Owned (default)** | `bg-gray-800` | `border-gray-700` | `ring-1 ring-white/80` |
-| **Not owned** | `bg-gray-800/30` | `border-gray-700/50` | `ring-1 ring-gray-700 opacity-40` |
-| **Hovered** | `bg-gray-700` | `border-orange-400 ring-1 ring-orange-400` | `ring-2 ring-orange-400` |
-| **Instance highlighted** | `bg-gray-700/50` | `border-orange-400/50` | — |
-| **Dimmed (other instance hovered)** | `bg-gray-800` | `border-gray-700 opacity-40` | — |
+| State | Meaning | Color |
+|-------|---------|-------|
+| **Unowned** | Perk not available on any owned instance | Gray/faded |
+| **Owned** | Perk available on at least one instance | White ring |
+| **Selected/Active** | User-selected or hover-highlighted | Blue |
 
-### Inventory Cards
+### Perk Matrix States
 
-Each weapon instance card follows the same pattern:
+Each perk is displayed as a rounded rectangle card:
+
+| State | Perk Row | Icon Ring |
+|-------|----------|-----------|
+| **Owned (default)** | `bg-surface-elevated border-border` | `ring-1 ring-white/80` |
+| **Unowned** | `bg-surface-elevated/30 border-border/50` | `ring-1 ring-border opacity-40` |
+| **Hovered** | `bg-surface-overlay border-blue-300` | `ring-2 ring-blue-300` |
+| **Selected** | `bg-blue-900/40 border-blue-500/70` | `ring-2 ring-blue-400` |
+
+### Inventory Card States
+
+Instance cards in "In Your Inventory" section:
 
 | State | Classes |
 |-------|---------|
-| **Default** | `bg-gray-800 border-gray-700` |
-| **Hovered** | `bg-gray-700 border-orange-400 ring-1 ring-orange-400` |
-| **Perk highlighted** | `bg-gray-700/50 border-orange-400/50` |
-| **Dimmed** | `opacity-50` |
+| **Default** | `bg-surface-elevated border-border` |
+| **Hovered** | `bg-surface-overlay border-blue-300 ring-1 ring-blue-300/50` |
+| **Match** (has selected perks) | `bg-blue-900/50 border-blue-400 ring-2 ring-blue-400` |
+| **Non-match** (when selection active) | `opacity-40 grayscale-[0.3]` |
+| **DIM selected** | `ring-2 ring-blue-500` (checkbox checked) |
 
-### Wishlist Indicators
+### Instance Sorting
 
-- **Thumbs-up badge**: Green circle (`bg-green-600`) positioned at `-top-1 -right-1` on perk icons
-- Appears on perks recommended by enabled wishlists
+Inventory cards sort dynamically based on context:
 
-### Source Type Badges
+| Context | Sort Order |
+|---------|------------|
+| **Default** | Numerically by instance ID |
+| **Wishlist mode + perks selected** | Matches first, then by ID |
+| **Coverage mode + perk hovered** | Instances with perk first, then by ID |
 
-Pill-shaped badges indicating wishlist source (consistent across all views):
+Instance labels show `#XXXX` (last 4 digits of instance ID) with tooltip for full ID.
 
-| Type | Classes |
-|------|---------|
-| **Preset** | `bg-green-900/50 text-green-300 border border-green-700/50 rounded-full` |
-| **Custom** | `bg-blue-900/50 text-blue-300 border border-blue-700/50 rounded-full` |
+### Special Indicators
 
-Used in:
-- `WishlistCard.vue` - Full size (`px-2 py-0.5 text-xs`)
-- `WishlistsApplied.vue` - Compact size (`px-1.5 py-0.5 text-[9px]`)
+| Indicator | Color | Usage |
+|-----------|-------|-------|
+| **Enhanced perk** | Gold arrow (`bg-amber-500`) | Marks enhanced variant |
+| **Wishlist thumbs-up** | Green badge (`bg-green-600`) | Perk recommended by wishlist |
+| **Preset wishlist badge** | Green pill (`bg-green-900/50`) | Built-in wishlist |
+| **Custom wishlist badge** | Blue pill (`bg-blue-900/50`) | User-created wishlist |
 
-### Color System
+### Mode-Specific Behavior
 
-- **Base backgrounds**: `gray-800` (darker), `gray-700` (lighter/hover)
-- **Accent color**: `orange-400` for hover states and highlights
-- **Dimming**: `opacity-40` or `opacity-50` for non-focused elements
-- **Wishlist badge**: `green-600`
+**Wishlist Editor Mode:**
+- Click perks to select (blue highlight)
+- Matching instances highlighted with blue border
+- Non-matching instances dimmed
+
+**Coverage Analysis Mode:**
+- Hover perks to explore (light blue highlight)
+- Instances with hovered perk sort to top
+- Non-matching instances dimmed
 
 ---
 

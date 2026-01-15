@@ -37,3 +37,7 @@ scripts/youtube-agent/perk_names.json
 __pycache__/
 *.pyc
 .playwright-mcp/
+
+# Playwright test artifacts
+playwright-report/
+test-results/

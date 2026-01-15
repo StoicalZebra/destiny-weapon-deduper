@@ -41,7 +41,7 @@ const props = withDefaults(defineProps<{
   /** Size variant */
   size?: 'sm' | 'md' | 'lg'
   /** Ring color variant */
-  variant?: 'default' | 'highlighted' | 'wishlist' | 'owned' | 'none'
+  variant?: 'default' | 'highlighted' | 'selected' | 'wishlist' | 'owned' | 'none'
   /** Override tooltip (otherwise uses perk name + description) */
   customTooltip?: string
 }>(), {
@@ -84,6 +84,8 @@ const ringClasses = computed(() => {
   switch (props.variant) {
     case 'highlighted':
       return 'ring-2 ring-orange-500 ring-offset-1 ring-offset-surface'
+    case 'selected':
+      return 'ring-2 ring-blue-400 ring-offset-1 ring-offset-surface'
     case 'wishlist':
       return 'ring-2 ring-yellow-500 ring-offset-1 ring-offset-surface'
     case 'owned':

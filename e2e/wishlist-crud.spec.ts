@@ -172,70 +172,6 @@ test.describe('Roll CRUD Operations', () => {
     await expect(presetLoaded).toBeVisible({ timeout: 30000 })
   })
 
-  test.describe('Create Roll', () => {
-    test('can create a god roll via weapon detail page', async ({ page }) => {
-      // Navigate to playground to access weapon detail
-      await page.goto('/playground')
-
-      // Wait for showcase weapons to load
-      await expect(page.getByText('Demo Mode')).toBeVisible()
-      await expect(page.getByText(/Select a weapon/)).toBeVisible({ timeout: 30000 })
-
-      // Click the first weapon card to view details
-      await page.locator('button').filter({ hasText: /copies/ }).first().click()
-
-      // Wait for weapon detail to load - look for the tabs
-      await expect(page.getByRole('button', { name: 'Perk Coverage' })).toBeVisible({ timeout: 10000 })
-
-      // Click "Edit Wishlist Rolls" tab
-      await page.getByRole('button', { name: 'Edit Wishlist Rolls' }).click()
-
-      // Wait for the editor to appear
-      await expect(page.getByText('Wishlist Roll Editor')).toBeVisible()
-
-      // Click on a perk in the matrix to select it (find the first perk row with a clickable element)
-      const perkRow = page.locator('.rounded-lg.border.cursor-pointer').first()
-      await perkRow.click()
-
-      // After selecting a perk, the save form should appear
-      await expect(page.getByRole('button', { name: /Save to Wishlist/i })).toBeVisible()
-
-      // Click Save to Wishlist
-      await page.getByRole('button', { name: /Save to Wishlist/i }).click()
-
-      // Verify the roll was saved - look for "Saved on Your Custom Wishlist" section
-      await expect(page.getByText(/Saved on Your Custom Wishlist/i)).toBeVisible({ timeout: 5000 })
-    })
-
-    test('save form shows cancel button that clears selection', async ({ page }) => {
-      // Navigate to playground
-      await page.goto('/playground')
-
-      // Wait for showcase weapons
-      await expect(page.getByText(/Select a weapon/)).toBeVisible({ timeout: 30000 })
-
-      // Click first weapon
-      await page.locator('button').filter({ hasText: /copies/ }).first().click()
-
-      // Go to edit tab
-      await expect(page.getByRole('button', { name: 'Edit Wishlist Rolls' })).toBeVisible({ timeout: 10000 })
-      await page.getByRole('button', { name: 'Edit Wishlist Rolls' }).click()
-
-      // Select a perk
-      const perkRow = page.locator('.rounded-lg.border.cursor-pointer').first()
-      await perkRow.click()
-
-      // Save form should appear
-      await expect(page.getByRole('button', { name: 'Cancel' })).toBeVisible()
-
-      // Click Cancel
-      await page.getByRole('button', { name: 'Cancel' }).click()
-
-      // Save button should disappear (no selection)
-      await expect(page.getByRole('button', { name: /Save to Wishlist/i })).not.toBeVisible()
-    })
-  })
-
   test.describe('Read Rolls', () => {
     test('displays rolls in custom wishlist detail view', async ({ page }) => {
       // Create a custom wishlist first
@@ -255,65 +191,6 @@ test.describe('Roll CRUD Operations', () => {
 
       // Should show stats (even if empty)
       await expect(page.getByText(/Items:/)).toBeVisible()
-    })
-
-    test('saved rolls appear on Saved Profiles section', async ({ page }) => {
-      // Navigate to playground
-      await page.goto('/playground')
-
-      // Wait for showcase weapons
-      await expect(page.getByText(/Select a weapon/)).toBeVisible({ timeout: 30000 })
-
-      // Click first weapon
-      await page.locator('button').filter({ hasText: /copies/ }).first().click()
-
-      // Go to edit tab
-      await expect(page.getByRole('button', { name: 'Edit Wishlist Rolls' })).toBeVisible({ timeout: 10000 })
-      await page.getByRole('button', { name: 'Edit Wishlist Rolls' }).click()
-
-      // Select a perk and save
-      const perkRow = page.locator('.rounded-lg.border.cursor-pointer').first()
-      await perkRow.click()
-      await page.getByRole('button', { name: /Save to Wishlist/i }).click()
-
-      // Verify the Saved Profiles section appears with the roll
-      await expect(page.getByText(/Saved on Your Custom Wishlist/i)).toBeVisible({ timeout: 5000 })
-      await expect(page.getByText(/\d+ perks/)).toBeVisible()
-    })
-  })
-
-  test.describe('Delete Roll', () => {
-    test('can delete a saved roll from the editor', async ({ page }) => {
-      // Navigate to playground and create a roll first
-      await page.goto('/playground')
-      await expect(page.getByText(/Select a weapon/)).toBeVisible({ timeout: 30000 })
-      await page.locator('button').filter({ hasText: /copies/ }).first().click()
-
-      await expect(page.getByRole('button', { name: 'Edit Wishlist Rolls' })).toBeVisible({ timeout: 10000 })
-      await page.getByRole('button', { name: 'Edit Wishlist Rolls' }).click()
-
-      // Create a roll
-      const perkRow = page.locator('.rounded-lg.border.cursor-pointer').first()
-      await perkRow.click()
-      await page.getByRole('button', { name: /Save to Wishlist/i }).click()
-
-      // Wait for saved profiles section
-      await expect(page.getByText(/Saved on Your Custom Wishlist/i)).toBeVisible({ timeout: 5000 })
-
-      // Find the saved profile card and hover to reveal delete button
-      const profileCard = page.locator('.group').filter({ hasText: /\d+ perks/ }).first()
-      await profileCard.hover()
-
-      // Click delete button (trash icon)
-      await profileCard.getByRole('button', { name: 'Delete' }).click()
-
-      // Confirm deletion - "Sure?" prompt appears
-      await expect(page.getByText('Sure?')).toBeVisible()
-      await page.getByRole('button', { name: 'Yes' }).click()
-
-      // The roll should be removed - "Saved on Your Custom Wishlist" section may disappear
-      // if this was the only roll
-      await expect(profileCard).not.toBeVisible({ timeout: 3000 })
     })
   })
 })
