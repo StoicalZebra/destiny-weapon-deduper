@@ -535,10 +535,17 @@ const bgColor = window.getComputedStyle(document.body).backgroundColor;
 
 ### Why Perk Icons Use Dark Backgrounds in Both Modes
 
-Bungie's perk icons are designed for dark backgrounds. The icon images have transparent backgrounds with colored/white foreground elements. Using `bg-slate-800` ensures proper contrast and visibility regardless of the page theme.
+Bungie's perk icons are designed for dark backgrounds. The icon images have transparent backgrounds with colored/white foreground elements. The app uses a semantic color token `bg-perk-background` (CSS variable `--color-perk-background`) to ensure proper contrast and visibility regardless of the page theme.
 
-**Correct:** `bg-slate-800` (dark background, both modes)
+**Implementation:**
+- CSS variable: `--color-perk-background: #1e293b` (slate-800) defined in both `:root` and `.dark` in `src/style.css`
+- Tailwind token: `perk.background` in `tailwind.config.js`
+- Usage: `bg-perk-background` class on all perk icon containers
+
+**Correct:** `bg-perk-background` (semantic token, same dark background in both modes)
 **Incorrect:** `bg-slate-200 dark:bg-slate-800` (light background in light mode breaks icon visibility)
+
+**Important:** All perk icons should use the `PerkIcon.vue` component which handles the dark background automatically. If rendering perk icons directly, always include `bg-perk-background` on the container.
 
 ### Playwright MCP Verification Pattern
 
