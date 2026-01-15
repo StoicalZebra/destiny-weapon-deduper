@@ -233,7 +233,15 @@ Workflow
 - [ ] DIM markings: mark as junk in DIM
 
 
+## 2026-01-13
+Wishlist roll oerks all get converted to "AND" / mandatory perks. Breaks lookup feature in inventory.
 
+## 2026-01-14
+Little Light web app wishlist manager is unfortunately too buggy. Committing to fixing mine and making it good. Sticking with default DIM .txt files
+
+Focus
+- wishlist management
+- finding rolls that meet wishlist
 
 
 

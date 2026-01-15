@@ -99,9 +99,9 @@
                   :title="getPerkTooltip(perk)"
                 >
                    <div class="relative flex-shrink-0 ml-0.5 w-8 h-8">
-                     <!-- Perk icon with ring indicator -->
+                     <!-- Perk icon with ring indicator (uses semantic bg-perk-background) -->
                      <div
-                       class="w-8 h-8 rounded-full overflow-hidden bg-slate-800"
+                       class="w-8 h-8 rounded-full overflow-hidden bg-perk-background"
                        :class="getPerkIconClasses(perk)"
                      >
                        <img
@@ -227,7 +227,7 @@
                 v-if="perk.icon"
                 :src="`https://www.bungie.net${perk.icon}`"
                 :alt="perk.name"
-                class="h-4 w-4 rounded bg-slate-800"
+                class="h-4 w-4 rounded bg-perk-background"
               />
               <span>{{ perk.name }}</span>
             </span>
@@ -247,7 +247,7 @@
                 v-if="perk.icon"
                 :src="`https://www.bungie.net${perk.icon}`"
                 :alt="perk.name"
-                class="h-4 w-4 rounded bg-slate-800"
+                class="h-4 w-4 rounded bg-perk-background"
               />
               <span>{{ perk.name }}</span>
             </span>

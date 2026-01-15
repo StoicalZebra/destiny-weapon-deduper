@@ -1,3 +1,10 @@
+<!--
+  IMPORTANT: All Destiny 2 perk icons MUST use this component.
+  Perk icons have transparent backgrounds and require a consistent
+  dark background (bg-perk-background) to be visible in light mode.
+
+  DO NOT render perk icons with inline <img> tags elsewhere.
+-->
 <template>
   <div
     class="relative group inline-block"
@@ -5,7 +12,7 @@
   >
     <!-- Perk icon with ring indicator -->
     <div
-      class="rounded-full overflow-hidden bg-slate-800"
+      class="rounded-full overflow-hidden bg-perk-background"
       :class="[sizeClasses, ringClasses]"
     >
       <img

@@ -27,6 +27,10 @@ export default {
           primary: 'var(--color-accent-primary)',
           secondary: 'var(--color-accent-secondary)',
         },
+        // Perk icons - theme-invariant background for transparent game icons
+        perk: {
+          background: 'var(--color-perk-background)',
+        },
         // Destiny rarity colors
         destiny: {
           exotic: '#ceae33',

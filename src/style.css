@@ -20,6 +20,9 @@
     --color-accent-secondary: #f97316;  /* orange-500 */
 
     --ring-offset-color: #ffffff;
+
+    /* Perk icons - theme-invariant dark background for transparent game icons */
+    --color-perk-background: #1e293b;   /* slate-800 */
   }
 
   .dark {
@@ -39,6 +42,9 @@
     --color-accent-secondary: #fb923c;  /* orange-400 */
 
     --ring-offset-color: #0f172a;
+
+    /* Perk icons - same in dark mode for consistency */
+    --color-perk-background: #1e293b;   /* slate-800 */
   }
 
   body {

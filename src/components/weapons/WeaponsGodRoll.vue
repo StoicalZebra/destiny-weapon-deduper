@@ -146,9 +146,9 @@
                   :title="getPerkTooltip(perk, column)"
                 >
                   <div class="relative flex-shrink-0 ml-0.5 w-8 h-8">
-                    <!-- Perk icon with ring indicator -->
+                    <!-- Perk icon with ring indicator (uses semantic bg-perk-background) -->
                     <div
-                      class="w-8 h-8 rounded-full overflow-hidden bg-slate-800"
+                      class="w-8 h-8 rounded-full overflow-hidden bg-perk-background"
                       :class="getPerkIconClasses(perk, column)"
                     >
                       <img
