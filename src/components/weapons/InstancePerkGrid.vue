@@ -22,7 +22,7 @@
             <div
               v-if="isEnhancedPerk(perkHash)"
               class="absolute -top-0.5 -left-0.5 w-3 h-3 rounded-full bg-amber-500 flex items-center justify-center"
-              title="Enhanced Perk"
+              :title="TOOLTIP_STRINGS.ENHANCED_PERK"
             >
               <svg xmlns="http://www.w3.org/2000/svg" class="h-2 w-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
@@ -32,7 +32,7 @@
             <div
               v-if="isWishlistPerk(perkHash)"
               :class="[INDICATOR_STYLES.wishlist, 'absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center shadow-lg']"
-              :title="getWishlistTooltip(perkHash)"
+              :title="getWishlistBadgeTooltip(props.wishlistPerkAnnotations?.get(perkHash))"
             >
               <svg xmlns="http://www.w3.org/2000/svg" class="h-2.5 w-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
@@ -61,7 +61,7 @@
         <div
           v-if="masterworkInfo.isEnhanced"
           class="absolute -top-0.5 -left-0.5 w-3 h-3 rounded-full bg-amber-500 flex items-center justify-center"
-          title="Enhanced Masterwork"
+          :title="TOOLTIP_STRINGS.ENHANCED_MASTERWORK"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-2 w-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
             <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
@@ -79,6 +79,7 @@ import type { WeaponInstance } from '@/models/weapon-instance'
 import type { PerkColumn } from '@/models/deduped-weapon'
 import { manifestService } from '@/services/manifest-service'
 import { getInstanceMasterwork, isEnhancedPerk } from '@/services/deduplication'
+import { TOOLTIP_STRINGS, getWishlistBadgeTooltip, formatWishlistTooltipSuffix } from '@/utils/tooltip-helpers'
 import PerkIcon from '@/components/common/PerkIcon.vue'
 import { INDICATOR_STYLES } from '@/styles/ui-states'
 
@@ -145,34 +146,16 @@ function isWishlistPerk(perkHash: number): boolean {
   return props.wishlistPerkAnnotations?.has(perkHash) ?? false
 }
 
-// Get wishlist names that recommend this perk
-function getWishlistTooltip(perkHash: number): string {
-  const wishlists = props.wishlistPerkAnnotations?.get(perkHash)
-  if (!wishlists || wishlists.length === 0) return ''
-  return `Recommended by: ${wishlists.join(', ')}`
-}
-
-// Get perk name from manifest
-function getPerkName(perkHash: number): string {
-  const def = manifestService.getInventoryItem(perkHash)
-  return def?.displayProperties?.name || 'Unknown'
-}
-
-// Get perk description from manifest
-function getPerkDescription(perkHash: number): string {
-  const def = manifestService.getInventoryItem(perkHash)
-  return def?.displayProperties?.description || ''
-}
-
-// Build full tooltip (including wishlist info)
+// Build full tooltip for perk icon (name + description + wishlist info)
 function getTooltip(perkHash: number): string {
-  const name = getPerkName(perkHash)
-  const desc = getPerkDescription(perkHash)
-  const wishlistInfo = getWishlistTooltip(perkHash)
+  const def = manifestService.getInventoryItem(perkHash)
+  const name = def?.displayProperties?.name || 'Unknown'
+  const desc = def?.displayProperties?.description || ''
+  const wishlistSuffix = formatWishlistTooltipSuffix(props.wishlistPerkAnnotations?.get(perkHash))
 
   let tooltip = name
   if (desc) tooltip += `\n${desc}`
-  if (wishlistInfo) tooltip += `\n\n${wishlistInfo}`
+  tooltip += wishlistSuffix
 
   return tooltip
 }

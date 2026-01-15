@@ -320,6 +320,9 @@ export const useWishlistsStore = defineStore('wishlists', () => {
     wishlist.items.push(item)
     wishlist.lastUpdated = new Date().toISOString()
     wishlistStorageService.saveUserWishlist(wishlist)
+
+    // Rebuild weapon index for this wishlist
+    weaponIndexes.value.set(wishlistId, buildWeaponIndex(wishlist))
   }
 
   /**
@@ -334,6 +337,9 @@ export const useWishlistsStore = defineStore('wishlists', () => {
       wishlist.items.splice(index, 1)
       wishlist.lastUpdated = new Date().toISOString()
       wishlistStorageService.saveUserWishlist(wishlist)
+
+      // Rebuild weapon index for this wishlist
+      weaponIndexes.value.set(wishlistId, buildWeaponIndex(wishlist))
     }
   }
 
@@ -349,6 +355,9 @@ export const useWishlistsStore = defineStore('wishlists', () => {
       Object.assign(item, updates)
       wishlist.lastUpdated = new Date().toISOString()
       wishlistStorageService.saveUserWishlist(wishlist)
+
+      // Rebuild weapon index for this wishlist (perkHashes may have changed)
+      weaponIndexes.value.set(wishlistId, buildWeaponIndex(wishlist))
     }
   }
 
