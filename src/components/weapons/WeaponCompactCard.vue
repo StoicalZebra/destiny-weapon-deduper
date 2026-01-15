@@ -20,6 +20,22 @@
       <div class="text-right flex-shrink-0">
         <p class="text-lg font-semibold text-accent-primary">{{ weapon.instances.length }}</p>
         <p class="text-xs text-text-subtle uppercase">{{ weapon.instances.length === 1 ? 'Copy' : 'Copies' }}</p>
+        <!-- Single variant: simple hash display -->
+        <p v-if="weapon.variantHashes.length === 1" class="text-xs text-text-subtle">
+          Hash ...{{ String(weapon.variantHashes[0].hash).slice(-4) }}
+        </p>
+        <!-- Multiple variants: show labels for each -->
+        <div v-else class="text-xs space-y-0.5 mt-1">
+          <div
+            v-for="variant in weapon.variantHashes"
+            :key="variant.hash"
+            class="flex items-center gap-1 justify-end"
+          >
+            <span v-if="variant.isHolofoil" class="text-purple-400">Holofoil</span>
+            <span v-else class="text-text-subtle">Normal</span>
+            <span class="text-text-subtle font-mono">...{{ String(variant.hash).slice(-4) }}</span>
+          </div>
+        </div>
       </div>
     </div>
   </RouterLink>

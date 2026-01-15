@@ -161,7 +161,8 @@ export class WeaponParser {
           }))
         },
         socketPlugsByIndex: Object.keys(socketPlugsByIndex).length ? socketPlugsByIndex : undefined,
-        gearTier
+        gearTier,
+        isHolofoil: manifestService.isHolofoilWeapon(item.itemHash)
       }
 
       weapons.push(weaponInstance)
@@ -184,6 +185,7 @@ export class WeaponParser {
 
   /**
    * Group weapons by hash (for deduplication)
+   * @deprecated Use groupWeaponsByNameAndSeason instead for holofoil variant support
    */
   groupWeaponsByHash(weapons: WeaponInstance[]): Map<number, WeaponInstance[]> {
     const grouped = new Map<number, WeaponInstance[]>()
@@ -193,6 +195,32 @@ export class WeaponParser {
         grouped.set(weapon.itemHash, [])
       }
       grouped.get(weapon.itemHash)!.push(weapon)
+    }
+
+    return grouped
+  }
+
+  /**
+   * Group weapons by name + season number (combines holofoil variants and different watermark images)
+   * Returns Map<groupKey, WeaponInstance[]> where groupKey is derived from name + season
+   */
+  groupWeaponsByNameAndSeason(weapons: WeaponInstance[]): Map<string, WeaponInstance[]> {
+    const grouped = new Map<string, WeaponInstance[]>()
+
+    for (const weapon of weapons) {
+      const name = this.getWeaponName(weapon.itemHash)
+      const watermark = this.getWeaponIconWatermark(weapon.itemHash)
+      // Convert watermark to season number for consistent grouping
+      // This handles cases where same-season weapons have different watermark images
+      const season = manifestService.getSeasonFromWatermark(watermark) ?? 0
+
+      // Group by name + season number (not watermark path)
+      const groupKey = `${name}|season-${season}`
+
+      if (!grouped.has(groupKey)) {
+        grouped.set(groupKey, [])
+      }
+      grouped.get(groupKey)!.push(weapon)
     }
 
     return grouped

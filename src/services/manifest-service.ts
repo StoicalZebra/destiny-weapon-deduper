@@ -30,6 +30,8 @@ export interface DestinyInventoryItemDefinition extends ManifestDefinition {
   iconWatermarkShelved?: string
   // Season association
   seasonHash?: number
+  // Holofoil variant indicator (cosmetic shiny variant)
+  isHolofoil?: boolean
   // Quality block with version-specific watermarks
   quality?: {
     displayVersionWatermarkIcons?: string[]
@@ -200,6 +202,14 @@ class ManifestService {
   getSeasonFromWatermark(watermark: string | undefined): number | undefined {
     if (!watermark) return undefined
     return (watermarkToSeason as Record<string, number>)[watermark]
+  }
+
+  /**
+   * Check if a weapon is a holofoil (shiny cosmetic) variant
+   */
+  isHolofoilWeapon(hash: number): boolean {
+    const def = this.getInventoryItem(hash)
+    return def?.isHolofoil === true
   }
 
   /**

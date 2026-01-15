@@ -7,6 +7,8 @@ export interface WeaponInstance {
   socketPlugsByIndex?: Record<number, number[]>
   // Gear tier (1-5 stars) - null/undefined for items obtained before Episode Heresy (9.0.0)
   gearTier?: number | null
+  // Holofoil variant indicator (cosmetic shiny variant)
+  isHolofoil?: boolean
 }
 
 export interface SocketInstance {

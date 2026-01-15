@@ -122,19 +122,29 @@
           class="rounded-xl border border-border bg-surface-elevated p-4"
         >
           <!-- Weapon Header -->
-          <div class="flex items-center gap-3 mb-3">
-            <img
-              v-if="getWeaponIcon(weaponHash)"
-              :src="`https://www.bungie.net${getWeaponIcon(weaponHash)}`"
-              :alt="getWeaponName(weaponHash)"
-              class="w-10 h-10 rounded"
-            />
-            <div v-else class="w-10 h-10 rounded bg-surface-overlay flex items-center justify-center">
-              <span class="text-text-subtle text-xs">?</span>
-            </div>
-            <div>
-              <h3 class="font-semibold text-text">{{ getWeaponName(weaponHash) }}</h3>
-              <p class="text-xs text-text-subtle">{{ items.length }} {{ items.length === 1 ? 'roll' : 'rolls' }}</p>
+          <div class="flex items-start justify-between gap-3 mb-3">
+            <div class="flex items-center gap-3 min-w-0">
+              <img
+                v-if="getWeaponIcon(weaponHash)"
+                :src="`https://www.bungie.net${getWeaponIcon(weaponHash)}`"
+                :alt="getWeaponName(weaponHash)"
+                class="w-10 h-10 rounded"
+              />
+              <div v-else class="w-10 h-10 rounded bg-surface-overlay flex items-center justify-center">
+                <span class="text-text-subtle text-xs">?</span>
+              </div>
+              <div class="min-w-0 flex-1 grid grid-cols-2 gap-x-4 items-end">
+                <!-- Left column: Name + Rolls -->
+                <div class="min-w-0 flex flex-col justify-end">
+                  <h3 class="font-semibold text-text truncate">{{ getWeaponName(weaponHash) }}</h3>
+                  <p class="text-xs text-text-subtle">{{ items.length }} {{ items.length === 1 ? 'roll' : 'rolls' }}</p>
+                </div>
+                <!-- Right column: Season + Hash (left-aligned, bottom-aligned) -->
+                <div class="flex flex-col justify-end">
+                  <p v-if="getWeaponSeasonName(weaponHash)" class="text-xs text-text-subtle">{{ getWeaponSeasonName(weaponHash) }}</p>
+                  <p class="text-xs text-text-subtle font-mono">Hash ...{{ String(weaponHash).slice(-4) }}</p>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -217,6 +227,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useWishlistsStore } from '@/stores/wishlists'
 import { manifestService } from '@/services/manifest-service'
+import { weaponParser } from '@/services/weapon-parser'
 import { getWishlistStats } from '@/services/dim-wishlist-parser'
 import WishlistPerkMatrix from '@/components/wishlists/WishlistPerkMatrix.vue'
 import type { WishlistItem, WishlistTag } from '@/models/wishlist'
@@ -323,6 +334,10 @@ function getWeaponName(hash: number): string {
 function getWeaponIcon(hash: number): string | null {
   const def = manifestService.getInventoryItem(hash)
   return def?.displayProperties?.icon || null
+}
+
+function getWeaponSeasonName(hash: number): string | undefined {
+  return weaponParser.getWeaponSeasonName(hash)
 }
 
 function formatDate(isoString?: string): string {

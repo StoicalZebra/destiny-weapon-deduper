@@ -442,6 +442,14 @@
                   <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </button>
+              <!-- Holofoil badge -->
+              <span
+                v-if="instance.isHolofoil"
+                class="text-xs px-1.5 py-0.5 rounded-full bg-purple-600 text-white font-medium"
+                title="Holofoil variant"
+              >
+                Holofoil
+              </span>
               <span class="font-bold text-xs font-mono" :title="instance.itemInstanceId">#{{ instance.itemInstanceId.slice(-4) }}</span>
             </div>
             <div class="flex items-center gap-1">
@@ -687,6 +695,14 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                 </button>
+                <!-- Holofoil badge -->
+                <span
+                  v-if="instance.isHolofoil"
+                  class="text-xs px-1.5 py-0.5 rounded-full bg-purple-600 text-white font-medium"
+                  title="Holofoil variant"
+                >
+                  Holofoil
+                </span>
                 <span class="font-bold text-xs font-mono" :title="instance.itemInstanceId">#{{ instance.itemInstanceId.slice(-4) }}</span>
               </div>
               <div class="flex items-center gap-1">

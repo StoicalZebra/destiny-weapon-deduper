@@ -52,14 +52,14 @@ export const useWeaponsStore = defineStore('weapons', () => {
 
       console.log(`Found ${parsedWeapons.length} weapons`)
 
-      // Group weapons by hash for deduplication
-      const grouped = weaponParser.groupWeaponsByHash(parsedWeapons)
+      // Group weapons by name + season (combines holofoil variants with normal versions)
+      const grouped = weaponParser.groupWeaponsByNameAndSeason(parsedWeapons)
 
       // Build deduped weapon entries with perk matrices
       const dedupedWeapons: DedupedWeapon[] = []
 
-      for (const [weaponHash, instances] of grouped) {
-        dedupedWeapons.push(buildDedupedWeapon(weaponHash, instances))
+      for (const [, instances] of grouped) {
+        dedupedWeapons.push(buildDedupedWeapon(instances))
       }
 
       // Sort by weapon name

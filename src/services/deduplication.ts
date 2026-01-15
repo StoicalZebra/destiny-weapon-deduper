@@ -1,7 +1,7 @@
 import { manifestService } from './manifest-service'
 import { weaponParser } from './weapon-parser'
 import { SOCKET_CATEGORY_INTRINSIC_TRAITS, SOCKET_CATEGORY_WEAPON_PERKS } from '@/utils/constants'
-import type { DedupedWeapon, PerkColumn } from '@/models/deduped-weapon'
+import type { DedupedWeapon, PerkColumn, WeaponVariantInfo } from '@/models/deduped-weapon'
 import type { WeaponInstance } from '@/models/weapon-instance'
 import type { Perk } from '@/models/perk'
 
@@ -696,11 +696,43 @@ function calculateGearTierRange(instances: WeaponInstance[]): { min: number | nu
   }
 }
 
+/**
+ * Collect variant information from instances (for holofoil + normal grouping)
+ * Returns array of unique hashes with their holofoil status, sorted so non-holofoil comes first
+ */
+function collectVariantHashes(instances: WeaponInstance[]): WeaponVariantInfo[] {
+  const hashSet = new Set<number>()
+  for (const inst of instances) {
+    hashSet.add(inst.itemHash)
+  }
+
+  const variants: WeaponVariantInfo[] = Array.from(hashSet).map(hash => ({
+    hash,
+    isHolofoil: manifestService.isHolofoilWeapon(hash)
+  }))
+
+  // Sort so non-holofoil comes first (primary)
+  variants.sort((a, b) => {
+    if (a.isHolofoil !== b.isHolofoil) {
+      return a.isHolofoil ? 1 : -1
+    }
+    return 0
+  })
+
+  return variants
+}
+
 export function buildDedupedWeapon(
-  weaponHash: number,
   instances: WeaponInstance[]
 ): DedupedWeapon {
-  const { matrix, intrinsicPerks, masterworkPerks, masterworkSocketIndex } = buildPerkMatrix(weaponHash, instances)
+  // Collect all variant hashes (may include both normal and holofoil)
+  const variantHashes = collectVariantHashes(instances)
+  const hasHolofoil = variantHashes.some(v => v.isHolofoil)
+
+  // Use primary hash (non-holofoil preferred) for weapon metadata
+  const primaryHash = variantHashes[0].hash
+
+  const { matrix, intrinsicPerks, masterworkPerks, masterworkSocketIndex } = buildPerkMatrix(primaryHash, instances)
   const totalPerksOwned = countOwnedPerks(matrix)
   const totalPerksPossible = countPossiblePerks(matrix)
   const completionPercentage = totalPerksPossible > 0
@@ -709,11 +741,13 @@ export function buildDedupedWeapon(
   const { min: minGearTier, max: maxGearTier } = calculateGearTierRange(instances)
 
   return {
-    weaponHash,
-    weaponName: weaponParser.getWeaponName(weaponHash),
-    weaponIcon: weaponParser.getWeaponIcon(weaponHash),
-    iconWatermark: weaponParser.getWeaponIconWatermark(weaponHash),
-    seasonName: weaponParser.getWeaponSeasonName(weaponHash),
+    weaponHash: primaryHash,
+    weaponName: weaponParser.getWeaponName(primaryHash),
+    weaponIcon: weaponParser.getWeaponIcon(primaryHash),
+    iconWatermark: weaponParser.getWeaponIconWatermark(primaryHash),
+    seasonName: weaponParser.getWeaponSeasonName(primaryHash),
+    variantHashes,
+    hasHolofoil,
     perkMatrix: matrix,
     intrinsicPerks,
     masterworkPerks,
@@ -721,7 +755,7 @@ export function buildDedupedWeapon(
     totalPerksOwned,
     totalPerksPossible,
     completionPercentage,
-    tierType: weaponParser.getWeaponTierType(weaponHash),
+    tierType: weaponParser.getWeaponTierType(primaryHash),
     minGearTier,
     maxGearTier,
     masterworkSocketIndex

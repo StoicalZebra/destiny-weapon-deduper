@@ -561,3 +561,72 @@ Each instance card shows its equipped masterwork below the perk grid:
 - Gold ring (`ring-yellow-600`) for base masterwork
 - Amber ring (`ring-amber-500`) + up-arrow badge for enhanced masterwork
 - Stat name displayed next to icon (e.g., "Tier 3: Cooling Efficiency")
+
+---
+
+## Holofoil Weapon System
+
+Holofoil weapons are cosmetic "shiny" variants of regular weapons introduced in Destiny 2. They share the same name but have different item hashes in Bungie's API.
+
+### How Bungie Represents Holofoil
+
+| Property | Normal | Holofoil |
+|----------|--------|----------|
+| `itemHash` | e.g., `1323862250` | e.g., `1556004989` (different) |
+| `displayProperties.name` | "Riptide" | "Riptide" (same) |
+| `isHolofoil` | `false`/`undefined` | `true` |
+| `iconWatermark` | Season watermark | Same season watermark |
+| Perks/stats | Standard pool | Same pool |
+
+### Our Grouping Strategy
+
+We group weapons by **name + season watermark** instead of just `itemHash`:
+
+1. **Parse weapons** - Tag each instance with `isHolofoil` from manifest
+2. **Group by key** - Use `${weaponName}|${iconWatermark}` as group key
+3. **Build DedupedWeapon** - Merge perks from all instances (both variants)
+4. **Track variants** - `variantHashes[]` array with holofoil status per hash
+5. **Display** - Show both hashes on cards with "Normal/Holofoil" labels
+
+**Key files:**
+- `src/services/weapon-parser.ts` - `groupWeaponsByNameAndSeason()`
+- `src/services/deduplication.ts` - `collectVariantHashes()`, `buildDedupedWeapon()`
+- `src/models/deduped-weapon.ts` - `WeaponVariantInfo`, `variantHashes`, `hasHolofoil`
+
+### Data Model
+
+```typescript
+// Tracks variant information for weapons with multiple hashes
+interface WeaponVariantInfo {
+  hash: number
+  isHolofoil: boolean
+}
+
+// DedupedWeapon now includes:
+interface DedupedWeapon {
+  // ... existing fields ...
+  variantHashes: WeaponVariantInfo[]  // All variant hashes (sorted: normal first)
+  hasHolofoil: boolean                 // Convenience flag for UI
+}
+
+// WeaponInstance now includes:
+interface WeaponInstance {
+  // ... existing fields ...
+  isHolofoil?: boolean  // True if this instance is a holofoil variant
+}
+```
+
+### UI Indicators
+
+| Location | Display |
+|----------|---------|
+| **WeaponCompactCard** | Single variant: "Hash ...XXXX"; Multiple: "Normal ...XXXX" / "Holofoil ...XXXX" (purple text) |
+| **Instance cards** | Purple "Holofoil" pill badge next to instance ID |
+| **Detail header** | Could show combined icon or indicate variants exist |
+
+### Edge Cases
+
+- **Same season, different names**: Not grouped (different weapons)
+- **No watermark data**: Uses "no-watermark" as fallback key
+- **Mixed ownership**: Could own only holofoil OR only normal (both tracked)
+- **Only one variant owned**: Card displays single hash without labels

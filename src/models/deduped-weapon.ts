@@ -1,14 +1,26 @@
 import type { WeaponInstance } from './weapon-instance'
 import type { Perk } from './perk'
 
+/**
+ * Tracks variant information for weapons with multiple hashes (e.g., normal + holofoil)
+ */
+export interface WeaponVariantInfo {
+  hash: number
+  isHolofoil: boolean
+}
+
 export interface DedupedWeapon {
-  weaponHash: number
+  weaponHash: number // Primary hash (prefers non-holofoil)
   weaponName: string
   weaponIcon: string
   // Season/version watermark overlay (small badge in upper-left corner)
   iconWatermark?: string
   // Season display name (e.g., "Season 28")
   seasonName?: string
+
+  // Variant tracking (for holofoil + normal grouping)
+  variantHashes: WeaponVariantInfo[]
+  hasHolofoil: boolean // Convenience flag for UI
 
   // Merged perk data
   perkMatrix: PerkColumn[]
