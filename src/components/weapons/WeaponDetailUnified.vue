@@ -177,6 +177,92 @@
       </div>
     </div>
 
+      <!-- Inline Save Form (when perks selected) - positioned between Saved Rolls and Perk Matrix -->
+      <div v-if="hasSelection" class="bg-surface-elevated/80 rounded-lg border border-border p-4 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div class="space-y-3">
+          <!-- Tags Selection -->
+          <div>
+            <label class="block text-xs font-bold text-text-muted uppercase tracking-wider mb-1">
+              Tags (Optional)
+            </label>
+            <div class="flex flex-wrap gap-2">
+              <button
+                v-for="tag in AVAILABLE_TAGS"
+                :key="tag"
+                @click="toggleTag(tag)"
+                :title="getTagTooltip(tag)"
+                class="text-xs font-bold px-2 py-1 rounded uppercase transition-all"
+                :class="getTagButtonClasses(tag)"
+              >
+                {{ tag }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Notes -->
+          <div>
+            <label class="block text-xs font-bold text-text-muted uppercase tracking-wider mb-1">
+              Notes (Optional)
+            </label>
+            <textarea
+              v-model="profileNotesInput"
+              placeholder="Add notes about this roll (e.g., PvP Roll, Best for add clear)..."
+              rows="2"
+              class="w-full bg-surface border border-border rounded px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-text-subtle resize-y min-h-[3rem]"
+            />
+          </div>
+
+          <!-- YouTube Reference -->
+          <div>
+            <label class="block text-xs font-bold text-text-muted uppercase tracking-wider mb-1">
+              YouTube Reference (Optional)
+            </label>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <input
+                v-model="youtubeLink"
+                type="url"
+                placeholder="YouTube link..."
+                class="bg-surface border border-border rounded px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-text-subtle"
+              />
+              <input
+                v-model="youtubeAuthor"
+                type="text"
+                placeholder="Creator name..."
+                class="bg-surface border border-border rounded px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-text-subtle"
+              />
+              <input
+                v-model="youtubeTimestamp"
+                type="text"
+                placeholder="Timestamp (e.g., 2:34)..."
+                class="bg-surface border border-border rounded px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-text-subtle"
+              />
+            </div>
+          </div>
+
+          <div class="flex justify-between items-center gap-3">
+            <p class="text-xs text-text-subtle">
+              {{ saveTargetText }}
+            </p>
+            <div class="flex items-center gap-3">
+              <p v-if="saveMessage" :class="['text-xs', saveMessage.type === 'error' ? 'text-red-600 dark:text-red-400' : 'text-text-muted']">{{ saveMessage.text }}</p>
+              <button
+                @click="clearSelection"
+                class="px-4 py-2 rounded text-sm font-medium transition-colors bg-surface-overlay hover:bg-surface-elevated text-text border border-border"
+              >
+                Clear Selection
+              </button>
+              <button
+                @click="handleSave"
+                class="px-4 py-2 rounded text-sm font-medium transition-colors"
+                :class="buttonClasses"
+              >
+                {{ buttonLabel }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Perk Matrix Section (Wishlist Mode - always editable) -->
       <div class="space-y-4">
         <!-- Header with controls -->
@@ -330,91 +416,6 @@
         </div>
       </div>
 
-      <!-- Inline Save Form (when perks selected) -->
-      <div v-if="hasSelection" class="bg-surface-elevated/80 rounded-lg border border-border p-4 animate-in fade-in slide-in-from-top-2 duration-200">
-        <div class="space-y-3">
-          <!-- Tags Selection -->
-          <div>
-            <label class="block text-xs font-bold text-text-muted uppercase tracking-wider mb-1">
-              Tags (Optional)
-            </label>
-            <div class="flex flex-wrap gap-2">
-              <button
-                v-for="tag in AVAILABLE_TAGS"
-                :key="tag"
-                @click="toggleTag(tag)"
-                :title="getTagTooltip(tag)"
-                class="text-xs font-bold px-2 py-1 rounded uppercase transition-all"
-                :class="getTagButtonClasses(tag)"
-              >
-                {{ tag }}
-              </button>
-            </div>
-          </div>
-
-          <!-- Notes -->
-          <div>
-            <label class="block text-xs font-bold text-text-muted uppercase tracking-wider mb-1">
-              Notes (Optional)
-            </label>
-            <textarea
-              v-model="profileNotesInput"
-              placeholder="Add notes about this roll (e.g., PvP Roll, Best for add clear)..."
-              rows="2"
-              class="w-full bg-surface border border-border rounded px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-text-subtle resize-y min-h-[3rem]"
-            />
-          </div>
-
-          <!-- YouTube Reference -->
-          <div>
-            <label class="block text-xs font-bold text-text-muted uppercase tracking-wider mb-1">
-              YouTube Reference (Optional)
-            </label>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              <input
-                v-model="youtubeLink"
-                type="url"
-                placeholder="YouTube link..."
-                class="bg-surface border border-border rounded px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-text-subtle"
-              />
-              <input
-                v-model="youtubeAuthor"
-                type="text"
-                placeholder="Creator name..."
-                class="bg-surface border border-border rounded px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-text-subtle"
-              />
-              <input
-                v-model="youtubeTimestamp"
-                type="text"
-                placeholder="Timestamp (e.g., 2:34)..."
-                class="bg-surface border border-border rounded px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-text-subtle"
-              />
-            </div>
-          </div>
-
-          <div class="flex justify-between items-center gap-3">
-            <p class="text-xs text-text-subtle">
-              {{ saveTargetText }}
-            </p>
-            <div class="flex items-center gap-3">
-              <p v-if="saveMessage" :class="['text-xs', saveMessage.type === 'error' ? 'text-red-600 dark:text-red-400' : 'text-text-muted']">{{ saveMessage.text }}</p>
-              <button
-                @click="clearSelection"
-              class="px-4 py-2 rounded text-sm font-medium transition-colors bg-surface-overlay hover:bg-surface-elevated text-text border border-border"
-            >
-              Clear Selection
-            </button>
-            <button
-              @click="handleSave"
-              class="px-4 py-2 rounded text-sm font-medium transition-colors"
-              :class="buttonClasses"
-            >
-              {{ buttonLabel }}
-            </button>
-            </div>
-          </div>
-        </div>
-      </div>
       </div>
 
       <!-- Instances List (Wishlist Mode) -->
