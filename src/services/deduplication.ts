@@ -546,18 +546,18 @@ function buildPerkMatrix(
 
   const masterwork = masterworkCandidate
   if (masterwork) {
-    const socketTypeName = masterwork.socketTypeName.toLowerCase()
-    const filter = socketTypeName.includes('masterwork')
-      ? isMasterworkDisplayCandidate
-      : isMasterworkPlug
-    masterworkPerks.push(
-      ...buildOwnedPerksList(
-        masterwork.socketIndex,
-        instances,
-        filter,
-        true
-      )
+    // Filter plug items to only include valid masterwork stats (exclude tier overlays, placeholders)
+    const filteredPlugItems = masterwork.plugItems.filter(p => isMasterworkDisplayCandidate(p.hash))
+    const column = buildPerkColumn(
+      masterwork.socketEntry,
+      filteredPlugItems,
+      masterwork.socketIndex,
+      instances,
+      'Masterwork'
     )
+    if (column) {
+      masterworkPerks.push(...column.availablePerks)
+    }
   }
 
   for (const { label, candidate } of orderedColumns) {
