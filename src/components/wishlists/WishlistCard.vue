@@ -13,13 +13,7 @@
                 : 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-700/50'
             ]"
           >
-            {{ wishlist.sourceType === 'preset' ? 'Preset' : 'Custom' }}
-          </span>
-          <span
-            v-if="isAdminEditable"
-            class="inline-flex items-center rounded-full bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-700/50 px-2 py-0.5 text-xs font-medium"
-          >
-            Admin Editable
+            {{ wishlist.sourceType === 'preset' ? 'Premade' : 'Custom' }}
           </span>
           <span
             v-if="hasLocalChanges"
@@ -47,7 +41,7 @@
     <!-- Stats -->
     <div class="mt-4 grid grid-cols-2 gap-3 text-sm">
       <div class="flex items-center justify-between rounded-lg bg-surface/40 px-3 py-2">
-        <span class="text-text-muted">Items</span>
+        <span class="text-text-muted">Rolls</span>
         <span class="font-semibold text-text">{{ stats.itemCount.toLocaleString() }}</span>
       </div>
       <div class="flex items-center justify-between rounded-lg bg-surface/40 px-3 py-2">
@@ -61,64 +55,81 @@
       Last updated: {{ formatDate(wishlist.lastUpdated || wishlist.lastFetched) }}
     </div>
 
-    <!-- Actions -->
-    <div class="mt-4 flex flex-wrap gap-2">
-      <!-- Admin-editable presets: Edit button (internal link) -->
-      <router-link
-        v-if="isAdminEditable"
-        :to="{ name: 'wishlist-detail', params: { id: wishlist.id } }"
-        class="inline-flex items-center rounded-lg bg-purple-100 dark:bg-purple-600/30 px-3 py-1.5 text-sm font-medium text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-600/40 transition-colors"
-      >
-        Edit
-      </router-link>
+    <!-- Actions - show different UI based on wishlist size -->
+    <div class="mt-4">
+      <!-- Large wishlists: show message explaining why edit is disabled -->
+      <div v-if="isTooLarge" class="text-sm text-text-muted space-y-2">
+        <p>
+          <span class="text-text font-medium">{{ stats.itemCount.toLocaleString() }} rolls</span>
+          — too large for in-app editing (limit: {{ MAX_EDITABLE_ROLLS }})
+        </p>
+        <a
+          v-if="wishlist.sourceUrl"
+          :href="wishlist.sourceUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-1.5 text-blue-600 dark:text-blue-400 hover:underline"
+        >
+          View or fork on GitHub
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          </svg>
+        </a>
+      </div>
 
-      <!-- Preset wishlists: View on GitHub (external link) -->
-      <a
-        v-if="wishlist.sourceType === 'preset' && wishlist.sourceUrl"
-        :href="wishlist.sourceUrl"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="inline-flex items-center gap-1.5 rounded-lg bg-surface-overlay px-3 py-1.5 text-sm font-medium text-text hover:bg-surface-elevated transition-colors"
-      >
-        View on GitHub
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-        </svg>
-      </a>
+      <!-- Normal size wishlists: show full action buttons -->
+      <div v-else class="flex flex-wrap gap-2">
+        <!-- View/Edit button for all editable wishlists -->
+        <router-link
+          :to="{ name: 'wishlist-detail', params: { id: wishlist.id } }"
+          :class="[
+            'inline-flex items-center rounded-lg px-3 py-1.5 text-sm font-medium transition-colors',
+            wishlist.sourceType === 'preset'
+              ? 'bg-purple-100 dark:bg-purple-600/30 text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-600/40'
+              : 'bg-surface-overlay text-text hover:bg-surface-elevated'
+          ]"
+        >
+          {{ wishlist.sourceType === 'preset' ? 'View / Edit' : 'View' }}
+        </router-link>
 
-      <!-- User wishlists: View (internal link) -->
-      <router-link
-        v-if="wishlist.sourceType === 'user'"
-        :to="{ name: 'wishlist-detail', params: { id: wishlist.id } }"
-        class="inline-flex items-center rounded-lg bg-surface-overlay px-3 py-1.5 text-sm font-medium text-text hover:bg-surface-elevated transition-colors"
-      >
-        View
-      </router-link>
+        <!-- Preset wishlists: View on GitHub (external link) -->
+        <a
+          v-if="wishlist.sourceType === 'preset' && wishlist.sourceUrl"
+          :href="wishlist.sourceUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-1.5 rounded-lg bg-surface-overlay px-3 py-1.5 text-sm font-medium text-text hover:bg-surface-elevated transition-colors"
+        >
+          GitHub
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          </svg>
+        </a>
 
-      <button
-        v-if="wishlist.sourceType === 'preset' && hasUpdate"
-        @click="$emit('refresh', wishlist)"
-        class="inline-flex items-center rounded-lg bg-amber-100 dark:bg-amber-600/30 px-3 py-1.5 text-sm font-medium text-amber-700 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-600/40 transition-colors"
-      >
-        Update
-      </button>
+        <button
+          v-if="wishlist.sourceType === 'preset' && hasUpdate"
+          @click="$emit('refresh', wishlist)"
+          class="inline-flex items-center rounded-lg bg-amber-100 dark:bg-amber-600/30 px-3 py-1.5 text-sm font-medium text-amber-700 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-600/40 transition-colors"
+        >
+          Update
+        </button>
 
-      <!-- Export for user wishlists and admin-editable presets -->
-      <button
-        v-if="wishlist.sourceType === 'user' || isAdminEditable"
-        @click="$emit('export', wishlist)"
-        class="inline-flex items-center rounded-lg bg-surface-overlay px-3 py-1.5 text-sm font-medium text-text hover:bg-surface-elevated transition-colors"
-      >
-        Export
-      </button>
+        <!-- Export for all editable wishlists -->
+        <button
+          @click="$emit('export', wishlist)"
+          class="inline-flex items-center rounded-lg bg-surface-overlay px-3 py-1.5 text-sm font-medium text-text hover:bg-surface-elevated transition-colors"
+        >
+          Export
+        </button>
 
-      <button
-        v-if="wishlist.sourceType === 'user'"
-        @click="$emit('delete', wishlist)"
-        class="inline-flex items-center rounded-lg bg-red-100 dark:bg-red-600/30 px-3 py-1.5 text-sm font-medium text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-600/40 transition-colors"
-      >
-        Delete
-      </button>
+        <button
+          v-if="wishlist.sourceType === 'user'"
+          @click="$emit('delete', wishlist)"
+          class="inline-flex items-center rounded-lg bg-red-100 dark:bg-red-600/30 px-3 py-1.5 text-sm font-medium text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-600/40 transition-colors"
+        >
+          Delete
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -126,8 +137,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { Wishlist, WishlistUpdateStatus } from '@/models/wishlist'
+import { MAX_EDITABLE_ROLLS } from '@/models/wishlist'
 import { getWishlistStats } from '@/services/dim-wishlist-parser'
-import { isWishlistEditable } from '@/utils/admin'
+import { isWishlistTooLarge } from '@/utils/admin'
 import { useWishlistsStore } from '@/stores/wishlists'
 
 const props = defineProps<{
@@ -149,10 +161,8 @@ const hasUpdate = computed(
   () => props.updateStatus?.hasUpdate ?? false
 )
 
-// Admin mode - check if this is an admin-editable preset
-const isAdminEditable = computed(() => {
-  return props.wishlist.sourceType === 'preset' && isWishlistEditable(props.wishlist)
-})
+// Check if wishlist is too large for in-app editing
+const isTooLarge = computed(() => isWishlistTooLarge(props.wishlist))
 
 // Check if there are unsaved local changes
 const hasLocalChanges = computed(() => {

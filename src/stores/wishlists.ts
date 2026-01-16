@@ -25,7 +25,7 @@ import {
   selectionToWishlistItem,
   wishlistItemToSelection
 } from '@/services/dim-wishlist-parser'
-import { isAdminMode, isWishlistEditable } from '@/utils/admin'
+import { isWishlistEditable } from '@/utils/admin'
 
 export const useWishlistsStore = defineStore('wishlists', () => {
   // ==================== State ====================
@@ -361,14 +361,7 @@ export const useWishlistsStore = defineStore('wishlists', () => {
     }
   }
 
-  // ==================== Admin Mode Editing ====================
-
-  /**
-   * Check if admin mode is enabled
-   */
-  function isAdmin(): boolean {
-    return isAdminMode()
-  }
+  // ==================== Premade Wishlist Editing ====================
 
   /**
    * Check if a preset has unsaved local changes
@@ -385,11 +378,9 @@ export const useWishlistsStore = defineStore('wishlists', () => {
   }
 
   /**
-   * Add an item to a preset wishlist (admin mode only)
+   * Add an item to a preset wishlist (if editable based on size)
    */
   async function addItemToPreset(wishlistId: string, item: WishlistItem): Promise<boolean> {
-    if (!isAdminMode()) return false
-
     const wishlist = presetWishlists.value.find((w) => w.id === wishlistId)
     if (!wishlist || !isWishlistEditable(wishlist)) return false
 
@@ -410,11 +401,9 @@ export const useWishlistsStore = defineStore('wishlists', () => {
   }
 
   /**
-   * Remove an item from a preset wishlist (admin mode only)
+   * Remove an item from a preset wishlist (if editable based on size)
    */
   async function removeItemFromPreset(wishlistId: string, itemId: string): Promise<boolean> {
-    if (!isAdminMode()) return false
-
     const wishlist = presetWishlists.value.find((w) => w.id === wishlistId)
     if (!wishlist || !isWishlistEditable(wishlist)) return false
 
@@ -432,15 +421,13 @@ export const useWishlistsStore = defineStore('wishlists', () => {
   }
 
   /**
-   * Update an item in a preset wishlist (admin mode only)
+   * Update an item in a preset wishlist (if editable based on size)
    */
   async function updateItemInPreset(
     wishlistId: string,
     itemId: string,
     updates: Partial<WishlistItem>
   ): Promise<boolean> {
-    if (!isAdminMode()) return false
-
     const wishlist = presetWishlists.value.find((w) => w.id === wishlistId)
     if (!wishlist || !isWishlistEditable(wishlist)) return false
 
@@ -822,8 +809,7 @@ export const useWishlistsStore = defineStore('wishlists', () => {
     migrateLegacyGodRolls,
     clearLegacyGodRolls,
 
-    // Admin mode
-    isAdmin,
+    // Premade wishlist editing
     hasLocalChanges,
     markChangesSaved,
     addItemToPreset,

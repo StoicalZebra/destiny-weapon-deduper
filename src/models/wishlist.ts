@@ -44,6 +44,20 @@ export interface Wishlist {
 }
 
 /**
+ * Maximum number of rolls a wishlist can have for in-app editing.
+ * Wishlists exceeding this limit are view-only with GitHub link.
+ */
+export const MAX_EDITABLE_ROLLS = 500
+
+/**
+ * Get the roll count for a wishlist (items.length)
+ * Used for size-based edit permissions
+ */
+export function getWishlistRollCount(wishlist: Wishlist): number {
+  return wishlist.items.length
+}
+
+/**
  * Preset wishlist configuration (metadata before fetching full content)
  */
 export interface PresetWishlistConfig {

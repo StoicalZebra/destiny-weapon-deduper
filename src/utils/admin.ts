@@ -1,39 +1,32 @@
 /**
- * Admin Mode Utilities
+ * Wishlist Edit Permission Utilities
  *
- * Admin mode is enabled via VITE_ADMIN_MODE=true in .env.local
- * This allows editing of admin-curated preset wishlists (like StoicalZebra)
+ * Wishlists are editable based on their size (roll count).
+ * Large wishlists (>500 rolls) would cause performance issues in the UI,
+ * so they're view-only with a link to GitHub.
  */
 
 import type { Wishlist } from '@/models/wishlist'
+import { MAX_EDITABLE_ROLLS, getWishlistRollCount } from '@/models/wishlist'
 
 /**
- * IDs of preset wishlists that are admin-curated and can be edited in admin mode
+ * Check if a wishlist is editable based on its size
+ * - User wishlists are always editable (they can't exceed limit via UI)
+ * - Premade wishlists are editable if under 500 rolls
+ * - Large premade wishlists are view-only (link to GitHub)
  */
-const ADMIN_CURATED_PRESET_IDS = ['stoicalzebra']
-
-/**
- * Check if admin mode is enabled
- */
-export function isAdminMode(): boolean {
-  return import.meta.env.VITE_ADMIN_MODE === 'true'
-}
-
-/**
- * Check if a wishlist is editable by the current user
- * - User wishlists are always editable
- * - Admin-curated presets are editable only in admin mode
- * - Other presets are never editable
- */
-export function isWishlistEditable(wishlist: Pick<Wishlist, 'sourceType' | 'id'>): boolean {
+export function isWishlistEditable(wishlist: Pick<Wishlist, 'sourceType' | 'items'>): boolean {
   // User wishlists are always editable
   if (wishlist.sourceType === 'user') return true
 
-  // Presets require admin mode + being in the admin-curated list
-  if (wishlist.sourceType === 'preset') {
-    if (!isAdminMode()) return false
-    return ADMIN_CURATED_PRESET_IDS.includes(wishlist.id)
-  }
+  // Premade wishlists: editable if under size limit
+  const rollCount = getWishlistRollCount(wishlist as Wishlist)
+  return rollCount <= MAX_EDITABLE_ROLLS
+}
 
-  return false
+/**
+ * Check if a wishlist is too large for in-app viewing/editing
+ */
+export function isWishlistTooLarge(wishlist: Pick<Wishlist, 'items'>): boolean {
+  return getWishlistRollCount(wishlist as Wishlist) > MAX_EDITABLE_ROLLS
 }

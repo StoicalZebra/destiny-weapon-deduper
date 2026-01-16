@@ -462,11 +462,18 @@ Reference: [LittleLight Wishlists GitHub](https://github.com/LittleLightForDesti
 
 ## Wishlist Types & Permissions
 
-| Type | Can Edit | Card Buttons | Notes |
-|------|----------|--------------|-------|
-| **Regular Presets** (Voltron, etc.) | No | View on GitHub, Update | Read-only for all users |
-| **Admin-Editable Preset** (StoicalZebra) | Yes (admin only) | Edit, View on GitHub, Export | Editable by configured admin user |
-| **Custom/User Wishlists** | Yes | View, Export, Delete | User-created, stored locally |
+Wishlists are editable based on their **size** (roll count):
+
+| Wishlist Size | View | Edit | Export | Delete |
+|---------------|------|------|--------|--------|
+| **≤500 rolls** (StoicalZebra, etc.) | Yes | Yes | Yes | Premade: No, Custom: Yes |
+| **>500 rolls** (Voltron, etc.) | GitHub link | No | No | No |
+
+### Why Size-Based Permissions?
+
+Large wishlists like Voltron (~50,000+ rolls) would cause performance issues if rendered in the editable UI. They're view-only with a direct link to GitHub for forking.
+
+Smaller curated wishlists (like StoicalZebra, PandaPaxxy individual lists) are fully editable in-app.
 
 ### Design Philosophy
 
@@ -474,15 +481,13 @@ Users can create and edit their own custom wishlists - no need for external tool
 
 What we intentionally removed:
 - **Fork/copy preset wishlists** - Voltron has 240K+ items; forking creates massive local copies
-- **In-app viewing of preset contents** - Rendering 240K items crashed browsers
+- **In-app viewing of large preset contents** - Rendering 240K items crashed browsers
 
-If you want to see what's in a preset like Voltron, click "View on GitHub" to see the raw file. If you want your own wishlist, create a custom one from scratch or import a DIM-format file.
+If you want to see what's in a large preset like Voltron, click "View on GitHub" to see the raw file. If you want your own wishlist, create a custom one from scratch or import a DIM-format file.
 
-This matches DIM's model: presets are "subscribe and use" not "fork and customize."
+### Editing Premade Wishlists (StoicalZebra, etc.)
 
-### Admin Wishlist Editing (StoicalZebra)
-
-The StoicalZebra preset wishlist is admin-editable, allowing in-app editing with a manual sync workflow.
+Premade wishlists under 500 rolls can be edited directly in the app with a manual sync workflow.
 
 ### Storage Locations
 

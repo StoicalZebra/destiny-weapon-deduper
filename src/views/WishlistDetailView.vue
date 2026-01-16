@@ -63,7 +63,7 @@
                     : 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-700/50'
                 ]"
               >
-                {{ wishlist.sourceType === 'preset' ? 'Preset' : 'Custom' }}
+                {{ wishlist.sourceType === 'preset' ? 'Premade' : 'Custom' }}
               </span>
             </div>
             <p v-if="wishlist.description" class="mt-2 text-text-muted">

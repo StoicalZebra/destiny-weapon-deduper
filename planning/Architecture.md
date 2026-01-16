@@ -663,12 +663,21 @@ Sync your mock data when:
 - Local app shows weapons you no longer have
 - You want to add new weapons to your wishlist
 
-### Admin Wishlist Editing
+### Wishlist Editing
 
-With `VITE_ADMIN_MODE=true` in `.env.local`:
+Wishlists with **500 rolls or fewer** can be edited directly in the app (both locally and on production). Larger wishlists like Voltron are view-only with a link to GitHub.
 
-1. Edit StoicalZebra wishlist via weapon detail pages
-2. Export changes: Wishlists → StoicalZebra → Export & Mark Saved
-3. Publish: `./scripts/publish-wishlist.sh`
+**Size-based permissions:**
+| Wishlist Size | View | Edit | Export |
+|---------------|------|------|--------|
+| ≤500 rolls | Yes | Yes | Yes |
+| >500 rolls | GitHub link only | No | No |
+
+**Editing workflow:**
+1. Go to Wishlists page
+2. Click "View / Edit" on any premade wishlist under 500 rolls
+3. Make changes via weapon detail pages
+4. Export changes when done
+5. For StoicalZebra: run `./scripts/publish-wishlist.sh` to push to GitHub
 
 The publish script copies the exported file to `data/wishlists/StoicalZebra-wishlist.txt` and pushes to GitHub.

@@ -4,7 +4,7 @@ interface ImportMetaEnv {
   readonly VITE_BUNGIE_API_KEY: string
   readonly VITE_BUNGIE_CLIENT_ID: string
   readonly VITE_BUNGIE_REDIRECT_URI: string
-  readonly VITE_ADMIN_MODE?: string // 'true' enables admin editing of curated wishlists
+  readonly VITE_USE_MOCK?: string // 'true' uses mock data instead of live API
 }
 
 interface ImportMeta {
