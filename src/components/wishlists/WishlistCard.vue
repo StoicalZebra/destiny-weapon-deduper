@@ -52,23 +52,33 @@
     <!-- Actions - show different UI based on wishlist size -->
     <div class="mt-4">
       <!-- Large wishlists: show message explaining why edit is disabled -->
-      <div v-if="isTooLarge" class="text-sm text-text-muted space-y-2">
+      <div v-if="isTooLarge" class="text-sm text-text-muted space-y-3">
         <p>
           <span class="text-text font-medium">{{ stats.itemCount.toLocaleString() }} rolls</span>
           — too large for in-app editing (limit: {{ MAX_EDITABLE_ROLLS }})
         </p>
-        <a
-          v-if="wishlist.sourceUrl"
-          :href="wishlist.sourceUrl"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="inline-flex items-center gap-1.5 text-blue-600 dark:text-blue-400 hover:underline"
-        >
-          View or fork on GitHub
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-          </svg>
-        </a>
+        <div class="flex flex-wrap items-center gap-2">
+          <a
+            v-if="wishlist.sourceUrl"
+            :href="wishlist.sourceUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-1.5 text-blue-600 dark:text-blue-400 hover:underline"
+          >
+            View or fork on GitHub
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+          </a>
+          <!-- Unload button for large presets (to free storage) -->
+          <button
+            v-if="wishlist.sourceType === 'preset' && isLargePreset"
+            @click="$emit('unload', wishlist)"
+            class="inline-flex items-center rounded-lg bg-red-100 dark:bg-red-600/30 px-3 py-1.5 text-sm font-medium text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-600/40 transition-colors"
+          >
+            Unload
+          </button>
+        </div>
       </div>
 
       <!-- Normal size wishlists: show full action buttons -->
@@ -83,7 +93,7 @@
               : 'bg-surface-overlay text-text hover:bg-surface-elevated'
           ]"
         >
-          {{ wishlist.sourceType === 'preset' ? 'View / Edit' : 'View' }}
+          {{ wishlist.sourceType === 'preset' ? 'View / Fork' : 'View' }}
         </router-link>
 
         <!-- Preset wishlists: View on GitHub (external link) -->
@@ -116,6 +126,15 @@
           Export
         </button>
 
+        <!-- Unload button for large presets (to free storage) -->
+        <button
+          v-if="wishlist.sourceType === 'preset' && isLargePreset"
+          @click="$emit('unload', wishlist)"
+          class="inline-flex items-center rounded-lg bg-red-100 dark:bg-red-600/30 px-3 py-1.5 text-sm font-medium text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-600/40 transition-colors"
+        >
+          Unload
+        </button>
+
         <button
           v-if="wishlist.sourceType === 'user'"
           @click="$emit('delete', wishlist)"
@@ -138,12 +157,14 @@ import { isWishlistTooLarge } from '@/utils/admin'
 const props = defineProps<{
   wishlist: Wishlist
   updateStatus?: WishlistUpdateStatus
+  isLargePreset?: boolean
 }>()
 
 defineEmits<{
   (e: 'refresh', wishlist: Wishlist): void
   (e: 'export', wishlist: Wishlist): void
   (e: 'delete', wishlist: Wishlist): void
+  (e: 'unload', wishlist: Wishlist): void
 }>()
 
 const stats = computed(() => getWishlistStats(props.wishlist.items))

@@ -96,9 +96,11 @@
           :key="wishlist.id"
           :wishlist="wishlist"
           :update-status="store.updateStatuses.get(wishlist.id)"
+          :is-large-preset="isLargePreset(wishlist.id)"
           @refresh="handleRefresh"
           @export="handleExport"
           @delete="handleDelete"
+          @unload="handleUnload"
         />
       </div>
 
@@ -133,7 +135,7 @@
           <span class="text-xs text-text-subtle bg-surface-overlay px-2 py-0.5 rounded">On-demand</span>
         </div>
         <p class="text-sm text-text-muted mb-4">
-          These wishlists have many rolls and are loaded on-demand to save storage space.
+          These wishlists have many rolls (&gt;500) and are loaded on-demand to save storage space.
         </p>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -260,6 +262,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useWishlistsStore } from '@/stores/wishlists'
 import { WishlistCard, WishlistImportExport } from '@/components/wishlists'
+import { presetWishlistService } from '@/services/preset-wishlist-service'
 import type { Wishlist } from '@/models/wishlist'
 
 const store = useWishlistsStore()
@@ -273,6 +276,11 @@ const loadingPresetId = ref<string | null>(null)
 
 // Computed
 const unloadedLargePresets = computed(() => store.getUnloadedLargePresetConfigs())
+
+// Helper to check if a wishlist is a large preset
+function isLargePreset(wishlistId: string): boolean {
+  return presetWishlistService.getLargePresetConfigs().some((c) => c.id === wishlistId)
+}
 
 // Initialize on mount
 onMounted(async () => {
@@ -335,6 +343,10 @@ function handleExport(wishlist: Wishlist) {
 
 function handleDelete(wishlist: Wishlist) {
   deletingWishlist.value = wishlist
+}
+
+async function handleUnload(wishlist: Wishlist) {
+  await store.unloadLargePreset(wishlist.id)
 }
 
 function confirmDelete() {

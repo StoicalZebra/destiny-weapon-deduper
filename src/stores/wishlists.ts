@@ -226,6 +226,30 @@ export const useWishlistsStore = defineStore('wishlists', () => {
   }
 
   /**
+   * Unload a large preset to free up storage space
+   * The preset can be re-loaded later from the "Large Wishlists" section
+   */
+  async function unloadLargePreset(presetId: string): Promise<void> {
+    const config = presetWishlistService.getLargePresetConfigs().find((c) => c.id === presetId)
+    if (!config) return // Not a large preset
+
+    const index = presetWishlists.value.findIndex((w) => w.id === presetId)
+    if (index < 0) return // Not loaded
+
+    // Remove from IndexedDB
+    await wishlistStorageService.deletePreset(presetId)
+
+    // Remove from in-memory state
+    presetWishlists.value.splice(index, 1)
+
+    // Clean up related state
+    weaponIndexes.value.delete(presetId)
+    enabledStates.value.delete(presetId)
+    wishlistStorageService.removeEnabledState(presetId)
+    updateStatuses.value.delete(presetId)
+  }
+
+  /**
    * Check all presets for available updates
    */
   async function checkForUpdates(): Promise<void> {
@@ -844,6 +868,7 @@ export const useWishlistsStore = defineStore('wishlists', () => {
     loadPresets,
     loadLargePreset,
     getUnloadedLargePresetConfigs,
+    unloadLargePreset,
     checkForUpdates,
     refreshPreset,
     refreshAllPresets,
