@@ -9,13 +9,32 @@
         class="flex flex-col gap-1"
         :title="column.label"
       >
-        <PerkIcon
-          v-for="perkHash in column.perks"
-          :key="perkHash"
-          :perk-hash="perkHash"
-          size="md"
-          variant="wishlist"
-        />
+        <!-- Masterwork column uses special styling with wishlist gold ring -->
+        <template v-if="column.isMasterwork">
+          <div
+            v-for="perkHash in column.perks"
+            :key="perkHash"
+            :class="[MASTERWORK_ICON_STYLES.containerMd, PERK_RING_STYLES.wishlist]"
+            :title="getMasterworkTooltip(perkHash)"
+          >
+            <img
+              v-if="getPerkIcon(perkHash)"
+              :src="getPerkIcon(perkHash)"
+              :class="MASTERWORK_ICON_STYLES.image"
+              :alt="getPerkName(perkHash)"
+            />
+          </div>
+        </template>
+        <!-- Regular perks -->
+        <template v-else>
+          <PerkIcon
+            v-for="perkHash in column.perks"
+            :key="perkHash"
+            :perk-hash="perkHash"
+            size="md"
+            variant="wishlist"
+          />
+        </template>
       </div>
     </div>
   </div>
@@ -24,6 +43,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { manifestService } from '@/services/manifest-service'
+import { formatMasterworkStatName } from '@/utils/formatting'
+import { MASTERWORK_ICON_STYLES, PERK_RING_STYLES } from '@/styles/ui-states'
 import PerkIcon from '@/components/common/PerkIcon.vue'
 
 const props = defineProps<{
@@ -36,12 +57,17 @@ interface PerkColumnDisplay {
   label: string
   columnIndex: number
   perks: number[]
+  isMasterwork?: boolean
 }
 
 interface WeaponSocketInfo {
   perkToColumn: Map<number, number>
   columnLabels: Map<number, string>
+  masterworkSocketIndex: number | null
 }
+
+// Masterwork socket type hash (used to identify masterwork sockets)
+const MASTERWORK_SOCKET_TYPE_HASH = 2218962841
 
 /**
  * Cache expensive socket scanning per weapon hash.
@@ -54,11 +80,17 @@ const weaponSocketInfo = computed((): WeaponSocketInfo | null => {
   const perkToColumn = new Map<number, number>()
   const columnLabels = new Map<number, string>()
   const socketEntries = weaponDef.sockets.socketEntries
+  let masterworkSocketIndex: number | null = null
 
   // Scan sockets once to build perk-to-column mapping
   for (let socketIdx = 0; socketIdx < socketEntries.length; socketIdx++) {
     const socketEntry = socketEntries[socketIdx]
     if (!socketEntry) continue
+
+    // Detect masterwork socket
+    if (socketEntry.socketTypeHash === MASTERWORK_SOCKET_TYPE_HASH) {
+      masterworkSocketIndex = socketIdx
+    }
 
     const plugHashes: number[] = []
 
@@ -100,10 +132,11 @@ const weaponSocketInfo = computed((): WeaponSocketInfo | null => {
     else if (socketIdx === 3) label = 'Left Trait'
     else if (socketIdx === 4) label = 'Right Trait'
     else if (socketIdx === 5) label = 'Origin'
+    if (socketIdx === masterworkSocketIndex) label = 'Masterwork'
     columnLabels.set(socketIdx, label)
   }
 
-  return { perkToColumn, columnLabels }
+  return { perkToColumn, columnLabels, masterworkSocketIndex }
 })
 
 /**
@@ -120,7 +153,7 @@ const organizedPerks = computed((): PerkColumnDisplay[] => {
       : []
   }
 
-  const { perkToColumn, columnLabels } = socketInfo
+  const { perkToColumn, columnLabels, masterworkSocketIndex } = socketInfo
 
   // Group wishlist perks by their column (cheap operation)
   const columnMap = new Map<number, number[]>()
@@ -146,7 +179,8 @@ const organizedPerks = computed((): PerkColumnDisplay[] => {
     result.push({
       label: columnLabels.get(colIdx) || `Column ${colIdx}`,
       columnIndex: colIdx,
-      perks
+      perks,
+      isMasterwork: colIdx === masterworkSocketIndex
     })
   }
 
@@ -160,4 +194,21 @@ const organizedPerks = computed((): PerkColumnDisplay[] => {
 
   return result
 })
+
+// Helper functions for masterwork display
+function getPerkIcon(perkHash: number): string | null {
+  const perkDef = manifestService.getInventoryItem(perkHash)
+  const iconPath = perkDef?.displayProperties?.icon
+  return iconPath ? `https://www.bungie.net${iconPath}` : null
+}
+
+function getPerkName(perkHash: number): string {
+  const perkDef = manifestService.getInventoryItem(perkHash)
+  return perkDef?.displayProperties?.name || 'Unknown'
+}
+
+function getMasterworkTooltip(perkHash: number): string {
+  const name = getPerkName(perkHash)
+  return `Masterwork: ${formatMasterworkStatName(name)}`
+}
 </script>

@@ -887,13 +887,24 @@ const selectedMasterworkHash = computed(() => {
   return null
 })
 
-// Convert perkMatrix to PerkColumnInfo format for store helpers
+// Convert perkMatrix to PerkColumnInfo format for store helpers (including masterworks)
 const perkColumnsForStore = computed<PerkColumnInfo[]>(() => {
-  return matrixColumns.value.map(col => ({
+  const columns = matrixColumns.value.map(col => ({
     columnIndex: col.columnIndex,
     columnName: col.columnName,
     availablePerks: col.availablePerks.map(p => ({ hash: p.hash, name: p.name }))
   }))
+
+  // Add masterwork perks as a virtual column so they get included in perkHashes
+  if (props.weapon.masterworkPerks && props.weapon.masterworkPerks.length > 0) {
+    columns.push({
+      columnIndex: props.weapon.masterworkSocketIndex ?? 99,
+      columnName: 'Masterwork',
+      availablePerks: props.weapon.masterworkPerks.map(p => ({ hash: p.hash, name: p.name }))
+    })
+  }
+
+  return columns
 })
 
 // Build a map from any perk hash to all its variants (for matching)

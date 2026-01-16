@@ -85,6 +85,8 @@ export const INSTANCE_PALETTE = [
 // Masterwork icon styling (simplified display - just shows stat name, no enhanced distinction)
 export const MASTERWORK_ICON_STYLES = {
   container: 'w-7 h-7 rounded-full overflow-hidden bg-black',
+  // Medium size to match PerkIcon md (w-8 h-8) for wishlist displays
+  containerMd: 'w-8 h-8 rounded-full overflow-hidden bg-black',
   ring: 'ring-1 ring-slate-400 dark:ring-slate-500 ring-offset-1 ring-offset-surface',
   // Filters to standardize all MW icons to white glyphs (removes gold/colored variants)
   image: 'w-full h-full object-cover brightness-[1.75] contrast-125 saturate-0',
