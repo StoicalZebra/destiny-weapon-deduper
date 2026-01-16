@@ -164,10 +164,10 @@
               :key="item.id"
               class="bg-surface/50 rounded-lg p-3 border border-border/50"
             >
-              <!-- Tags -->
+              <!-- Tags (sorted by priority) -->
               <div class="flex flex-wrap gap-1 mb-2">
                 <span
-                  v-for="tag in item.tags || []"
+                  v-for="tag in sortTagsForDisplay(item.tags)"
                   :key="tag"
                   :class="getTagClasses(tag)"
                   :title="getTagTooltip(tag)"
@@ -373,7 +373,7 @@ const isEditable = computed(() => {
   return wishlist.value.sourceType === 'user'
 })
 
-// Group items by weapon
+// Group items by weapon, sorted by tag priority within each group
 const groupedByWeapon = computed(() => {
   if (!wishlist.value) return new Map<number, WishlistItem[]>()
 
@@ -383,6 +383,12 @@ const groupedByWeapon = computed(() => {
     existing.push(item)
     groups.set(item.weaponHash, existing)
   }
+
+  // Sort items within each group by tag priority
+  for (const [hash, items] of groups) {
+    groups.set(hash, sortItemsByTagPriority(items))
+  }
+
   return groups
 })
 
@@ -492,6 +498,53 @@ function getTagClasses(tag: WishlistTag): string {
 
 function getTagTooltip(tag: WishlistTag): string {
   return TAG_TOOLTIPS[tag] || tag
+}
+
+// Get tag-based priority for sorting items: PVE > PVE+ALT > PVP > PVP+ALT > others
+function getItemTagPriority(item: WishlistItem): number {
+  const tags = item.tags || []
+  const hasPve = tags.includes('pve')
+  const hasPvp = tags.includes('pvp')
+  const hasAlt = tags.includes('alt')
+
+  if (hasPve && !hasAlt) return 0      // PVE
+  if (hasPve && hasAlt) return 1       // PVE ALT
+  if (hasPvp && !hasAlt) return 2      // PVP
+  if (hasPvp && hasAlt) return 3       // PVP ALT
+  return 4                              // No matching tags
+}
+
+// Sort items by tag priority
+function sortItemsByTagPriority(items: WishlistItem[]): WishlistItem[] {
+  return [...items].sort((a, b) => getItemTagPriority(a) - getItemTagPriority(b))
+}
+
+// Sort tags for display: PVE first, then PVP, then ALT repositioned based on context
+function sortTagsForDisplay(tags: WishlistTag[] | undefined): WishlistTag[] {
+  if (!tags || tags.length === 0) return []
+
+  const tagPriority: Record<string, number> = {
+    pve: 0,
+    pvp: 2,
+    alt: 10,
+    controller: 20,
+    mkb: 21,
+    trash: 99
+  }
+
+  return [...tags].sort((a, b) => {
+    const hasPve = tags.includes('pve')
+    const hasPvp = tags.includes('pvp')
+
+    // Position ALT right after PVE or PVP
+    let aPriority = tagPriority[a] ?? 50
+    let bPriority = tagPriority[b] ?? 50
+
+    if (a === 'alt') aPriority = hasPve ? 1 : hasPvp ? 3 : 10
+    if (b === 'alt') bPriority = hasPve ? 1 : hasPvp ? 3 : 10
+
+    return aPriority - bPriority
+  })
 }
 
 // Name/description save handlers
