@@ -82,104 +82,48 @@
       </button>
 
       <div v-show="savedRollsExpanded" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        <div
+        <WishlistRollCard
           v-for="profile in displayProfiles"
           :key="profile.id"
-          class="group bg-surface-elevated border border-border hover:border-border-subtle rounded-lg p-3 transition-colors cursor-pointer relative"
-          :class="{ 'ring-2 ring-blue-500/50 border-blue-500/50 bg-blue-900/10': isProfileActive(profile) }"
+          :item="profile.item"
+          :weapon-hash="weapon.weaponHash"
+          :wishlist-name="profile.wishlistName"
+          :clickable="true"
+          :is-active="isProfileActive(profile)"
           @click="loadProfile(profile)"
         >
-          <!-- Header row: left=wishlist name, center=perks, right=tags+delete -->
-          <div class="flex items-center mb-2 gap-2">
-            <!-- Left: wishlist name -->
-            <span class="text-xs font-medium text-text-muted truncate min-w-0 flex-1" :title="profile.wishlistName">
-              {{ profile.wishlistName }}
-            </span>
-
-            <!-- Center: perks count -->
-            <span class="text-xs text-text-subtle flex-shrink-0">
-              {{ profile.item.perkHashes.length }} perks
-            </span>
-
-            <!-- Right: tags and delete action -->
-            <div class="flex items-center gap-2 flex-1 justify-end">
-              <!-- Tags -->
-              <div v-if="profile.item.tags?.length" class="flex flex-wrap gap-1 justify-end">
-                <span
-                  v-for="tag in sortTagsForDisplay(profile.item.tags)"
-                  :key="tag"
-                  :class="getTagDisplayClasses(tag)"
-                  class="text-[10px] font-bold px-1.5 py-0.5 rounded uppercase"
+          <!-- Delete action in header - only show for user wishlists -->
+          <template v-if="profile.isUserWishlist" #header-actions>
+            <div class="flex items-center gap-2 flex-shrink-0" @click.stop>
+              <template v-if="profile.showDeleteConfirm">
+                <span class="text-xs text-red-600 dark:text-red-400 font-bold">Sure?</span>
+                <button
+                  @click="deleteProfile(profile.id)"
+                  class="text-xs px-2 py-0.5 bg-red-900/50 hover:bg-red-900 text-red-200 border border-red-800 rounded"
                 >
-                  {{ tag }}
-                </span>
-              </div>
-              <!-- Delete action - only show for user wishlists -->
-              <div v-if="profile.isUserWishlist" class="flex items-center gap-2 flex-shrink-0" @click.stop>
-                <template v-if="profile.showDeleteConfirm">
-                  <span class="text-xs text-red-600 dark:text-red-400 font-bold">Sure?</span>
-                  <button
-                    @click="deleteProfile(profile.id)"
-                    class="text-xs px-2 py-0.5 bg-red-900/50 hover:bg-red-900 text-red-200 border border-red-800 rounded"
-                  >
-                    Yes
-                  </button>
-                  <button
-                    @click="profile.showDeleteConfirm = false"
-                    class="text-xs px-2 py-0.5 bg-surface-overlay hover:bg-surface-elevated text-text-muted rounded"
-                  >
-                    Cancel
-                  </button>
-                </template>
-                <template v-else>
-                  <button
-                    @click="profile.showDeleteConfirm = true"
-                    class="p-1 text-text-subtle hover:text-red-600 dark:hover:text-red-400 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                    title="Delete"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
-                </template>
-              </div>
+                  Yes
+                </button>
+                <button
+                  @click="profile.showDeleteConfirm = false"
+                  class="text-xs px-2 py-0.5 bg-surface-overlay hover:bg-surface-elevated text-text-muted rounded"
+                >
+                  Cancel
+                </button>
+              </template>
+              <template v-else>
+                <button
+                  @click="profile.showDeleteConfirm = true"
+                  class="p-1 text-text-subtle hover:text-red-600 dark:hover:text-red-400 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                  title="Delete"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </template>
             </div>
-          </div>
-
-          <!-- Two-column layout: perk matrix left, notes right -->
-          <div class="flex gap-3 items-stretch">
-            <!-- Left: perk matrix -->
-            <div class="flex-shrink-0">
-              <WishlistPerkMatrix
-                :weapon-hash="weapon.weaponHash"
-                :perk-hashes="profile.item.perkHashes"
-              />
-            </div>
-
-            <!-- Right: notes (if any) - full height column -->
-            <div
-              v-if="profile.item.notes"
-              class="text-xs text-text-muted flex-1 min-w-0 overflow-y-auto max-h-32 cursor-help"
-              :title="profile.item.notes"
-            >
-              {{ profile.item.notes }}
-            </div>
-          </div>
-
-          <!-- Bottom: Creator and YouTube Reference -->
-          <div v-if="profile.item.youtubeLink || profile.item.youtubeAuthor" class="mt-2 text-xs text-text-subtle">
-            <span v-if="profile.item.youtubeAuthor" class="mr-1">{{ profile.item.youtubeAuthor }}</span>
-            <a
-              v-if="profile.item.youtubeLink"
-              :href="profile.item.youtubeTimestamp && getTimestampedUrl(profile.item.youtubeLink, profile.item.youtubeTimestamp) || profile.item.youtubeLink"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="text-blue-400 hover:text-blue-300 hover:underline"
-              @click.stop
-            >YouTube<template v-if="profile.item.youtubeTimestamp"> @ {{ profile.item.youtubeTimestamp }}</template></a>
-            <span v-else-if="profile.item.youtubeTimestamp">@ {{ profile.item.youtubeTimestamp }}</span>
-          </div>
-        </div>
+          </template>
+        </WishlistRollCard>
       </div>
     </div>
 
@@ -726,7 +670,7 @@ import { getWishlistPerkAnnotations, selectionToWishlistItem } from '@/services/
 import InstancePerkGrid from './InstancePerkGrid.vue'
 import InstanceFilterBar from './InstanceFilterBar.vue'
 import PerkIconWithBadges from './PerkIconWithBadges.vue'
-import WishlistPerkMatrix from '@/components/wishlists/WishlistPerkMatrix.vue'
+import WishlistRollCard from '@/components/wishlists/WishlistRollCard.vue'
 import WishlistsApplied from './WishlistsApplied.vue'
 import {
   INSTANCE_CARD_STYLES,
@@ -737,7 +681,6 @@ import {
   INSTANCE_PALETTE,
   MASTERWORK_ICON_STYLES,
   DROPDOWN_STYLES,
-  TAG_DISPLAY_STYLES,
   TAG_BUTTON_STYLES,
   TAG_TOOLTIPS,
 } from '@/styles/ui-states'
@@ -750,8 +693,7 @@ import {
   expandHashSetWithVariants
 } from '@/utils/perk-variants'
 import { formatMasterworkStatName, formatHashSuffix } from '@/utils/formatting'
-import { getTimestampedUrl } from '@/utils/youtube'
-import { sortTagsForDisplay, getItemTagPriority } from '@/utils/wishlist-sorting'
+import { getItemTagPriority } from '@/utils/wishlist-sorting'
 
 const props = defineProps<{
   weapon: DedupedWeapon
@@ -1112,12 +1054,6 @@ function getTagButtonClasses(tag: WishlistTag): string {
     : TAG_BUTTON_STYLES.default
 
   return `${baseClasses} ${isSelected ? styles.selected : styles.unselected}`
-}
-
-function getTagDisplayClasses(tag: WishlistTag): string {
-  if (tag === 'pve') return TAG_DISPLAY_STYLES.pve
-  if (tag === 'pvp') return TAG_DISPLAY_STYLES.pvp
-  return TAG_DISPLAY_STYLES.default
 }
 
 function getTagTooltip(tag: WishlistTag): string {

@@ -159,70 +159,17 @@
 
           <!-- Items for this weapon -->
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-            <div
+            <WishlistRollCard
               v-for="item in items"
               :key="item.id"
-              class="bg-surface/50 rounded-lg p-3 border border-border/50"
-            >
-              <!-- Tags (sorted by priority) -->
-              <div class="flex flex-wrap gap-1 mb-2">
-                <span
-                  v-for="tag in sortTagsForDisplay(item.tags)"
-                  :key="tag"
-                  :class="getTagClasses(tag)"
-                  :title="getTagTooltip(tag)"
-                  class="text-xs font-bold px-1.5 py-0.5 rounded uppercase"
-                >
-                  {{ tag }}
-                </span>
-              </div>
-
-              <!-- Perks - DIM-style matrix -->
-              <WishlistPerkMatrix
-                :weapon-hash="weaponHash"
-                :perk-hashes="item.perkHashes"
-                class="mb-2"
-              />
-
-              <!-- Notes - with full text on hover -->
-              <p
-                v-if="item.notes"
-                class="text-xs text-text-subtle line-clamp-3 cursor-help"
-                :title="item.notes"
-              >
-                {{ item.notes }}
-              </p>
-
-              <!-- YouTube Reference (if any) -->
-              <div v-if="item.youtubeLink || item.youtubeAuthor" class="mt-1 text-xs text-text-subtle">
-                <span v-if="item.youtubeAuthor" class="mr-1">{{ item.youtubeAuthor }}</span>
-                <a
-                  v-if="item.youtubeLink"
-                  :href="item.youtubeTimestamp && getTimestampedUrl(item.youtubeLink, item.youtubeTimestamp) || item.youtubeLink"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="text-blue-400 hover:text-blue-300 hover:underline"
-                  @click.stop
-                >YouTube<template v-if="item.youtubeTimestamp"> @ {{ item.youtubeTimestamp }}</template></a>
-                <span v-else-if="item.youtubeTimestamp">@ {{ item.youtubeTimestamp }}</span>
-              </div>
-
-              <!-- Action buttons for editable wishlists (user OR admin-editable presets) -->
-              <div v-if="isEditable" class="mt-2 flex gap-3">
-                <button
-                  @click="handleEditItem(item, weaponHash)"
-                  class="text-xs text-accent-primary hover:text-accent-primary/80"
-                >
-                  Edit
-                </button>
-                <button
-                  @click="handleDeleteItem(item.id)"
-                  class="text-xs text-red-600 dark:text-red-400 hover:text-red-500 dark:hover:text-red-300"
-                >
-                  Remove
-                </button>
-              </div>
-            </div>
+              :item="item"
+              :weapon-hash="weaponHash"
+              :wishlist-name="wishlist?.name || 'Unknown'"
+              :show-actions="isEditable"
+              @view="handleViewItem(item, weaponHash)"
+              @edit="handleEditItem(item, weaponHash)"
+              @remove="handleDeleteItem(item.id)"
+            />
           </div>
         </div>
       </div>
@@ -329,12 +276,10 @@ import { useWishlistsStore } from '@/stores/wishlists'
 import { manifestService } from '@/services/manifest-service'
 import { weaponParser } from '@/services/weapon-parser'
 import { getWishlistStats } from '@/services/dim-wishlist-parser'
-import WishlistPerkMatrix from '@/components/wishlists/WishlistPerkMatrix.vue'
-import type { WishlistItem, WishlistTag } from '@/models/wishlist'
+import WishlistRollCard from '@/components/wishlists/WishlistRollCard.vue'
+import type { WishlistItem } from '@/models/wishlist'
 import { formatHashSuffix } from '@/utils/formatting'
-import { getTimestampedUrl } from '@/utils/youtube'
-import { sortItemsByTagPriority, sortTagsForDisplay } from '@/utils/wishlist-sorting'
-import { TAG_DISPLAY_STYLES, TAG_TOOLTIPS } from '@/styles/ui-states'
+import { sortItemsByTagPriority } from '@/utils/wishlist-sorting'
 
 const route = useRoute()
 const router = useRouter()
@@ -491,16 +436,6 @@ function formatDate(isoString?: string): string {
   })
 }
 
-function getTagClasses(tag: WishlistTag): string {
-  if (tag === 'pve') return TAG_DISPLAY_STYLES.pve
-  if (tag === 'pvp') return TAG_DISPLAY_STYLES.pvp
-  return TAG_DISPLAY_STYLES.default
-}
-
-function getTagTooltip(tag: WishlistTag): string {
-  return TAG_TOOLTIPS[tag] || tag
-}
-
 // Name/description save handlers
 function saveName() {
   if (!wishlist.value || wishlist.value.sourceType !== 'user') return
@@ -568,6 +503,14 @@ function handleExport() {
 function handleDeleteItem(itemId: string) {
   if (!wishlist.value || wishlist.value.sourceType !== 'user') return
   wishlistsStore.removeItemFromWishlist(wishlist.value.id, itemId)
+}
+
+function handleViewItem(_item: WishlistItem, weaponHash: number) {
+  // Navigate to weapon detail page (view mode)
+  router.push({
+    name: 'weapon-detail',
+    params: { weaponHash: weaponHash.toString() }
+  })
 }
 
 function handleEditItem(item: WishlistItem, weaponHash: number) {

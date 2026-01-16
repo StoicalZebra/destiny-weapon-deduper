@@ -1,10 +1,35 @@
 <template>
-  <div class="rounded-xl border border-border bg-surface-elevated p-5 shadow-sm hover:border-border-subtle transition-colors">
+  <div class="rounded-xl border border-border bg-surface-elevated p-5 shadow-sm hover:border-border-subtle transition-colors h-full flex flex-col">
     <!-- Header -->
     <div class="flex items-start justify-between gap-4">
+      <!-- Left: Title, Author, Description -->
       <div class="min-w-0 flex-1">
-        <div class="flex items-center gap-2 flex-wrap">
-          <h3 class="text-lg font-semibold text-text truncate">{{ wishlist.name }}</h3>
+        <h3 class="text-lg font-semibold text-text truncate">{{ wishlist.name }}</h3>
+        <p v-if="wishlist.author" class="text-sm text-text-muted">
+          by {{ wishlist.author }}
+        </p>
+        <p v-if="wishlist.description" class="mt-1 text-sm text-text-muted line-clamp-2">
+          {{ wishlist.description }}
+        </p>
+      </div>
+
+      <!-- Right: Updated date + all badges -->
+      <div class="flex flex-col items-end gap-1.5 flex-shrink-0">
+        <!-- Updated date -->
+        <div v-if="wishlist.lastFetched || wishlist.lastUpdated" class="text-xs text-text-subtle whitespace-nowrap">
+          Updated: {{ formatDateShort(wishlist.lastUpdated || wishlist.lastFetched) }}
+        </div>
+
+        <!-- Badges row -->
+        <div class="flex flex-wrap gap-1.5 justify-end">
+          <!-- Large badge -->
+          <span
+            v-if="isLargePreset"
+            class="inline-flex items-center rounded-full bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-700/50 px-2 py-0.5 text-xs font-medium"
+          >
+            Large
+          </span>
+          <!-- Premade/Custom badge -->
           <span
             :class="[
               'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
@@ -15,6 +40,7 @@
           >
             {{ wishlist.sourceType === 'preset' ? 'Premade' : 'Custom' }}
           </span>
+          <!-- Update Available badge -->
           <span
             v-if="hasUpdate"
             class="inline-flex items-center rounded-full bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-700/50 px-2 py-0.5 text-xs font-medium"
@@ -22,35 +48,23 @@
             Update Available
           </span>
         </div>
-        <p v-if="wishlist.description" class="mt-1 text-sm text-text-muted line-clamp-2">
-          {{ wishlist.description }}
-        </p>
-      </div>
-      <!-- Author in upper right -->
-      <div v-if="wishlist.author" class="text-sm text-text-muted whitespace-nowrap">
-        by {{ wishlist.author }}
       </div>
     </div>
 
     <!-- Stats -->
-    <div class="mt-4 grid grid-cols-2 gap-3 text-sm">
-      <div class="flex items-center justify-between rounded-lg bg-surface/40 px-3 py-2">
+    <div class="mt-4 grid grid-cols-2 gap-3 text-sm flex-grow">
+      <div class="flex items-center justify-between rounded-lg bg-surface/40 px-3 py-2 h-fit">
         <span class="text-text-muted">Rolls</span>
         <span class="font-semibold text-text">{{ stats.itemCount.toLocaleString() }}</span>
       </div>
-      <div class="flex items-center justify-between rounded-lg bg-surface/40 px-3 py-2">
+      <div class="flex items-center justify-between rounded-lg bg-surface/40 px-3 py-2 h-fit">
         <span class="text-text-muted">Weapons</span>
         <span class="font-semibold text-text">{{ stats.weaponCount.toLocaleString() }}</span>
       </div>
     </div>
 
-    <!-- Last Updated -->
-    <div v-if="wishlist.lastFetched || wishlist.lastUpdated" class="mt-3 text-xs text-text-subtle">
-      Last updated: {{ formatDate(wishlist.lastUpdated || wishlist.lastFetched) }}
-    </div>
-
-    <!-- Actions - show different UI based on wishlist size -->
-    <div class="mt-4">
+    <!-- Actions - always at bottom -->
+    <div class="mt-4 pt-3 border-t border-border/50">
       <!-- Large wishlists: show message explaining why edit is disabled -->
       <div v-if="isTooLarge" class="text-sm text-text-muted space-y-3">
         <p>
@@ -176,13 +190,13 @@ const hasUpdate = computed(
 // Check if wishlist is too large for in-app editing
 const isTooLarge = computed(() => isWishlistTooLarge(props.wishlist))
 
-function formatDate(isoString?: string): string {
+function formatDateShort(isoString?: string): string {
   if (!isoString) return 'Unknown'
   const date = new Date(isoString)
-  return date.toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  })
+  // Format as yyyy-mm-dd
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 </script>
