@@ -851,6 +851,7 @@ export const useWishlistsStore = defineStore('wishlists', () => {
     presetWishlists,
     userWishlists,
     updateStatuses,
+    enabledStates,
     loading,
     error,
     initialized,

@@ -247,7 +247,7 @@
             <input
               v-model="forkName"
               type="text"
-              :placeholder="`My ${wishlist?.name || 'Custom'} Rolls`"
+              placeholder="My forked wishlist"
               class="w-full px-3 py-2 rounded-lg bg-surface-overlay border border-border text-text placeholder-text-subtle focus:outline-none focus:border-blue-500"
             />
           </div>
@@ -280,6 +280,26 @@
         </div>
       </div>
     </div>
+
+    <!-- Saved Toast -->
+    <Transition
+      enter-active-class="transition-all duration-200 ease-out"
+      enter-from-class="opacity-0 translate-y-2"
+      enter-to-class="opacity-100 translate-y-0"
+      leave-active-class="transition-all duration-150 ease-in"
+      leave-from-class="opacity-100 translate-y-0"
+      leave-to-class="opacity-0 translate-y-2"
+    >
+      <div
+        v-if="savedMessage"
+        class="fixed bottom-4 right-4 z-50 flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 text-white shadow-lg"
+      >
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        {{ savedMessage }}
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -374,6 +394,18 @@ const remainingCount = computed(() => {
   return allFilteredGroups.value.length - displayLimit.value
 })
 
+// Toast notification for saved changes
+const savedMessage = ref<string | null>(null)
+let savedTimeout: ReturnType<typeof setTimeout> | null = null
+
+function showSavedToast(message: string) {
+  if (savedTimeout) clearTimeout(savedTimeout)
+  savedMessage.value = message
+  savedTimeout = setTimeout(() => {
+    savedMessage.value = null
+  }, 2000)
+}
+
 function loadMore() {
   displayLimit.value += 50
 }
@@ -455,6 +487,7 @@ function saveName() {
   const trimmed = editableName.value.trim()
   if (trimmed && trimmed !== wishlist.value.name) {
     wishlistsStore.updateUserWishlist(wishlist.value.id, { name: trimmed })
+    showSavedToast('Name saved')
   } else {
     // Reset to original if empty
     editableName.value = wishlist.value.name
@@ -466,6 +499,7 @@ function saveDescription() {
   const trimmed = editableDescription.value.trim()
   if (trimmed !== (wishlist.value.description || '')) {
     wishlistsStore.updateUserWishlist(wishlist.value.id, { description: trimmed || undefined })
+    showSavedToast('Description saved')
   }
 }
 

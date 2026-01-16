@@ -93,7 +93,7 @@
               : 'bg-surface-overlay text-text hover:bg-surface-elevated'
           ]"
         >
-          {{ wishlist.sourceType === 'preset' ? 'View / Fork' : 'View' }}
+          {{ wishlist.sourceType === 'preset' ? 'View / Fork' : 'View / Edit' }}
         </router-link>
 
         <!-- Preset wishlists: View on GitHub (external link) -->
