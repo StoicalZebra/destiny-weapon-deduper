@@ -163,15 +163,13 @@
             <span v-if="profile.item.youtubeAuthor" class="mr-1">{{ profile.item.youtubeAuthor }}</span>
             <a
               v-if="profile.item.youtubeLink"
-              :href="profile.item.youtubeLink"
+              :href="profile.item.youtubeTimestamp && getTimestampedUrl(profile.item.youtubeLink, profile.item.youtubeTimestamp) || profile.item.youtubeLink"
               target="_blank"
               rel="noopener noreferrer"
               class="text-blue-400 hover:text-blue-300 hover:underline"
               @click.stop
-            >
-              YouTube<template v-if="profile.item.youtubeTimestamp"> @{{ profile.item.youtubeTimestamp }}</template>
-            </a>
-            <span v-else-if="profile.item.youtubeTimestamp">@{{ profile.item.youtubeTimestamp }}</span>
+            >YouTube<template v-if="profile.item.youtubeTimestamp"> @ {{ profile.item.youtubeTimestamp }}</template></a>
+            <span v-else-if="profile.item.youtubeTimestamp">@ {{ profile.item.youtubeTimestamp }}</span>
           </div>
         </div>
       </div>
@@ -212,10 +210,10 @@
             />
           </div>
 
-          <!-- YouTube Reference -->
+          <!-- YouTube URL -->
           <div>
             <label class="block text-xs font-bold text-text-muted uppercase tracking-wider mb-1">
-              YouTube Reference (Optional)
+              YouTube URL (Optional)
             </label>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <input
@@ -744,6 +742,7 @@ import {
   expandHashSetWithVariants
 } from '@/utils/perk-variants'
 import { formatMasterworkStatName, formatHashSuffix } from '@/utils/formatting'
+import { getTimestampedUrl } from '@/utils/youtube'
 
 const props = defineProps<{
   weapon: DedupedWeapon

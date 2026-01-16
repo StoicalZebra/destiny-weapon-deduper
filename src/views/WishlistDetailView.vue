@@ -198,15 +198,13 @@
                 <span v-if="item.youtubeAuthor" class="mr-1">{{ item.youtubeAuthor }}</span>
                 <a
                   v-if="item.youtubeLink"
-                  :href="item.youtubeLink"
+                  :href="item.youtubeTimestamp && getTimestampedUrl(item.youtubeLink, item.youtubeTimestamp) || item.youtubeLink"
                   target="_blank"
                   rel="noopener noreferrer"
                   class="text-blue-400 hover:text-blue-300 hover:underline"
                   @click.stop
-                >
-                  YouTube<template v-if="item.youtubeTimestamp"> @{{ item.youtubeTimestamp }}</template>
-                </a>
-                <span v-else-if="item.youtubeTimestamp">@{{ item.youtubeTimestamp }}</span>
+                >YouTube<template v-if="item.youtubeTimestamp"> @ {{ item.youtubeTimestamp }}</template></a>
+                <span v-else-if="item.youtubeTimestamp">@ {{ item.youtubeTimestamp }}</span>
               </div>
 
               <!-- Action buttons for editable wishlists (user OR admin-editable presets) -->
@@ -334,6 +332,7 @@ import { getWishlistStats } from '@/services/dim-wishlist-parser'
 import WishlistPerkMatrix from '@/components/wishlists/WishlistPerkMatrix.vue'
 import type { WishlistItem, WishlistTag } from '@/models/wishlist'
 import { formatHashSuffix } from '@/utils/formatting'
+import { getTimestampedUrl } from '@/utils/youtube'
 import { TAG_DISPLAY_STYLES, TAG_TOOLTIPS } from '@/styles/ui-states'
 
 const route = useRoute()
