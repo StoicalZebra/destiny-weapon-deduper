@@ -58,40 +58,45 @@
       </div>
     </div>
 
-    <!-- Bottom: Creator and YouTube Reference -->
-    <div v-if="item.youtubeLink || item.youtubeAuthor" class="mt-2 text-xs text-text-subtle">
-      <span v-if="item.youtubeAuthor" class="mr-1">{{ item.youtubeAuthor }}</span>
-      <a
-        v-if="item.youtubeLink"
-        :href="timestampedYoutubeUrl || item.youtubeLink"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="text-blue-400 hover:text-blue-300 hover:underline"
-        @click.stop
-      >YouTube<template v-if="item.youtubeTimestamp"> @ {{ item.youtubeTimestamp }}</template></a>
-      <span v-else-if="item.youtubeTimestamp">@ {{ item.youtubeTimestamp }}</span>
-    </div>
+    <!-- Bottom row: Creator/YouTube left, Actions right -->
+    <div v-if="(item.youtubeLink || item.youtubeAuthor) || showActions" class="mt-2 flex items-center justify-between gap-2 text-xs">
+      <!-- Left: Creator and YouTube Reference -->
+      <div v-if="item.youtubeLink || item.youtubeAuthor" class="text-text-subtle">
+        <span v-if="item.youtubeAuthor" class="mr-1">{{ item.youtubeAuthor }}</span>
+        <a
+          v-if="item.youtubeLink"
+          :href="timestampedYoutubeUrl || item.youtubeLink"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-blue-400 hover:text-blue-300 hover:underline"
+          @click.stop
+        >YouTube<template v-if="item.youtubeTimestamp"> @ {{ item.youtubeTimestamp }}</template></a>
+        <span v-else-if="item.youtubeTimestamp">@ {{ item.youtubeTimestamp }}</span>
+      </div>
+      <!-- Spacer if no youtube info but actions exist -->
+      <div v-else></div>
 
-    <!-- Action links (for editable wishlists) -->
-    <div v-if="showActions" class="mt-2 flex gap-3 text-xs" @click.stop>
-      <button
-        @click="emit('view')"
-        class="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300"
-      >
-        View
-      </button>
-      <button
-        @click="emit('edit')"
-        class="text-accent-primary hover:text-accent-primary/80"
-      >
-        Edit
-      </button>
-      <button
-        @click="emit('remove')"
-        class="text-red-600 dark:text-red-400 hover:text-red-500 dark:hover:text-red-300"
-      >
-        Remove
-      </button>
+      <!-- Right: Action links (for editable wishlists) -->
+      <div v-if="showActions" class="flex gap-3" @click.stop>
+        <button
+          @click="emit('view')"
+          class="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300"
+        >
+          View
+        </button>
+        <button
+          @click="emit('edit')"
+          class="text-accent-primary hover:text-accent-primary/80"
+        >
+          Edit
+        </button>
+        <button
+          @click="emit('remove')"
+          class="text-red-600 dark:text-red-400 hover:text-red-500 dark:hover:text-red-300"
+        >
+          Remove
+        </button>
+      </div>
     </div>
   </div>
 </template>
