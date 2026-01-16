@@ -210,10 +210,10 @@
             />
           </div>
 
-          <!-- YouTube URL -->
+          <!-- YouTube or Website URL -->
           <div>
             <label class="block text-xs font-bold text-text-muted uppercase tracking-wider mb-1">
-              YouTube URL (Optional)
+              YouTube or Website URL (Optional)
             </label>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <input
@@ -247,7 +247,7 @@
                 @click="clearSelection"
                 class="px-4 py-2 rounded text-sm font-medium transition-colors bg-surface-overlay hover:bg-surface-elevated text-text border border-border"
               >
-                Clear Selection
+                Cancel Update
               </button>
               <button
                 @click="handleSave"
