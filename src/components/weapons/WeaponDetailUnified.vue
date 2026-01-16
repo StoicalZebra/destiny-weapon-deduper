@@ -53,7 +53,7 @@
         </button>
 
         <div v-show="wishlistsExpanded" class="px-3 pb-3">
-          <WishlistsApplied ref="wishlistsAppliedRef" :weapon-hash="weapon.weaponHash" />
+          <WishlistsApplied ref="wishlistsAppliedRef" :weapon-hash="weapon.weaponHash" :variant-hashes="allWeaponVariantHashes" />
         </div>
       </div>
     </div>

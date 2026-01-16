@@ -70,6 +70,7 @@ import type { Wishlist } from '@/models/wishlist'
 
 const props = defineProps<{
   weaponHash: number
+  variantHashes?: number[] // All variant hashes for multi-hash weapons
 }>()
 
 const store = useWishlistsStore()
@@ -81,13 +82,25 @@ onMounted(async () => {
   }
 })
 
-// Get all wishlists with their item counts for this weapon
+// Get all wishlists with their item counts for this weapon (checking all variant hashes)
 const wishlistsWithCounts = computed(() => {
+  // Use variant hashes if provided, otherwise fall back to single weaponHash
+  const hashesToCheck = props.variantHashes?.length ? props.variantHashes : [props.weaponHash]
+
   return store.allWishlists
-    .map(wishlist => ({
-      wishlist,
-      itemCount: getItemsForWeapon(wishlist.items, props.weaponHash).length
-    }))
+    .map(wishlist => {
+      // Count items matching ANY of the variant hashes
+      const matchingItems = new Set<string>()
+      for (const hash of hashesToCheck) {
+        for (const item of getItemsForWeapon(wishlist.items, hash)) {
+          matchingItems.add(item.id)
+        }
+      }
+      return {
+        wishlist,
+        itemCount: matchingItems.size
+      }
+    })
     .filter(({ itemCount }) => itemCount > 0)
     .sort((a, b) => {
       // Sort: enabled first, then by item count
