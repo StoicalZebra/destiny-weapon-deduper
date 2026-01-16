@@ -140,15 +140,15 @@
             </label>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <input
-                v-model="youtubeLink"
-                type="url"
-                placeholder="YouTube link..."
-                class="bg-surface border border-border rounded px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-text-subtle"
-              />
-              <input
                 v-model="youtubeAuthor"
                 type="text"
                 placeholder="Creator name..."
+                class="bg-surface border border-border rounded px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-text-subtle"
+              />
+              <input
+                v-model="youtubeLink"
+                type="url"
+                placeholder="YouTube link..."
                 class="bg-surface border border-border rounded px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-text-subtle"
               />
               <input
