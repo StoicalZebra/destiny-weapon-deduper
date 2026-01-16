@@ -89,51 +89,21 @@
           :class="{ 'ring-2 ring-blue-500/50 border-blue-500/50 bg-blue-900/10': isProfileActive(profile) }"
           @click="loadProfile(profile)"
         >
-          <!-- Header row with wishlist name, perks count, tags, and actions -->
-          <div class="flex justify-between items-start mb-2 gap-2">
-            <!-- Left: wishlist name only -->
-            <span class="text-xs font-medium text-text-muted truncate min-w-0" :title="profile.wishlistName">
+          <!-- Header row: left=wishlist name, center=perks, right=tags+delete -->
+          <div class="flex items-center mb-2 gap-2">
+            <!-- Left: wishlist name -->
+            <span class="text-xs font-medium text-text-muted truncate min-w-0 flex-1" :title="profile.wishlistName">
               {{ profile.wishlistName }}
             </span>
 
-            <!-- Right: perks count, tags, and delete action -->
-            <div class="flex flex-col items-end gap-1 flex-shrink-0">
-              <!-- Top row: perks count and delete button -->
-              <div class="flex items-center gap-2">
-                <span class="text-xs text-text-subtle">
-                  {{ profile.item.perkHashes.length }} perks
-                </span>
-                <!-- Actions - only show delete for user wishlists -->
-                <div v-if="profile.isUserWishlist" class="flex items-center gap-2" @click.stop>
-                  <template v-if="profile.showDeleteConfirm">
-                    <span class="text-xs text-red-600 dark:text-red-400 font-bold">Sure?</span>
-                    <button
-                      @click="deleteProfile(profile.id)"
-                      class="text-xs px-2 py-0.5 bg-red-900/50 hover:bg-red-900 text-red-200 border border-red-800 rounded"
-                    >
-                      Yes
-                    </button>
-                    <button
-                      @click="profile.showDeleteConfirm = false"
-                      class="text-xs px-2 py-0.5 bg-surface-overlay hover:bg-surface-elevated text-text-muted rounded"
-                    >
-                      Cancel
-                    </button>
-                  </template>
-                  <template v-else>
-                    <button
-                      @click="profile.showDeleteConfirm = true"
-                      class="p-1 text-text-subtle hover:text-red-600 dark:hover:text-red-400 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                      title="Delete"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                  </template>
-                </div>
-              </div>
-              <!-- Tags below perks count -->
+            <!-- Center: perks count -->
+            <span class="text-xs text-text-subtle flex-shrink-0">
+              {{ profile.item.perkHashes.length }} perks
+            </span>
+
+            <!-- Right: tags and delete action -->
+            <div class="flex items-center gap-2 flex-1 justify-end">
+              <!-- Tags -->
               <div v-if="profile.item.tags?.length" class="flex flex-wrap gap-1 justify-end">
                 <span
                   v-for="tag in sortTagsForDisplay(profile.item.tags)"
@@ -144,25 +114,59 @@
                   {{ tag }}
                 </span>
               </div>
+              <!-- Delete action - only show for user wishlists -->
+              <div v-if="profile.isUserWishlist" class="flex items-center gap-2 flex-shrink-0" @click.stop>
+                <template v-if="profile.showDeleteConfirm">
+                  <span class="text-xs text-red-600 dark:text-red-400 font-bold">Sure?</span>
+                  <button
+                    @click="deleteProfile(profile.id)"
+                    class="text-xs px-2 py-0.5 bg-red-900/50 hover:bg-red-900 text-red-200 border border-red-800 rounded"
+                  >
+                    Yes
+                  </button>
+                  <button
+                    @click="profile.showDeleteConfirm = false"
+                    class="text-xs px-2 py-0.5 bg-surface-overlay hover:bg-surface-elevated text-text-muted rounded"
+                  >
+                    Cancel
+                  </button>
+                </template>
+                <template v-else>
+                  <button
+                    @click="profile.showDeleteConfirm = true"
+                    class="p-1 text-text-subtle hover:text-red-600 dark:hover:text-red-400 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Delete"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </template>
+              </div>
             </div>
           </div>
 
-          <!-- DIM-style perk matrix -->
-          <WishlistPerkMatrix
-            :weapon-hash="weapon.weaponHash"
-            :perk-hashes="profile.item.perkHashes"
-          />
+          <!-- Two-column layout: perk matrix left, notes right -->
+          <div class="flex gap-3">
+            <!-- Left: perk matrix -->
+            <div class="flex-shrink-0">
+              <WishlistPerkMatrix
+                :weapon-hash="weapon.weaponHash"
+                :perk-hashes="profile.item.perkHashes"
+              />
+            </div>
 
-          <!-- Notes (if any) - with full text on hover -->
-          <p
-            v-if="profile.item.notes"
-            class="text-xs text-text-muted mt-2 line-clamp-2 cursor-help"
-            :title="profile.item.notes"
-          >
-            {{ profile.item.notes }}
-          </p>
+            <!-- Right: notes (if any) -->
+            <p
+              v-if="profile.item.notes"
+              class="text-xs text-text-muted flex-1 min-w-0 line-clamp-4 cursor-help"
+              :title="profile.item.notes"
+            >
+              {{ profile.item.notes }}
+            </p>
+          </div>
 
-          <!-- YouTube Reference (if any) -->
+          <!-- Bottom: Creator and YouTube Reference -->
           <div v-if="profile.item.youtubeLink || profile.item.youtubeAuthor" class="mt-2 text-xs text-text-subtle">
             <span v-if="profile.item.youtubeAuthor" class="mr-1">{{ profile.item.youtubeAuthor }}</span>
             <a
