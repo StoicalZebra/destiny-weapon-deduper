@@ -170,26 +170,25 @@
             </span>
           </div>
 
-          <div class="flex justify-between items-center gap-3">
+          <div class="flex items-center gap-3">
+            <p v-if="saveMessage" :class="['text-xs flex-1', saveMessage.type === 'error' ? 'text-red-600 dark:text-red-400' : 'text-text-muted']">{{ saveMessage.text }}</p>
+            <p v-else class="flex-1"></p>
             <p class="text-xs text-text-subtle">
               {{ saveTargetText }}
             </p>
-            <div class="flex items-center gap-3">
-              <p v-if="saveMessage" :class="['text-xs', saveMessage.type === 'error' ? 'text-red-600 dark:text-red-400' : 'text-text-muted']">{{ saveMessage.text }}</p>
-              <button
-                @click="clearSelection"
-                class="px-4 py-2 rounded text-sm font-medium transition-colors bg-surface-overlay hover:bg-surface-elevated text-text border border-border"
-              >
-                Cancel Update
-              </button>
-              <button
-                @click="handleSave"
-                class="px-4 py-2 rounded text-sm font-medium transition-colors"
-                :class="buttonClasses"
-              >
-                {{ buttonLabel }}
-              </button>
-            </div>
+            <button
+              @click="clearSelection"
+              class="px-4 py-2 rounded text-sm font-medium transition-colors bg-surface-overlay hover:bg-surface-elevated text-text border border-border"
+            >
+              Cancel
+            </button>
+            <button
+              @click="handleSave"
+              class="px-4 py-2 rounded text-sm font-medium transition-colors"
+              :class="buttonClasses"
+            >
+              {{ buttonLabel }}
+            </button>
           </div>
         </div>
       </div>
