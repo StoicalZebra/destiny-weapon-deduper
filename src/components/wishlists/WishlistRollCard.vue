@@ -58,29 +58,29 @@
       </div>
     </div>
 
-    <!-- Bottom row: Metadata left, YouTube center, Actions right (anchored to bottom) -->
+    <!-- Bottom row: YouTube left, Metadata center, Actions right (anchored to bottom) -->
     <!-- Uses same flex-1 pattern as header row for true centering -->
     <div v-if="hasBottomRowContent" class="mt-auto pt-2 flex items-center gap-2 text-xs">
-      <!-- Left: Updated date (with createdBy in tooltip) - flex-1 to balance right side -->
+      <!-- Left: YouTube info - flex-1 to balance right side -->
       <div class="text-text-subtle flex-1 min-w-0">
-        <span v-if="formattedUpdatedAt" :title="item.createdBy ? `by ${item.createdBy}` : undefined">
-          {{ formattedUpdatedAt }}
+        <span v-if="item.youtubeLink || item.youtubeAuthor">
+          <span v-if="item.youtubeAuthor" class="mr-1">{{ item.youtubeAuthor }}</span>
+          <a
+            v-if="item.youtubeLink"
+            :href="timestampedYoutubeUrl || item.youtubeLink"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-blue-400 hover:text-blue-300 hover:underline"
+            @click.stop
+          >YouTube<template v-if="item.youtubeTimestamp"> @ {{ item.youtubeTimestamp }}</template></a>
+          <span v-else-if="item.youtubeTimestamp">@ {{ item.youtubeTimestamp }}</span>
         </span>
       </div>
 
-      <!-- Center: YouTube info (flex-shrink-0 to stay centered) -->
-      <div v-if="item.youtubeLink || item.youtubeAuthor" class="flex-shrink-0 text-text-subtle">
-        <span v-if="item.youtubeAuthor" class="mr-1">{{ item.youtubeAuthor }}</span>
-        <a
-          v-if="item.youtubeLink"
-          :href="timestampedYoutubeUrl || item.youtubeLink"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="text-blue-400 hover:text-blue-300 hover:underline"
-          @click.stop
-        >YouTube<template v-if="item.youtubeTimestamp"> @ {{ item.youtubeTimestamp }}</template></a>
-        <span v-else-if="item.youtubeTimestamp">@ {{ item.youtubeTimestamp }}</span>
-      </div>
+      <!-- Center: Updated date (with createdBy in tooltip) - flex-shrink-0 to stay centered -->
+      <span v-if="formattedUpdatedAt" class="flex-shrink-0 text-text-subtle" :title="item.createdBy ? `by ${item.createdBy}` : undefined">
+        {{ formattedUpdatedAt }}
+      </span>
 
       <!-- Right: Action links (for editable wishlists) - flex-1 to balance left side -->
       <div class="flex-1 flex justify-end gap-3" @click.stop>
