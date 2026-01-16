@@ -88,6 +88,11 @@ src/
 - Single-button save with smart state detection
 - Click to toggle perk selection (selected perks highlighted in orange)
 
+**Wishlist Matching Logic:**
+- Uses **OR logic within columns**: If you select multiple perks in the same column (e.g., Perk A, B, C), an instance matches if it has ANY of those perks
+- Uses **AND logic between columns**: An instance must have at least one matching perk in EVERY column that has selections
+- Example: If you select "Delicate Tuning" and "Pugilist" in Column 1, plus "Precision Instrument" in Column 2, an instance matches if it has (Delicate Tuning OR Pugilist) AND (Precision Instrument)
+
 **UX Features:**
 - Perk tooltips (native `title` attribute) showing descriptions on hover
 - Recent searches dropdown with localStorage persistence

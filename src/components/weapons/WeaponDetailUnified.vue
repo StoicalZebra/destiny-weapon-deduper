@@ -868,18 +868,21 @@ const instanceMatchCache = computed(() => {
       const selectedPerksInCol = filterPerksWithSelectedVariant(col.availablePerks, selection.value)
       if (selectedPerksInCol.length === 0) continue
 
-      // Check if instance has any variant of each selected perk
-      for (const perk of selectedPerksInCol) {
-        const plugHash = instance.sockets.sockets[col.columnIndex]?.plugHash
-        const reusables = instance.socketPlugsByIndex?.[col.columnIndex] || []
+      // Check if instance has ANY of the selected perks (OR logic within column)
+      const plugHash = instance.sockets.sockets[col.columnIndex]?.plugHash
+      const reusables = instance.socketPlugsByIndex?.[col.columnIndex] || []
 
-        // Use utility to check if equipped or reusable matches any variant
-        if (!instanceHasPerkVariant(plugHash, reusables, perk)) {
-          matches = false
+      let columnMatches = false
+      for (const perk of selectedPerksInCol) {
+        if (instanceHasPerkVariant(plugHash, reusables, perk)) {
+          columnMatches = true
           break
         }
       }
-      if (!matches) break
+      if (!columnMatches) {
+        matches = false
+        break
+      }
     }
 
     // Check masterwork selection
