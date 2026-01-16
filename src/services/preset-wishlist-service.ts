@@ -150,7 +150,7 @@ class PresetWishlistService {
 
       const status: WishlistUpdateStatus = {
         wishlistId: config.id,
-        hasUpdate: !localInfo || localInfo.version !== remoteVersion,
+        hasUpdate: localInfo !== null && localInfo.version !== remoteVersion,
         currentVersion: localInfo?.version,
         remoteVersion,
         lastChecked: new Date().toISOString()
