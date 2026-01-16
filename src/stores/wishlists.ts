@@ -553,6 +553,42 @@ export const useWishlistsStore = defineStore('wishlists', () => {
   }
 
   /**
+   * Get all wishlist items for a weapon and its variants (e.g., holofoil + normal)
+   * Checks all variant hashes to find matching wishlist items
+   */
+  function getItemsForWeaponVariants(
+    variantHashes: number[]
+  ): Array<{ wishlist: Wishlist; items: WishlistItem[] }> {
+    const results: Array<{ wishlist: Wishlist; items: WishlistItem[] }> = []
+    const seenItems = new Set<string>() // Dedupe by item.id across all hashes
+
+    for (const wishlist of allWishlists.value) {
+      if (!isWishlistEnabled(wishlist.id)) continue
+
+      const index = weaponIndexes.value.get(wishlist.id)
+      if (!index) continue
+
+      // Collect items matching ANY variant hash
+      const matchingItems: WishlistItem[] = []
+      for (const hash of variantHashes) {
+        const items = index.get(hash) || []
+        for (const item of items) {
+          if (!seenItems.has(item.id)) {
+            seenItems.add(item.id)
+            matchingItems.push(item)
+          }
+        }
+      }
+
+      if (matchingItems.length > 0) {
+        results.push({ wishlist, items: matchingItems })
+      }
+    }
+
+    return results
+  }
+
+  /**
    * Set whether a wishlist is enabled (contributes to perk annotations)
    * Only updates the separate enabledStates Map for instant reactivity
    */
@@ -905,6 +941,7 @@ export const useWishlistsStore = defineStore('wishlists', () => {
     removeItemFromWishlist,
     updateItemInWishlist,
     getItemsForWeaponHash,
+    getItemsForWeaponVariants,
     setWishlistEnabled,
     isWishlistEnabled,
     importDimFormat,

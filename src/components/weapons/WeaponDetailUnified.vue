@@ -891,6 +891,12 @@ const perkColumnsForStore = computed<PerkColumnInfo[]>(() => {
   return columns
 })
 
+// All weapon variant hashes (e.g., holofoil + normal versions of same weapon)
+// Used for multi-hash wishlist lookup
+const allWeaponVariantHashes = computed(() =>
+  props.weapon.variantHashes.map(v => v.hash)
+)
+
 // Build a map from any perk hash to all its variants (for matching)
 const perkVariantsMap = computed(() => {
   const map = new Map<number, number[]>()
@@ -908,7 +914,8 @@ const perkVariantsMap = computed(() => {
 
 // Get wishlist perk annotations for this weapon (expanded to include all variant hashes)
 const wishlistPerkAnnotations = computed(() => {
-  const wishlistResults = wishlistsStore.getItemsForWeaponHash(props.weapon.weaponHash)
+  // Check all weapon variant hashes (e.g., holofoil + normal) for wishlist items
+  const wishlistResults = wishlistsStore.getItemsForWeaponVariants(allWeaponVariantHashes.value)
   const baseAnnotations = getWishlistPerkAnnotations(wishlistResults)
 
   const expandedAnnotations = new Map<number, string[]>()
@@ -1395,8 +1402,9 @@ const loadProfilesFromStore = async () => {
     await wishlistsStore.initialize(false)
   }
 
-  // Get items from all ENABLED wishlists (respects the toggle in "Wishlists that include this weapon")
-  const wishlistResults = wishlistsStore.getItemsForWeaponHash(props.weapon.weaponHash)
+  // Get items from all ENABLED wishlists, checking all weapon variant hashes
+  // (respects the toggle in "Wishlists that include this weapon")
+  const wishlistResults = wishlistsStore.getItemsForWeaponVariants(allWeaponVariantHashes.value)
   const profiles: DisplayProfile[] = []
 
   for (const { wishlist, items } of wishlistResults) {
