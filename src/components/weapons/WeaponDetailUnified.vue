@@ -199,13 +199,13 @@
         <div class="flex items-center justify-between">
           <h4 class="font-bold text-lg">Perk Matrix</h4>
           <div class="flex items-center gap-3">
-            <!-- Edit This Roll button (when viewing a saved roll) -->
+            <!-- Edit/Copy button (when viewing a saved roll) -->
             <button
               v-if="editorMode === 'view' && viewingProfileId"
               @click="switchToEditMode"
               :class="['px-3 py-1.5 rounded-lg text-sm font-medium transition-colors', BUTTON_STYLES.primary]"
             >
-              Edit This Roll
+              {{ viewingUserWishlist ? 'Edit This Roll' : 'Copy to My Wishlist' }}
             </button>
             <!-- Create Wishlist Roll button (only when perks selected and NOT viewing/editing existing roll) -->
             <button
@@ -1480,12 +1480,34 @@ const startCreateRoll = () => {
   youtubeTimestamp.value = ''
 }
 
-// Switch from view mode to edit mode
+// Check if the currently viewed profile is from a user wishlist (for Edit vs Copy button)
+const viewingUserWishlist = computed(() => {
+  if (!viewingProfileId.value) return false
+  const profile = displayProfiles.value.find(p => p.id === viewingProfileId.value)
+  return profile?.isUserWishlist ?? false
+})
+
+// Switch from view mode to edit mode (or copy mode for premade wishlists)
 const switchToEditMode = () => {
   if (!viewingProfileId.value) return
   const profile = displayProfiles.value.find(p => p.id === viewingProfileId.value)
-  if (profile) {
+  if (!profile) return
+
+  if (profile.isUserWishlist) {
+    // Edit existing user roll
     handleEdit(profile)
+  } else {
+    // Copy premade roll to user's wishlist
+    editorMode.value = 'edit'
+    currentProfileId.value = null // Creating new, not updating
+    sourceWishlistId.value = null // Will save to default user wishlist
+    // Keep viewingProfileId so we can see which card is highlighted
+    // Pre-populate form fields from the premade roll
+    profileNotesInput.value = profile.item.notes || ''
+    selectedTags.value = new Set(profile.item.tags || [])
+    youtubeLink.value = profile.item.youtubeLink || ''
+    youtubeAuthor.value = profile.item.youtubeAuthor || ''
+    youtubeTimestamp.value = profile.item.youtubeTimestamp || ''
   }
 }
 
