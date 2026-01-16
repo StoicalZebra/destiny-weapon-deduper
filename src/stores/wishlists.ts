@@ -26,6 +26,7 @@ import {
   selectionToWishlistItem,
   wishlistItemToSelection
 } from '@/services/dim-wishlist-parser'
+import { manifestService } from '@/services/manifest-service'
 import { isWishlistEditable } from '@/utils/admin'
 
 export const useWishlistsStore = defineStore('wishlists', () => {
@@ -704,6 +705,7 @@ export const useWishlistsStore = defineStore('wishlists', () => {
   /**
    * Save a god roll selection to the default user wishlist
    * Creates entries for ALL variant hashes so the roll works for any weapon variant
+   * Uses manifest to find ALL known variants, not just user-owned ones
    * Returns the primary WishlistItem (first variant hash)
    */
   function saveGodRollSelection(
@@ -717,19 +719,27 @@ export const useWishlistsStore = defineStore('wishlists', () => {
       youtubeAuthor?: string
       youtubeTimestamp?: string
       existingItemId?: string // If updating existing item
-      variantHashes?: number[] // All weapon variant hashes (for multi-hash weapons)
+      variantHashes?: number[] // User-owned variant hashes (optional, manifest used for full list)
     }
   ): WishlistItem {
     const wishlist = getOrCreateDefaultWishlist()
     const createdBy = getBungieDisplayName()
 
-    // Determine all hashes to save to (use variants if provided, otherwise just primary)
-    const hashesToSave = options?.variantHashes?.length
-      ? options.variantHashes
-      : [weaponHash]
+    // Get ALL known variants from manifest (not just user-owned ones)
+    // This ensures rolls work for anyone who owns ANY variant of the weapon
+    const manifestVariants = manifestService.getWeaponVariantHashes(weaponHash)
+
+    // Combine manifest variants with user-provided ones (in case manifest is incomplete)
+    const hashesToSave = new Set(manifestVariants)
+    if (options?.variantHashes) {
+      for (const hash of options.variantHashes) {
+        hashesToSave.add(hash)
+      }
+    }
+    const allHashes = Array.from(hashesToSave)
 
     // Generate a group ID to link all variant entries
-    const variantGroupId = hashesToSave.length > 1 ? crypto.randomUUID() : undefined
+    const variantGroupId = allHashes.length > 1 ? crypto.randomUUID() : undefined
 
     if (options?.existingItemId) {
       // Update existing item and all its variant group members
@@ -763,7 +773,7 @@ export const useWishlistsStore = defineStore('wishlists', () => {
       // Create new entries - one per variant hash
       let primaryItem: WishlistItem | null = null
 
-      for (const hash of hashesToSave) {
+      for (const hash of allHashes) {
         const item = selectionToWishlistItem(selection, hash, perkColumns, {
           notes: options?.notes,
           tags: options?.tags,

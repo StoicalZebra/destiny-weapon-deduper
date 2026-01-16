@@ -204,6 +204,59 @@ class ManifestService {
   }
 
   /**
+   * Find all variant hashes for a weapon (same name + season, different hashes)
+   * Used to ensure wishlist rolls are saved to ALL possible variants
+   * Returns array of hashes including the input hash
+   */
+  getWeaponVariantHashes(hash: number): number[] {
+    const table = this.cache.get('DestinyInventoryItemDefinition') as Record<string, DestinyInventoryItemDefinition> | undefined
+    if (!table) return [hash]
+
+    const sourceDef = this.getInventoryItem(hash)
+    if (!sourceDef) return [hash]
+
+    const sourceName = sourceDef.displayProperties?.name
+    const sourceWatermark = sourceDef.iconWatermark || sourceDef.quality?.displayVersionWatermarkIcons?.[0]
+    const sourceSeason = sourceDef.seasonHash
+
+    if (!sourceName) return [hash]
+
+    // Find all items with matching name and season/watermark
+    const variants: number[] = []
+
+    for (const key in table) {
+      const def = table[key]
+      if (!def?.displayProperties?.name) continue
+
+      // Must have same name
+      if (def.displayProperties.name !== sourceName) continue
+
+      // Must be a weapon (itemType 3 = weapon)
+      if (def.itemType !== 3) continue
+
+      // Must have same season or watermark (to avoid matching different season versions)
+      const defWatermark = def.iconWatermark || def.quality?.displayVersionWatermarkIcons?.[0]
+      const sameSeason = sourceSeason && def.seasonHash === sourceSeason
+      const sameWatermark = sourceWatermark && defWatermark === sourceWatermark
+
+      if (!sameSeason && !sameWatermark) continue
+
+      // Add this variant
+      const variantHash = typeof def.hash === 'number' ? def.hash : parseInt(key)
+      if (!variants.includes(variantHash)) {
+        variants.push(variantHash)
+      }
+    }
+
+    // Ensure source hash is included
+    if (!variants.includes(hash)) {
+      variants.push(hash)
+    }
+
+    return variants
+  }
+
+  /**
    * Clear memory cache
    */
   clearCache(): void {
