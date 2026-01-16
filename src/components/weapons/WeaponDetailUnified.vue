@@ -1131,7 +1131,7 @@ const getAvailablePerks = (column: PerkColumn) => {
 }
 
 const doesInstanceHavePerk = (instId: string, perkHash: number, colIndex: number): boolean => {
-  const instance = props.weapon.instances.find(i => i.itemInstanceId === instId)
+  const instance = instanceLookupMap.value.get(instId)
   if (!instance) return false
 
   const variants = perkVariantsMap.value.get(perkHash) || [perkHash]
@@ -1151,6 +1151,15 @@ const getInstancesWithPerk = (perkHash: number, colIndex: number): string[] => {
 }
 
 // ============ INSTANCE HELPERS ============
+// Cached instance lookup map - O(1) lookup instead of O(n) find
+const instanceLookupMap = computed(() => {
+  const map = new Map<string, typeof props.weapon.instances[0]>()
+  for (const inst of props.weapon.instances) {
+    map.set(inst.itemInstanceId, inst)
+  }
+  return map
+})
+
 // Cached instance color map - O(1) lookup instead of O(n) findIndex
 const instanceColorMap = computed(() => {
   const map = new Map<string, string>()
