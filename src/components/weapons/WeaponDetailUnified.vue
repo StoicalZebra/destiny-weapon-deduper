@@ -134,7 +134,7 @@
           <!-- Tags (if any) -->
           <div v-if="profile.item.tags?.length" class="flex flex-wrap gap-1 mb-2">
             <span
-              v-for="tag in profile.item.tags"
+              v-for="tag in sortTagsForDisplay(profile.item.tags)"
               :key="tag"
               :class="getTagDisplayClasses(tag)"
               class="text-[10px] font-bold px-1.5 py-0.5 rounded uppercase"
@@ -1380,6 +1380,40 @@ function clearDIMSelection() {
   selectedForDIM.value = new Set()
 }
 
+// Sort tags for display: PVE > ALT (with PVE) > PVP > ALT (with PVP) > others alphabetically
+function sortTagsForDisplay(tags: WishlistTag[] | undefined): WishlistTag[] {
+  if (!tags || tags.length === 0) return []
+
+  const tagPriority: Record<string, number> = {
+    pve: 0,
+    pvp: 2,
+    alt: 10,  // Will be repositioned based on context
+    controller: 20,
+    mkb: 21,
+    trash: 99
+  }
+
+  // Clone and sort
+  return [...tags].sort((a, b) => {
+    const hasPve = tags.includes('pve')
+    const hasPvp = tags.includes('pvp')
+
+    // Special handling for 'alt' - position after pve or pvp
+    let priorityA = tagPriority[a] ?? 50
+    let priorityB = tagPriority[b] ?? 50
+
+    if (a === 'alt') {
+      priorityA = hasPve ? 1 : hasPvp ? 3 : 10
+    }
+    if (b === 'alt') {
+      priorityB = hasPve ? 1 : hasPvp ? 3 : 10
+    }
+
+    if (priorityA !== priorityB) return priorityA - priorityB
+    return a.localeCompare(b)
+  })
+}
+
 async function copySelectedToDIM() {
   if (selectedForDIM.value.size === 0) return
 
@@ -1420,6 +1454,23 @@ const loadProfilesFromStore = async () => {
       })
     }
   }
+
+  // Sort profiles by tag priority: PVE > PVE+ALT > PVP > PVP+ALT > others
+  profiles.sort((a, b) => {
+    const getPriority = (item: WishlistItem): number => {
+      const tags = item.tags || []
+      const hasPve = tags.includes('pve')
+      const hasPvp = tags.includes('pvp')
+      const hasAlt = tags.includes('alt')
+
+      if (hasPve && !hasAlt) return 0      // PVE
+      if (hasPve && hasAlt) return 1       // PVE ALT
+      if (hasPvp && !hasAlt) return 2      // PVP
+      if (hasPvp && hasAlt) return 3       // PVP ALT
+      return 4                              // No matching tags
+    }
+    return getPriority(a.item) - getPriority(b.item)
+  })
 
   displayProfiles.value = profiles
 
