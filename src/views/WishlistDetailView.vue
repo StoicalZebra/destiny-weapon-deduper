@@ -151,7 +151,7 @@
                 <!-- Right column: Season + Hash (left-aligned, bottom-aligned) -->
                 <div class="flex flex-col justify-end">
                   <p v-if="getWeaponSeasonName(weaponHash)" class="text-xs text-text-subtle">{{ getWeaponSeasonName(weaponHash) }}</p>
-                  <p class="text-xs text-text-subtle font-mono">Hash ...{{ String(weaponHash).slice(-4) }}</p>
+                  <p class="text-xs text-text-subtle font-mono">Hash ...{{ formatHashSuffix(weaponHash) }}</p>
                 </div>
               </div>
             </div>
@@ -312,6 +312,7 @@ import { weaponParser } from '@/services/weapon-parser'
 import { getWishlistStats } from '@/services/dim-wishlist-parser'
 import WishlistPerkMatrix from '@/components/wishlists/WishlistPerkMatrix.vue'
 import type { WishlistItem, WishlistTag } from '@/models/wishlist'
+import { formatHashSuffix } from '@/utils/formatting'
 
 const route = useRoute()
 const router = useRouter()

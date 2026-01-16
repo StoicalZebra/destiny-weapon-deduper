@@ -67,6 +67,7 @@ import { getInstanceMasterwork, isEnhancedPerk } from '@/services/deduplication'
 import { TOOLTIP_STRINGS, getWishlistBadgeTooltip, formatWishlistTooltipSuffix } from '@/utils/tooltip-helpers'
 import PerkIcon from '@/components/common/PerkIcon.vue'
 import { INDICATOR_STYLES, MASTERWORK_ICON_STYLES } from '@/styles/ui-states'
+import { formatMasterworkStatName } from '@/utils/formatting'
 
 const props = defineProps<{
   instance: WeaponInstance
@@ -83,12 +84,7 @@ const masterworkInfo = computed(() =>
 
 // Strip prefixes from masterwork name to get just the stat name
 const masterworkStatName = computed(() => {
-  const name = masterworkInfo.value?.name || ''
-  // Remove "Tier X: " prefix (e.g., "Tier 3: Stability" -> "Stability")
-  // Remove "Masterworked: " prefix (e.g., "Masterworked: Range" -> "Range")
-  return name
-    .replace(/^Tier\s+\d+:\s*/i, '')
-    .replace(/^Masterworked:\s*/i, '')
+  return formatMasterworkStatName(masterworkInfo.value?.name || '')
 })
 
 // Get all perks for this instance organized by column

@@ -22,7 +22,7 @@
         <p class="text-xs text-text-subtle uppercase">{{ weapon.instances.length === 1 ? 'Copy' : 'Copies' }}</p>
         <!-- Single variant: simple hash display -->
         <p v-if="weapon.variantHashes.length === 1" class="text-xs text-text-subtle">
-          Hash ...{{ String(weapon.variantHashes[0].hash).slice(-4) }}
+          Hash ...{{ formatHashSuffix(weapon.variantHashes[0].hash) }}
         </p>
         <!-- Multiple variants: show labels for each -->
         <div v-else class="text-xs space-y-0.5 mt-1">
@@ -33,7 +33,7 @@
           >
             <span v-if="variant.isHolofoil" class="text-purple-400">Holofoil</span>
             <span v-else class="text-text-subtle">Normal</span>
-            <span class="text-text-subtle font-mono">...{{ String(variant.hash).slice(-4) }}</span>
+            <span class="text-text-subtle font-mono">...{{ formatHashSuffix(variant.hash) }}</span>
           </div>
         </div>
       </div>
@@ -46,6 +46,7 @@ import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import type { DedupedWeapon } from '@/models/deduped-weapon'
 import WeaponIcon from '@/components/common/WeaponIcon.vue'
+import { formatHashSuffix } from '@/utils/formatting'
 
 const props = defineProps<{
   weapon: DedupedWeapon

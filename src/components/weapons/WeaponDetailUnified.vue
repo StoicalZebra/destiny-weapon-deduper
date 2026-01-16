@@ -453,7 +453,7 @@
               >
                 Holofoil
               </span>
-              <span class="font-bold text-xs font-mono" :title="instance.itemInstanceId">#{{ instance.itemInstanceId.slice(-4) }}</span>
+              <span class="font-bold text-xs font-mono" :title="instance.itemInstanceId">#{{ formatHashSuffix(instance.itemInstanceId) }}</span>
             </div>
             <div class="flex items-center gap-1">
               <!-- Match badge (when perks selected) -->
@@ -706,7 +706,7 @@
                 >
                   Holofoil
                 </span>
-                <span class="font-bold text-xs font-mono" :title="instance.itemInstanceId">#{{ instance.itemInstanceId.slice(-4) }}</span>
+                <span class="font-bold text-xs font-mono" :title="instance.itemInstanceId">#{{ formatHashSuffix(instance.itemInstanceId) }}</span>
               </div>
               <div class="flex items-center gap-1">
                 <span :class="getTierClass(instance.gearTier)" class="text-xs">{{ formatTier(instance.gearTier) }}</span>
@@ -806,6 +806,7 @@ import {
   instanceHasPerkVariant,
   expandHashSetWithVariants
 } from '@/utils/perk-variants'
+import { formatMasterworkStatName, formatHashSuffix } from '@/utils/formatting'
 
 const props = defineProps<{
   weapon: DedupedWeapon
@@ -929,10 +930,7 @@ const availableMasterworks = computed(() => {
   const perks = props.weapon.masterworkPerks || []
   const seen = new Map<string, typeof perks[0]>()
   for (const mw of perks) {
-    const name = mw.name
-      .replace(/^Tier\s+\d+:\s*/i, '')
-      .replace(/^Masterworked:\s*/i, '')
-      .replace(/^Enhanced\s+/i, '')
+    const name = formatMasterworkStatName(mw.name)
     if (!seen.has(name)) {
       seen.set(name, mw)
     }
@@ -1159,12 +1157,8 @@ const clearSelection = () => {
 const getMasterworkByHash = (hash: number) =>
   availableMasterworks.value.find(m => m.hash === hash)
 
-// Normalize MW name to just the stat (e.g., "Tier 3: Stability" → "Stability")
-const formatMasterworkName = (name: string) =>
-  name
-    .replace(/^Tier\s+\d+:\s*/i, '')
-    .replace(/^Masterworked:\s*/i, '')
-    .replace(/^Enhanced\s+/i, '')
+// Alias for template usage
+const formatMasterworkName = formatMasterworkStatName
 
 const toggleMasterworkSelection = (mwHash: number) => {
   // Remove any previously selected MW
