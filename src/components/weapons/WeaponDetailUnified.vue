@@ -1455,27 +1455,35 @@ const loadProfilesFromStore = async () => {
     }
   }
 
-  // Sort profiles by tag priority: PVE > PVE+ALT > PVP > PVP+ALT > others
-  profiles.sort((a, b) => {
-    const getPriority = (item: WishlistItem): number => {
-      const tags = item.tags || []
-      const hasPve = tags.includes('pve')
-      const hasPvp = tags.includes('pvp')
-      const hasAlt = tags.includes('alt')
-
-      if (hasPve && !hasAlt) return 0      // PVE
-      if (hasPve && hasAlt) return 1       // PVE ALT
-      if (hasPvp && !hasAlt) return 2      // PVP
-      if (hasPvp && hasAlt) return 3       // PVP ALT
-      return 4                              // No matching tags
-    }
-    return getPriority(a.item) - getPriority(b.item)
-  })
-
-  displayProfiles.value = profiles
+  // Sort and assign
+  displayProfiles.value = sortProfilesByTagPriority(profiles)
 
   // Auto-expand if profiles exist
   savedRollsExpanded.value = displayProfiles.value.length > 0
+}
+
+// Helper to get tag-based priority for sorting profiles
+function getProfileTagPriority(item: WishlistItem): number {
+  const tags = item.tags || []
+  const hasPve = tags.includes('pve')
+  const hasPvp = tags.includes('pvp')
+  const hasAlt = tags.includes('alt')
+
+  if (hasPve && !hasAlt) return 0      // PVE
+  if (hasPve && hasAlt) return 1       // PVE ALT
+  if (hasPvp && !hasAlt) return 2      // PVP
+  if (hasPvp && hasAlt) return 3       // PVP ALT
+  return 4                              // No matching tags
+}
+
+// Sort profiles by tag priority: PVE > PVE+ALT > PVP > PVP+ALT > others
+function sortProfilesByTagPriority(profiles: DisplayProfile[]): DisplayProfile[] {
+  return [...profiles].sort((a, b) => getProfileTagPriority(a.item) - getProfileTagPriority(b.item))
+}
+
+// Re-sort displayProfiles in place (call after tag changes)
+function resortDisplayProfiles() {
+  displayProfiles.value = sortProfilesByTagPriority(displayProfiles.value)
 }
 
 const loadProfile = (profile: DisplayProfile) => {
@@ -1636,6 +1644,9 @@ const handleSave = async () => {
       currentProfileId.value = savedItem.id
     }
   }
+
+  // Re-sort profiles in case tags changed
+  resortDisplayProfiles()
 
   // Clear selection after saving
   clearSelection()
