@@ -205,8 +205,8 @@
             <textarea
               v-model="profileNotesInput"
               placeholder="Add notes about this roll (e.g., PvP Roll, Best for add clear)..."
-              rows="2"
-              class="w-full bg-surface border border-border rounded px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-text-subtle resize-y min-h-[3rem]"
+              rows="6"
+              class="w-full bg-surface border border-border rounded px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-text-subtle resize-y min-h-[9rem]"
             />
           </div>
 
