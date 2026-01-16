@@ -147,7 +147,7 @@
           </div>
 
           <!-- Two-column layout: perk matrix left, notes right -->
-          <div class="flex gap-3">
+          <div class="flex gap-3 items-stretch">
             <!-- Left: perk matrix -->
             <div class="flex-shrink-0">
               <WishlistPerkMatrix
@@ -156,14 +156,14 @@
               />
             </div>
 
-            <!-- Right: notes (if any) -->
-            <p
+            <!-- Right: notes (if any) - full height column -->
+            <div
               v-if="profile.item.notes"
-              class="text-xs text-text-muted flex-1 min-w-0 line-clamp-4 cursor-help"
+              class="text-xs text-text-muted flex-1 min-w-0 overflow-y-auto max-h-32 cursor-help"
               :title="profile.item.notes"
             >
               {{ profile.item.notes }}
-            </p>
+            </div>
           </div>
 
           <!-- Bottom: Creator and YouTube Reference -->
