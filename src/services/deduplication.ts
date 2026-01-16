@@ -64,39 +64,12 @@ function getSocketTypeName(socketTypeHash: number, fallback: string): string {
   return socketTypeDef?.displayProperties?.name || fallback
 }
 
+/**
+ * Normalize perk name for grouping purposes.
+ * Removes "Enhanced" prefix (for legacy data) and lowercases.
+ */
 export function normalizePerkName(name: string): string {
   return name.replace(/^enhanced\s+/i, '').trim().toLowerCase()
-}
-
-export function isEnhancedPerkName(name: string): boolean {
-  return /^enhanced\s+/i.test(name)
-}
-
-/**
- * Check if a perk is an enhanced variant by looking at itemTypeDisplayName.
- * Modern Destiny 2 perks don't have "Enhanced" in their name - instead they have
- * itemTypeDisplayName starting with "Enhanced " (e.g., "Enhanced Trait", "Enhanced Barrel",
- * "Enhanced Magazine", "Enhanced Origin Trait", etc.) and a higher tierType.
- *
- * Known enhanced types from the manifest:
- * - Enhanced Trait, Enhanced Barrel, Enhanced Magazine, Enhanced Origin Trait
- * - Enhanced Battery, Enhanced Bolt, Enhanced Bowstring, Enhanced Arrow
- * - Enhanced Guard, Enhanced Haft, Enhanced Blade, Enhanced Rail
- * - Enhanced Launcher Barrel, Enhanced Intrinsic
- */
-export function isEnhancedPerk(hash: number): boolean {
-  const perkDef = manifestService.getInventoryItem(hash)
-  if (!perkDef) return false
-
-  // Check itemTypeDisplayName - all enhanced variants start with "Enhanced "
-  const itemTypeDisplayName = perkDef.itemTypeDisplayName?.toLowerCase() || ''
-  if (itemTypeDisplayName.startsWith('enhanced ')) return true
-
-  // Fallback: check name for legacy perks that might have "Enhanced" prefix
-  const name = perkDef.displayProperties?.name || ''
-  if (isEnhancedPerkName(name)) return true
-
-  return false
 }
 
 function isMasterworkPlug(hash: number): boolean {
@@ -333,34 +306,11 @@ function buildPerkColumn(
     })
   }
 
-  // Check for missing enhanced variants using the global trait mapping
-  // This handles cases where the enhanced variant exists in the manifest
-  // but isn't listed in this weapon's plug set (e.g., "Roar of Battle" on The Martlet)
-  for (const [, variants] of perkGroups) {
-    const hasEnhanced = variants.some((v) => isEnhancedPerk(v.hash))
-    const baseVariant = variants.find((v) => !isEnhancedPerk(v.hash))
-
-    if (baseVariant && !hasEnhanced) {
-      const enhancedHash = manifestService.getEnhancedVariant(baseVariant.hash)
-      if (enhancedHash) {
-        const enhancedDef = manifestService.getInventoryItem(enhancedHash)
-        if (enhancedDef) {
-          variants.push({
-            hash: enhancedHash,
-            name: enhancedDef.displayProperties?.name || '',
-            canRoll: false // Not in this weapon's plug set, but exists globally
-          })
-        }
-      }
-    }
-  }
-
   const availablePerks: Perk[] = []
 
   for (const variants of perkGroups.values()) {
-    const enhancedVariant = variants.find((variant) => isEnhancedPerk(variant.hash))
-    const baseVariant = variants.find((variant) => !isEnhancedPerk(variant.hash))
-    const chosen = baseVariant || variants[0] // Prefer base variant for display
+    // Use the first variant (they're all grouped by normalized name)
+    const chosen = variants[0]
     const perkDef = manifestService.getInventoryItem(chosen.hash)
 
     let isOwned = variants.some((variant) => ownedPerks.has(variant.hash))
@@ -381,22 +331,8 @@ function buildPerkColumn(
     // If any variant has currentlyCanRoll === true or undefined, it's considered rollable
     const cannotCurrentlyRoll = variants.every(v => v.canRoll === false)
 
-    // Collect all variant hashes (enhanced + non-enhanced) for hover matching
+    // Collect all variant hashes for hover matching
     const variantHashes = variants.map((v) => v.hash)
-
-    // Enhanced perk metadata
-    const hasEnhancedVariant = !!(enhancedVariant && baseVariant)
-
-    // Get enhanced variant's icon and description if available
-    let enhancedDescription: string | undefined
-    let enhancedIcon: string | undefined
-    if (enhancedVariant) {
-      const enhancedDef = manifestService.getInventoryItem(enhancedVariant.hash)
-      if (enhancedDef) {
-        enhancedDescription = enhancedDef.displayProperties?.description || undefined
-        enhancedIcon = enhancedDef.displayProperties?.icon || undefined
-      }
-    }
 
     availablePerks.push({
       hash: chosen.hash,
@@ -405,13 +341,7 @@ function buildPerkColumn(
       icon: perkDef?.displayProperties?.icon || '',
       isOwned,
       variantHashes,
-      cannotCurrentlyRoll: cannotCurrentlyRoll || undefined, // Only set if true
-      isEnhanced: isEnhancedPerk(chosen.hash),
-      baseHash: baseVariant?.hash,
-      enhancedHash: enhancedVariant?.hash,
-      hasEnhancedVariant,
-      enhancedDescription,
-      enhancedIcon
+      cannotCurrentlyRoll: cannotCurrentlyRoll || undefined // Only set if true
     })
   }
 
@@ -764,12 +694,12 @@ export function buildDedupedWeapon(
 
 /**
  * Get masterwork info for a specific weapon instance.
- * Returns the equipped masterwork perk details including enhanced status.
+ * Returns the equipped masterwork perk details.
  */
 export function getInstanceMasterwork(
   instance: WeaponInstance,
   masterworkSocketIndex: number | undefined
-): { hash: number; name: string; icon: string; isEnhanced: boolean } | null {
+): { hash: number; name: string; icon: string } | null {
   if (masterworkSocketIndex === undefined) return null
 
   const socket = instance.sockets.sockets[masterworkSocketIndex]
@@ -781,14 +711,9 @@ export function getInstanceMasterwork(
   const perkDef = manifestService.getInventoryItem(hash)
   if (!perkDef) return null
 
-  // Enhanced masterwork detection via itemTypeDisplayName
-  const itemTypeDisplayName = perkDef.itemTypeDisplayName?.toLowerCase() || ''
-  const isEnhanced = itemTypeDisplayName.startsWith('enhanced ')
-
   return {
     hash,
     name: perkDef.displayProperties?.name || 'Unknown',
-    icon: perkDef.displayProperties?.icon || '',
-    isEnhanced
+    icon: perkDef.displayProperties?.icon || ''
   }
 }

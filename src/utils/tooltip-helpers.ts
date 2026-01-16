@@ -3,13 +3,6 @@
  * Used by Perk Matrix, Instance Perk Grid, and other perk display components.
  */
 
-// ============ TOOLTIP STRING CONSTANTS ============
-
-export const TOOLTIP_STRINGS = {
-  ENHANCED_PERK: 'Enhanced Perk',
-  ENHANCED_MASTERWORK: 'Enhanced Masterwork'
-} as const
-
 // ============ WISHLIST TOOLTIP HELPERS ============
 
 /**

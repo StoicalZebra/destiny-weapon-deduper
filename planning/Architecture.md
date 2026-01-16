@@ -12,7 +12,8 @@ Technical architecture documentation for Destiny Weapon Deduper.
 4. [Key Services](#key-services)
 5. [Debugging Tips](#debugging-tips)
 6. [Weapon Socket Terminology](#weapon-socket-terminology)
-7. [Enhanced Perk System](#enhanced-perk-system)
+7. [Masterwork System](#masterwork-system)
+8. [Holofoil Weapon System](#holofoil-weapon-system)
 
 ---
 
@@ -388,114 +389,6 @@ This allows us to group related socket types (e.g., "Scopes" and "Barrels" both 
 
 ---
 
-## Enhanced Perk System
-
-Destiny 2 weapons can have "enhanced" versions of perks that provide slightly improved benefits. This section documents how Bungie represents enhanced perks and how our app handles them.
-
-### How Bungie Represents Enhanced Perks
-
-Enhanced perks are **separate inventory items** with their own hashes. Both base and enhanced versions share the same display name (e.g., both are "Rapid Hit"), but differ in:
-
-| Property | Base Perk | Enhanced Perk |
-|----------|-----------|---------------|
-| `inventory.tierType` | 2 (Basic) | 3 (Common) |
-| `itemTypeDisplayName` | "Trait" | "Enhanced Trait" |
-| `displayProperties.name` | "Rapid Hit" | "Rapid Hit" |
-| Hash | Different | Different |
-
-**Historical note:** Prior to ~2023, some enhanced perks had "Enhanced" in their display name (e.g., "Enhanced Rapid Hit"). Our `isEnhancedPerkName()` helper handles these legacy cases.
-
-### The Missing Enhanced Variant Problem
-
-**Issue:** Some weapons don't list enhanced variants in their plug sets, even when the enhanced version exists in the global manifest.
-
-**Example:** "Roar of Battle" origin trait on The Martlet:
-- Base hash: `1673863459` - Listed in weapon's plug set ✓
-- Enhanced hash: `4236235115` - Exists in manifest, but NOT in weapon's plug set ✗
-
-**Root cause:** This is a known pattern in Bungie's manifest data. Not all enhanced variants are included in every weapon's plug set, even when they should be available.
-
-### How Other Apps Handle This
-
-#### DIM (Destiny Item Manager)
-
-DIM uses a **pre-generated global lookup table** built from the entire manifest:
-
-1. **Build-time generation** ([d2-additional-info repo](https://github.com/DestinyItemManager/d2-additional-info)):
-   - Scans ALL plug sets for trait pairs
-   - Scans ALL inventory items' socket entries
-   - Matches perks by: exact name OR name + " Enhanced" suffix
-   - Filters by tier type: Basic (base) vs Common (enhanced)
-
-2. **Output**: Static JSON mapping `{ baseHash: enhancedHash }` stored in [trait-to-enhanced-trait.json](https://raw.githubusercontent.com/DestinyItemManager/DIM/master/src/data/d2/trait-to-enhanced-trait.json)
-
-3. **Usage**: When displaying perks, DIM looks up enhanced variants from this global map, not just the weapon's plug set
-
-#### Little Light
-
-- Uses Bungie API's native plug set structure directly
-- Less sophisticated enhanced perk handling
-- No explicit global mapping logic found
-
-### Our Solution: Runtime Global Mapping
-
-We generate a global trait-to-enhanced-trait mapping at runtime when the manifest loads.
-
-**Algorithm:**
-1. Iterate all plug sets in `DestinyPlugSetDefinition`
-2. For each plug set, separate perks by tier type (Basic vs Common)
-3. Match base and enhanced perks by display name
-4. Store bidirectional mapping: `baseToEnhanced` and `enhancedToBase`
-
-**Key functions in `manifest-service.ts`:**
-```typescript
-// Get enhanced variant hash for a base perk
-getEnhancedVariant(baseHash: number): number | undefined
-
-// Get base variant hash for an enhanced perk
-getBaseVariant(enhancedHash: number): number | undefined
-```
-
-**Integration in `deduplication.ts`:**
-When building perk columns, if we find a base perk without an enhanced variant in the weapon's plug set, we check the global mapping to add the enhanced variant metadata.
-
-**Performance:**
-- One-time scan on manifest load (~100ms)
-- Memory: ~5-10KB for mapping
-- O(1) lookups after initialization
-
-### Enhanced Perk Detection
-
-**Primary detection** (modern perks):
-```typescript
-function isEnhancedPerk(hash: number): boolean {
-  const perkDef = manifestService.getInventoryItem(hash)
-  const itemTypeDisplayName = perkDef?.itemTypeDisplayName?.toLowerCase() || ''
-  return itemTypeDisplayName.startsWith('enhanced ')
-}
-```
-
-**Fallback detection** (legacy perks with "Enhanced" in name):
-```typescript
-function isEnhancedPerkName(name: string): boolean {
-  return /^enhanced\s+/i.test(name)
-}
-```
-
-### Columns Supporting Enhanced Variants
-
-| Column | Supports Enhanced |
-|--------|-------------------|
-| Barrel | Yes |
-| Magazine | Yes |
-| Left Trait (Weapon Perk 1) | Yes |
-| Right Trait (Weapon Perk 2) | Yes |
-| Origin Trait | Yes |
-| Masterwork | Yes (see below) |
-| Intrinsic | No |
-
----
-
 ## Masterwork System
 
 Masterwork stats provide bonus stats to weapons. Each weapon instance has one equipped masterwork, and this section documents how we detect and display them.
@@ -507,27 +400,13 @@ Masterwork plugs are identified by multiple signals:
 | Property | Value/Pattern |
 |----------|---------------|
 | `plug.plugCategoryIdentifier` | Contains `'masterworks.stat'` (most reliable) |
-| `itemTypeDisplayName` | `"Masterwork"` or `"Enhanced Masterwork"` |
+| `itemTypeDisplayName` | `"Masterwork"` |
 | `displayProperties.name` | Stat name like `"Range Masterwork"`, `"Tier 3: Stability"` |
 
 **False positives to filter:**
 - `"Tier X"` - tier tracking perks, not actual masterworks
 - `"Random Masterwork"` - placeholder
 - `"Empty Mod Socket"` - empty slot
-
-### Enhanced Masterwork Detection
-
-Enhanced masterworks follow the same pattern as enhanced perks:
-
-| Property | Base Masterwork | Enhanced Masterwork |
-|----------|-----------------|---------------------|
-| `itemTypeDisplayName` | `"Masterwork"` | `"Enhanced Masterwork"` |
-| `inventory.tierType` | 2 (Basic) | 3 (Common) |
-
-Detection in code:
-```typescript
-const isEnhanced = itemTypeDisplayName.toLowerCase().startsWith('enhanced ')
-```
 
 ### Per-Instance Masterwork Display
 
@@ -551,15 +430,14 @@ function isMasterworkDisplayCandidate(hash: number): boolean
 export function getInstanceMasterwork(
   instance: WeaponInstance,
   masterworkSocketIndex: number | undefined
-): { hash: number; name: string; icon: string; isEnhanced: boolean } | null
+): { hash: number; name: string; icon: string } | null
 ```
 
 ### UI Display
 
 Each instance card shows its equipped masterwork below the perk grid:
 - Small icon (20px) with colored ring
-- Gold ring (`ring-yellow-600`) for base masterwork
-- Amber ring (`ring-amber-500`) + up-arrow badge for enhanced masterwork
+- Gold ring (`ring-yellow-600`) for masterwork
 - Stat name displayed next to icon (e.g., "Tier 3: Cooling Efficiency")
 
 ---

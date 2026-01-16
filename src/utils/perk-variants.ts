@@ -1,19 +1,14 @@
 /**
  * Perk Variant Matching Utilities
  *
- * Destiny 2 perks can have multiple "variants" - typically a base version and an
- * enhanced version that share the same name but have different hash IDs.
+ * Destiny 2 perks can have multiple "variants" - different hash IDs that represent
+ * the same logical perk (e.g., from different seasons or sources).
  *
  * When matching perks (e.g., checking if a selected perk matches an equipped perk),
  * we need to check ALL variants, not just exact hash equality.
  *
  * IMPORTANT: Always use these utilities when comparing perk hashes. Direct hash
- * comparison (hash1 === hash2) will fail for base vs enhanced variants.
- *
- * Common patterns:
- * - User selects "Under Pressure" (base) but instance has Enhanced Under Pressure
- * - User selects Enhanced perk but matrix only stores base hash as canonical
- * - Checking if any selected perk matches instance's equipped perk
+ * comparison (hash1 === hash2) will fail for different variants of the same perk.
  */
 
 import type { Perk } from '@/models/perk'

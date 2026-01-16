@@ -18,20 +18,16 @@ const basePerk: Perk = {
   description: 'Base version',
   icon: '/icon.png',
   isOwned: true,
-  variantHashes: [1000, 1001], // base and enhanced
-  baseHash: 1000,
-  enhancedHash: 1001,
-  hasEnhancedVariant: true
+  variantHashes: [1000, 1001] // variants for grouping
 }
 
-const enhancedOnlyPerk: Perk = {
+const singleVariantPerk: Perk = {
   hash: 2001,
-  name: 'Enhanced Perk',
-  description: 'Only enhanced exists',
+  name: 'Single Variant Perk',
+  description: 'Only one variant',
   icon: '/icon.png',
   isOwned: true,
-  variantHashes: [2001],
-  isEnhanced: true
+  variantHashes: [2001]
 }
 
 const noVariantsPerk: Perk = {
@@ -178,10 +174,10 @@ describe('perk-variants utilities', () => {
   })
 
   describe('filterPerksWithSelectedVariant', () => {
-    const perks = [basePerk, enhancedOnlyPerk, noVariantsPerk]
+    const perks = [basePerk, singleVariantPerk, noVariantsPerk]
 
     it('filters perks where any variant is selected', () => {
-      const selection = new Set([1001]) // enhanced variant of basePerk
+      const selection = new Set([1001]) // variant of basePerk
       const result = filterPerksWithSelectedVariant(perks, selection)
 
       expect(result).toHaveLength(1)

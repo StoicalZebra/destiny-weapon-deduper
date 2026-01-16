@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import {
   normalizePerkName,
-  isEnhancedPerkName,
   getColumnKind,
   isTrackerColumn,
   countOwnedPerks,
@@ -14,7 +13,7 @@ import type { WeaponInstance } from '@/models/weapon-instance'
 import { manifestService } from '@/services/manifest-service'
 
 describe('normalizePerkName', () => {
-  it('removes "Enhanced" prefix and lowercases', () => {
+  it('removes "Enhanced" prefix (legacy data) and lowercases', () => {
     expect(normalizePerkName('Enhanced Rampage')).toBe('rampage')
   })
 
@@ -35,31 +34,6 @@ describe('normalizePerkName', () => {
 
   it('handles empty string', () => {
     expect(normalizePerkName('')).toBe('')
-  })
-})
-
-describe('isEnhancedPerkName', () => {
-  it('returns true for enhanced perks', () => {
-    expect(isEnhancedPerkName('Enhanced Rampage')).toBe(true)
-    expect(isEnhancedPerkName('Enhanced Kill Clip')).toBe(true)
-  })
-
-  it('handles case insensitivity', () => {
-    expect(isEnhancedPerkName('ENHANCED Rampage')).toBe(true)
-    expect(isEnhancedPerkName('enhanced rampage')).toBe(true)
-  })
-
-  it('returns false for non-enhanced perks', () => {
-    expect(isEnhancedPerkName('Rampage')).toBe(false)
-    expect(isEnhancedPerkName('Kill Clip')).toBe(false)
-  })
-
-  it('returns false if Enhanced is not at the start', () => {
-    expect(isEnhancedPerkName('Super Enhanced Mode')).toBe(false)
-  })
-
-  it('returns false for empty string', () => {
-    expect(isEnhancedPerkName('')).toBe(false)
   })
 })
 
@@ -359,26 +333,7 @@ describe('getInstanceMasterwork', () => {
     expect(result).toEqual({
       hash: 123,
       name: 'Range Masterwork',
-      icon: '/icons/range.png',
-      isEnhanced: false
-    })
-  })
-
-  it('detects enhanced masterwork via itemTypeDisplayName', () => {
-    vi.mocked(manifestService.getInventoryItem).mockReturnValue({
-      displayProperties: { name: 'Range Masterwork', description: 'Greatly increases range', icon: '/icons/range.png' },
-      itemTypeDisplayName: 'Enhanced Masterwork',
-      plug: { plugCategoryIdentifier: 'masterworks.stat.range' }
-    } as any)
-
-    const instance = createInstance([{ plugHash: 456, isEnabled: true }])
-    const result = getInstanceMasterwork(instance, 0)
-
-    expect(result).toEqual({
-      hash: 456,
-      name: 'Range Masterwork',
-      icon: '/icons/range.png',
-      isEnhanced: true
+      icon: '/icons/range.png'
     })
   })
 

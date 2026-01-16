@@ -151,23 +151,6 @@
         <div class="flex items-center justify-between">
           <h4 class="font-bold text-lg">Perk Matrix</h4>
           <div class="flex items-center gap-4">
-            <!-- Enhanced Perks toggle (wrapped to match Coverage mode toggle height) -->
-            <div v-if="hasEnhanceablePerks" class="flex items-center gap-1 bg-surface-overlay rounded-lg p-1">
-              <button
-                @click="toggleEnhancedMode"
-                class="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md transition-colors"
-                :class="enhancedMode
-                  ? 'bg-amber-600 text-white'
-                  : 'text-text-muted hover:text-text hover:bg-surface-elevated'"
-                :title="enhancedMode ? 'Show base perks' : 'Show enhanced perks'"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                </svg>
-                <span>Enhanced Perks</span>
-              </button>
-            </div>
-
             <!-- Clear Selection -->
             <button
               v-if="hasSelection"
@@ -217,9 +200,8 @@
                 :title="getPerkTooltip(perk, column)"
               >
                 <PerkIconWithBadges
-                  :icon-path="getPerkIcon(perk, column)"
+                  :icon-path="perk.icon"
                   :ring-class="getPerkIconClassesWishlist(perk, column)"
-                  :show-enhanced="isEnhancedDisplay(perk, column)"
                   :show-wishlist="isWishlistPerk(perk.hash)"
                   :wishlist-tooltip="getWishlistBadgeTooltipForPerk(perk.hash)"
                 />
@@ -227,7 +209,7 @@
                   class="text-xs font-medium truncate select-none leading-tight"
                   :class="perk.isOwned ? 'text-text' : 'text-text-subtle'"
                 >
-                  {{ isEnhancedDisplay(perk, column) ? perk.name.replace(/^Enhanced\s+/i, '') : perk.name }}
+                  {{ perk.name }}
                 </span>
               </div>
             </div>
@@ -458,22 +440,6 @@
                 Detailed
               </button>
             </div>
-            <!-- Enhanced Perks toggle (same as Wishlist Mode) -->
-            <div v-if="hasEnhanceablePerks" class="flex items-center gap-1 bg-surface-overlay rounded-lg p-1">
-              <button
-                @click="toggleEnhancedMode"
-                class="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md transition-colors"
-                :class="enhancedMode
-                  ? 'bg-amber-600 text-white'
-                  : 'text-text-muted hover:text-text hover:bg-surface-elevated'"
-                :title="enhancedMode ? 'Show base perks' : 'Show enhanced perks'"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                </svg>
-                <span>Enhanced Perks</span>
-              </button>
-            </div>
           </div>
         </div>
 
@@ -532,7 +498,6 @@
                   <PerkIconWithBadges
                     :icon-path="perk.icon"
                     :ring-class="getPerkIconClassesCoverage(perk)"
-                    :show-enhanced="isEnhancedDisplay(perk, column)"
                     :show-wishlist="isWishlistPerk(perk.hash)"
                     :wishlist-tooltip="getWishlistBadgeTooltipForPerk(perk.hash)"
                   />
@@ -540,7 +505,7 @@
                     class="text-xs font-medium truncate select-none leading-tight"
                     :class="perk.isOwned ? 'text-text' : 'text-text-subtle'"
                   >
-                    {{ isEnhancedDisplay(perk, column) ? perk.name.replace(/^Enhanced\s+/i, '') : perk.name }}
+                    {{ perk.name }}
                   </span>
                 </div>
               </div>
@@ -789,7 +754,6 @@ const justCopied = ref(false)
 
 // ============ EDIT MODE STATE (GodRoll) ============
 const selection = ref<Set<number>>(new Set())
-const enhancedMode = ref(false)
 const profileNotesInput = ref('')
 const saveMessage = ref<{ text: string; type: 'error' | 'info' } | null>(null)
 
@@ -855,22 +819,6 @@ const perkVariantsMap = computed(() => {
   return map
 })
 
-// Build a lookup map for perks (hash -> Perk)
-const perkLookup = computed(() => {
-  const map = new Map<number, Perk>()
-  for (const col of matrixColumns.value) {
-    for (const perk of col.availablePerks) {
-      map.set(perk.hash, perk)
-      if (perk.variantHashes) {
-        for (const variantHash of perk.variantHashes) {
-          map.set(variantHash, perk)
-        }
-      }
-    }
-  }
-  return map
-})
-
 // Get wishlist perk annotations for this weapon (expanded to include all variant hashes)
 const wishlistPerkAnnotations = computed(() => {
   const wishlistResults = wishlistsStore.getItemsForWeaponHash(props.weapon.weaponHash)
@@ -893,16 +841,6 @@ const wishlistPerkAnnotations = computed(() => {
     }
   }
   return expandedAnnotations
-})
-
-// Check if any perks have enhanced variants
-const hasEnhanceablePerks = computed(() => {
-  for (const col of matrixColumns.value) {
-    if (col.availablePerks.some(p => p.hasEnhancedVariant)) {
-      return true
-    }
-  }
-  return false
 })
 
 // Helper: compare instance IDs numerically (IDs can be large, use BigInt)
@@ -1015,11 +953,6 @@ const isPerkSelected = (perk: Perk): boolean => {
 }
 
 const toggleSelection = (perk: Perk, _column: PerkColumn) => {
-  const useEnhanced = enhancedMode.value && perk.hasEnhancedVariant
-  const perkHash = useEnhanced
-    ? (perk.enhancedHash ?? perk.hash)
-    : (perk.baseHash ?? perk.hash)
-
   const isSelected = isPerkSelected(perk)
 
   if (isSelected) {
@@ -1027,7 +960,7 @@ const toggleSelection = (perk: Perk, _column: PerkColumn) => {
     const currentHash = findPerkHashInSet(perk, selection.value) ?? perk.hash
     selection.value.delete(currentHash)
   } else {
-    selection.value.add(perkHash)
+    selection.value.add(perk.hash)
   }
   triggerRef(selection) // Trigger reactivity without recreating Set
 }
@@ -1068,40 +1001,6 @@ const clearMasterworkSelection = () => {
   mwDropdownOpen.value = false
 }
 
-// ============ ENHANCED MODE ============
-const isEnhancedDisplay = (perk: Perk, _column: PerkColumn): boolean => {
-  return enhancedMode.value && !!perk.hasEnhancedVariant
-}
-
-const getPerkIcon = (perk: Perk, column: PerkColumn): string => {
-  if (isEnhancedDisplay(perk, column) && perk.enhancedIcon) {
-    return perk.enhancedIcon
-  }
-  return perk.icon
-}
-
-const toggleEnhancedMode = () => {
-  const newMode = !enhancedMode.value
-
-  if (selection.value.size > 0) {
-    const newSelection = new Set<number>()
-    for (const hash of selection.value) {
-      const perk = perkLookup.value.get(hash)
-      if (perk && perk.hasEnhancedVariant) {
-        const targetHash = newMode
-          ? (perk.enhancedHash ?? hash)
-          : (perk.baseHash ?? hash)
-        newSelection.add(targetHash)
-      } else {
-        newSelection.add(hash)
-      }
-    }
-    selection.value = newSelection
-  }
-
-  enhancedMode.value = newMode
-}
-
 // ============ WISHLIST HELPERS ============
 const isWishlistPerk = (perkHash: number): boolean => {
   return wishlistPerkAnnotations.value.has(perkHash)
@@ -1112,11 +1011,7 @@ const getWishlistBadgeTooltipForPerk = (perkHash: number): string => {
   return getWishlistBadgeTooltip(wishlistPerkAnnotations.value.get(perkHash))
 }
 
-const getPerkTooltip = (perk: Perk, column: PerkColumn): string => {
-  // In wishlist mode with enhanced display, show enhanced description
-  if (viewMode.value === 'wishlist' && isEnhancedDisplay(perk, column) && perk.enhancedDescription) {
-    return perk.enhancedDescription
-  }
+const getPerkTooltip = (perk: Perk, _column: PerkColumn): string => {
   let tooltip = perk.description || perk.name
   // In coverage mode, add wishlist recommendations to tooltip
   if (viewMode.value === 'coverage') {
@@ -1411,13 +1306,6 @@ const loadProfile = (profile: DisplayProfile) => {
   )
   currentProfileId.value = profile.id
   profileNotesInput.value = profile.item.notes || ''
-
-  // Auto-detect enhanced mode
-  const hasEnhancedHashes = profile.item.perkHashes.some(hash => {
-    const perk = perkLookup.value.get(hash)
-    return perk?.isEnhanced === true
-  })
-  enhancedMode.value = hasEnhancedHashes
 }
 
 const deleteProfile = (id: string) => {
@@ -1588,12 +1476,6 @@ const loadWishlistItem = (item: WishlistItem) => {
   )
   currentProfileId.value = null
   profileNotesInput.value = item.notes || ''
-
-  const hasEnhancedHashes = item.perkHashes.some(hash => {
-    const perk = perkLookup.value.get(hash)
-    return perk?.isEnhanced === true
-  })
-  enhancedMode.value = hasEnhancedHashes
 }
 
 // Edit an existing wishlist item in the Creator
@@ -1618,12 +1500,6 @@ const editWishlistItem = (item: WishlistItem, wishlist: Wishlist) => {
       showDeleteConfirm: false
     })
   }
-
-  const hasEnhancedHashes = item.perkHashes.some(hash => {
-    const perk = perkLookup.value.get(hash)
-    return perk?.isEnhanced === true
-  })
-  enhancedMode.value = hasEnhancedHashes
 }
 
 // Expose methods for parent component access

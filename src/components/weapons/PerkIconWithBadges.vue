@@ -13,17 +13,6 @@
       <div v-else class="w-full h-full bg-surface-overlay"></div>
     </div>
 
-    <!-- Enhanced indicator badge (upper-left) -->
-    <div
-      v-if="showEnhanced"
-      :class="[INDICATOR_STYLES.enhanced, 'absolute -top-0.5 -left-0.5 w-4 h-4 rounded-full flex items-center justify-center shadow-lg']"
-      :title="TOOLTIP_STRINGS.ENHANCED_PERK"
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-2.5 w-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
-      </svg>
-    </div>
-
     <!-- Wishlist thumbs-up indicator (upper-right) -->
     <div
       v-if="showWishlist"
@@ -39,12 +28,10 @@
 
 <script setup lang="ts">
 import { INDICATOR_STYLES } from '@/styles/ui-states'
-import { TOOLTIP_STRINGS } from '@/utils/tooltip-helpers'
 
 defineProps<{
   iconPath: string | null
   ringClass: string
-  showEnhanced?: boolean
   showWishlist?: boolean
   wishlistTooltip?: string
 }>()

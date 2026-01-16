@@ -57,9 +57,6 @@ export const useManifestStore = defineStore('manifest', () => {
           // Load tables into memory
           await manifestService.loadAllTables([...REQUIRED_MANIFEST_TABLES])
 
-          // Build the global trait-to-enhanced mapping
-          manifestService.buildTraitMapping()
-
           isInitialized.value = true
           loading.value = false
           return
@@ -96,9 +93,6 @@ export const useManifestStore = defineStore('manifest', () => {
         // Load tables into memory
         await manifestService.loadAllTables([...REQUIRED_MANIFEST_TABLES])
 
-        // Build the global trait-to-enhanced mapping
-        manifestService.buildTraitMapping()
-
         isInitialized.value = true
         loading.value = false
         return
@@ -120,9 +114,6 @@ export const useManifestStore = defineStore('manifest', () => {
 
       // Load tables into memory
       await manifestService.loadAllTables([...REQUIRED_MANIFEST_TABLES])
-
-      // Build the global trait-to-enhanced mapping
-      manifestService.buildTraitMapping()
 
       isInitialized.value = true
     } catch (err) {

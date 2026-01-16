@@ -52,7 +52,6 @@ export const BADGE_STYLES = {
 // Icon indicator badges (small circular icons on perk corners)
 export const INDICATOR_STYLES = {
   wishlist: 'bg-green-600', // thumbs-up indicator
-  enhanced: 'bg-amber-500', // enhanced perk arrow indicator
 } as const
 
 // Button variants

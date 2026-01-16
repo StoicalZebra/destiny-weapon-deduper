@@ -236,7 +236,7 @@ import {
   PERK_RING_STYLES,      // default, selected, hovered, owned, unowned
   PERK_ROW_STYLES,       // base, selected, hovered, highlighted
   BADGE_STYLES,          // success, warning, info, error
-  INDICATOR_STYLES,      // wishlist, enhanced (icon badges)
+  INDICATOR_STYLES,      // wishlist (icon badges)
   BUTTON_STYLES,         // primary, success, warning, danger, ghost
   INSTANCE_PALETTE,      // colors for coverage visualization
 } from '@/styles/ui-states'
@@ -298,7 +298,6 @@ Use `INDICATOR_STYLES` for icon badges:
 
 | Indicator | Constant | Usage |
 |-----------|----------|-------|
-| **Enhanced perk** | `INDICATOR_STYLES.enhanced` | Gold arrow badge |
 | **Wishlist thumbs-up** | `INDICATOR_STYLES.wishlist` | Green badge |
 
 Use `BADGE_STYLES` for text badges:
@@ -619,74 +618,21 @@ Then take screenshot with descriptive filename:
 
 ---
 
-## Enhanced Perks: Manifest Detection Guide
+## Design Decisions
 
-This section documents how to identify enhanced vs base perks in the Bungie Destiny 2 manifest. This knowledge is essential for the Enhanced Perks feature debugging.
+### Enhanced Perks Removed (2026-01-15)
 
-### Key Discovery
+**Decision:** Removed enhanced perk tracking and display from the application.
 
-**Modern Destiny 2 perks do NOT have "Enhanced" in their display name.** Both base and enhanced variants share the same `displayProperties.name` (e.g., both are "Rapid Hit"). They are differentiated by other manifest fields.
+**Reasoning:**
+- **Signal vs Noise**: Enhanced perks are obviously better, but typically only marginally so. For a deduplication and god roll tracking tool, the base perk name is what matters for decision-making.
+- **Reduced Complexity**: Enhanced perks added ~400 lines of code for detection, mapping, UI toggles, and tests. This complexity wasn't providing proportional value.
+- **Bug-Prone**: The feature had edge cases causing save errors with enhanced vs base perk hash mismatches.
+- **UI Clutter**: The enhanced toggle button and gold arrow badges added visual noise without helping users make better keep/dismantle decisions.
 
-### How to Identify Enhanced Perks
+**What We're NOT Doing**: This app doesn't compute weapon stats or DPS like d2foundry.gg, where enhanced perk bonuses would matter. For our use case (perk collection tracking), base perk names are sufficient.
 
-| Field | Base Perk | Enhanced Perk |
-|-------|-----------|---------------|
-| `itemTypeDisplayName` | `"Trait"`, `"Barrel"`, etc. | `"Enhanced Trait"`, `"Enhanced Barrel"`, etc. |
-| `tierType` | `2` (Common) | `3` (Uncommon) |
-| `displayProperties.name` | `"Rapid Hit"` | `"Rapid Hit"` (same!) |
-
-**Primary detection method:** Check `itemTypeDisplayName.startsWith("Enhanced ")`
-
-**Known enhanced types:** Enhanced Trait, Enhanced Barrel, Enhanced Magazine, Enhanced Origin Trait, Enhanced Battery, Enhanced Bolt, Enhanced Bowstring, Enhanced Arrow, Enhanced Guard, Enhanced Haft, Enhanced Blade, Enhanced Rail, Enhanced Launcher Barrel, Enhanced Intrinsic
-
-### Example: Aisha's Embrace Right Trait Perks
-
-The Right Trait plug set (hash `1580292161`) contains both base and enhanced variants:
-
-| Perk Name | Base Hash | Enhanced Hash |
-|-----------|-----------|---------------|
-| Rapid Hit | 247725512 | 2938480696 |
-| Dragonfly | 2848615171 | 1600202343 |
-| Explosive Payload | 3038247973 | 1824513213 |
-
-### Implementation
-
-The detection logic lives in [deduplication.ts](src/services/deduplication.ts):
-
-```typescript
-export function isEnhancedPerk(hash: number): boolean {
-  const perkDef = manifestService.getInventoryItem(hash)
-  if (!perkDef) return false
-
-  // Check itemTypeDisplayName - all enhanced variants start with "Enhanced "
-  const itemTypeDisplayName = perkDef.itemTypeDisplayName?.toLowerCase() || ''
-  if (itemTypeDisplayName.startsWith('enhanced ')) return true
-
-  // Fallback: check name for legacy perks that might have "Enhanced" prefix
-  const name = perkDef.displayProperties?.name || ''
-  if (isEnhancedPerkName(name)) return true
-
-  return false
-}
-```
-
-**Columns with enhanced support:** Barrel, Magazine, Left Trait, Right Trait, Origin Trait (all columns except Masterwork and Intrinsic)
-
-### Debugging Tips
-
-1. **Query IndexedDB directly**: Open DevTools → Application → IndexedDB → `d3deduper` → `manifest`
-   - Look up perk definitions by hash
-   - Check `itemTypeDisplayName` and `tierType` fields
-
-2. **Find plug set hashes**: Weapon definitions contain `sockets.socketEntries[].randomizedPlugSetHash` which points to the plug set containing all possible perks for that column
-
-3. **Verify perk grouping**: Perks are grouped by normalized name (lowercase). Each group should have exactly 2 variants if enhanced exists (base + enhanced)
-
-4. **Console logging**: Add temporary logging in `buildPerkColumn()` to see all perks and their enhanced status
-
-### Historical Context
-
-Prior to ~2023, some enhanced perks DID have "Enhanced" in their name (e.g., "Enhanced Rapid Hit"). The `isEnhancedPerkName()` helper handles these legacy cases. Modern perks require the `isEnhancedPerk()` check using `itemTypeDisplayName`.
+**Git History**: The full enhanced perk implementation is preserved in git history if ever needed again.
 
 ---
 
@@ -694,4 +640,3 @@ Prior to ~2023, some enhanced perks DID have "Enhanced" in their name (e.g., "En
 
 - [ ] **Wishlist toggle performance**: Toggle response is ~200-300ms. Goal is instant (<50ms). All obvious optimizations applied; further profiling needed to identify remaining bottleneck.
 - [ ] **DIM API Integration**: Implement direct Keep/Junk tagging via DIM's API
-- [x] **Enhanced Origin Traits**: ~~Some origin traits (e.g., "Roar of Battle" on The Martlet) don't show enhanced badge even though Enhanced variants exist in the manifest.~~ Fixed via global trait-to-enhanced mapping generated at runtime. See [Architecture.md](planning/Architecture.md#enhanced-perk-system) for details.
