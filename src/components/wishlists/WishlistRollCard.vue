@@ -58,33 +58,33 @@
       </div>
     </div>
 
-    <!-- Bottom row: Metadata/YouTube left, Actions right (anchored to bottom) -->
-    <div v-if="hasBottomRowContent" class="mt-auto pt-2 flex items-center justify-between gap-2 text-xs">
-      <!-- Left: Updated date, Creator, YouTube Reference -->
-      <div class="text-text-subtle flex items-center gap-2">
-        <!-- Updated date -->
+    <!-- Bottom row: Metadata left, YouTube center, Actions right (anchored to bottom) -->
+    <div v-if="hasBottomRowContent" class="mt-auto pt-2 flex items-center gap-2 text-xs">
+      <!-- Left: Updated date (with createdBy in tooltip) -->
+      <div class="text-text-subtle flex-shrink-0">
         <span v-if="formattedUpdatedAt" :title="item.createdBy ? `by ${item.createdBy}` : undefined">
           {{ formattedUpdatedAt }}
         </span>
-        <!-- Separator if both date and youtube info -->
-        <span v-if="formattedUpdatedAt && (item.youtubeLink || item.youtubeAuthor)" class="text-text-muted">·</span>
-        <!-- YouTube info -->
-        <span v-if="item.youtubeLink || item.youtubeAuthor">
-          <span v-if="item.youtubeAuthor" class="mr-1">{{ item.youtubeAuthor }}</span>
-          <a
-            v-if="item.youtubeLink"
-            :href="timestampedYoutubeUrl || item.youtubeLink"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="text-blue-400 hover:text-blue-300 hover:underline"
-            @click.stop
-          >YouTube<template v-if="item.youtubeTimestamp"> @ {{ item.youtubeTimestamp }}</template></a>
-          <span v-else-if="item.youtubeTimestamp">@ {{ item.youtubeTimestamp }}</span>
-        </span>
       </div>
 
+      <!-- Center: YouTube info (flex-1 to take remaining space, centered) -->
+      <div v-if="item.youtubeLink || item.youtubeAuthor" class="flex-1 text-center text-text-subtle truncate">
+        <span v-if="item.youtubeAuthor" class="mr-1">{{ item.youtubeAuthor }}</span>
+        <a
+          v-if="item.youtubeLink"
+          :href="timestampedYoutubeUrl || item.youtubeLink"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-blue-400 hover:text-blue-300 hover:underline"
+          @click.stop
+        >YouTube<template v-if="item.youtubeTimestamp"> @ {{ item.youtubeTimestamp }}</template></a>
+        <span v-else-if="item.youtubeTimestamp">@ {{ item.youtubeTimestamp }}</span>
+      </div>
+      <!-- Spacer when no YouTube info -->
+      <div v-else class="flex-1"></div>
+
       <!-- Right: Action links (for editable wishlists) -->
-      <div v-if="showActions" class="flex gap-3" @click.stop>
+      <div v-if="showActions" class="flex gap-3 flex-shrink-0" @click.stop>
         <button
           @click="emit('view')"
           class="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300"
