@@ -155,7 +155,6 @@ export class InventoryAPI {
     accessToken: string
   ): Promise<DestinyProfileResponse> {
     if (import.meta.env.VITE_USE_MOCK === 'true') {
-      console.log('Using mock inventory data')
       return (mockInventory as any).Response as DestinyProfileResponse
     }
 

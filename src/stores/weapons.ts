@@ -38,8 +38,6 @@ export const useWeaponsStore = defineStore('weapons', () => {
 
       const { membershipType, membershipId } = authStore.selectedMembership
 
-      console.log(`Fetching inventory for ${membershipType}/${membershipId}`)
-
       // Fetch profile from Bungie API
       const profile = await inventoryAPI.getProfile(
         membershipType,
@@ -50,13 +48,9 @@ export const useWeaponsStore = defineStore('weapons', () => {
       // Store raw response for export (local dev mock data sync)
       rawProfileResponse.value = profile
 
-      console.log('Profile fetched successfully')
-
       // Parse weapons from profile
       const parsedWeapons = weaponParser.parseWeapons(profile)
       weaponInstances.value = parsedWeapons
-
-      console.log(`Found ${parsedWeapons.length} weapons`)
 
       // Group weapons by name + season (combines holofoil variants with normal versions)
       const grouped = weaponParser.groupWeaponsByNameAndSeason(parsedWeapons)
@@ -72,11 +66,8 @@ export const useWeaponsStore = defineStore('weapons', () => {
       dedupedWeapons.sort((a, b) => a.weaponName.localeCompare(b.weaponName))
 
       weapons.value = dedupedWeapons
-
-      console.log(`Created ${dedupedWeapons.length} deduped weapon entries`)
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to load weapons'
-      console.error('Failed to load weapons:', err)
     } finally {
       loading.value = false
     }

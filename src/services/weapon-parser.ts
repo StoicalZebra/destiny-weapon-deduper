@@ -16,7 +16,6 @@ export class WeaponParser {
 
     // Collect items from vault (profile inventory)
     if (profile.profileInventory?.data?.items) {
-      console.log(`[Parser] Vault items: ${profile.profileInventory.data.items.length}`)
       allItems.push(...profile.profileInventory.data.items)
     }
 
@@ -25,7 +24,6 @@ export class WeaponParser {
       for (const characterId in profile.characterInventories.data) {
         const characterInventory = profile.characterInventories.data[characterId]
         if (characterInventory.items) {
-          console.log(`[Parser] Character ${characterId} inventory: ${characterInventory.items.length}`)
           allItems.push(...characterInventory.items)
         }
       }
@@ -36,63 +34,23 @@ export class WeaponParser {
       for (const characterId in profile.characterEquipment.data) {
         const characterEquipment = profile.characterEquipment.data[characterId]
         if (characterEquipment.items) {
-          console.log(`[Parser] Character ${characterId} equipment: ${characterEquipment.items.length}`)
           allItems.push(...characterEquipment.items)
         }
       }
     }
 
-    console.log(`[Parser] Total items collected: ${allItems.length}`)
-
-    // Track all unique bucket hashes to see what we're dealing with
-    const bucketHashCounts = new Map<number, number>()
-    for (const item of allItems) {
-      bucketHashCounts.set(item.bucketHash, (bucketHashCounts.get(item.bucketHash) || 0) + 1)
-    }
-    console.log(`[Parser] Unique bucket hashes found:`, Array.from(bucketHashCounts.entries()).slice(0, 20))
-
-    let weaponBucketCount = 0
-    let hasInstanceIdCount = 0
-    let hasDefinitionCount = 0
-    let legendaryExoticCount = 0
-    let actualWeaponCount = 0
-
-    // Filter and parse weapons
-    const missedWeaponBuckets = new Set<number>()
-
     for (const item of allItems) {
       // Check if item is in a weapon bucket
       const isWeapon = Object.values(WEAPON_BUCKET_HASHES).includes(item.bucketHash)
-
-      if (!isWeapon) {
-        // Check if this might be a weapon we're missing
-        if (item.itemInstanceId) {
-          const def = manifestService.getInventoryItem(item.itemHash)
-          if (def?.itemType === ItemType.Weapon) {
-            missedWeaponBuckets.add(item.bucketHash)
-          }
-        }
+      if (!isWeapon || !item.itemInstanceId) {
         continue
       }
-
-      if (!item.itemInstanceId) {
-        continue
-      }
-      weaponBucketCount++
-      hasInstanceIdCount++
 
       // Get weapon definition to check if it's legendary
       const weaponDef = manifestService.getInventoryItem(item.itemHash)
 
       if (!weaponDef) {
-        console.warn(`No definition found for weapon hash ${item.itemHash}`)
         continue
-      }
-      hasDefinitionCount++
-
-      // Log first few tierTypes to see what we're getting
-      if (hasDefinitionCount <= 5) {
-        console.log(`[Parser] Sample weapon: ${weaponDef.displayProperties?.name}, tierType: ${weaponDef.inventory?.tierType}, itemType: ${weaponDef.itemType}`)
       }
 
       // Filter for legendary weapons (and exotic for testing)
@@ -100,13 +58,11 @@ export class WeaponParser {
       if (tierType !== TierType.Superior && tierType !== TierType.Exotic) {
         continue
       }
-      legendaryExoticCount++
 
       // Only include actual weapons
       if (weaponDef.itemType !== ItemType.Weapon) {
         continue
       }
-      actualWeaponCount++
 
       // Get socket data for this instance
       const socketData = profile.itemComponents?.sockets?.data?.[item.itemInstanceId]
@@ -114,7 +70,6 @@ export class WeaponParser {
       const instanceData = profile.itemComponents?.instances?.data?.[item.itemInstanceId]
 
       if (!socketData || !socketData.sockets) {
-        console.warn(`No socket data for weapon instance ${item.itemInstanceId}`)
         continue
       }
 
@@ -166,18 +121,6 @@ export class WeaponParser {
       }
 
       weapons.push(weaponInstance)
-    }
-
-    console.log(`[Parser] Filter results:`)
-    console.log(`  - In weapon buckets: ${weaponBucketCount}`)
-    console.log(`  - Has instance ID: ${hasInstanceIdCount}`)
-    console.log(`  - Has definition: ${hasDefinitionCount}`)
-    console.log(`  - Is legendary/exotic: ${legendaryExoticCount}`)
-    console.log(`  - Is actual weapon: ${actualWeaponCount}`)
-    console.log(`  - Final weapons parsed: ${weapons.length}`)
-
-    if (missedWeaponBuckets.size > 0) {
-      console.warn(`[Parser] Found weapons in unexpected buckets:`, Array.from(missedWeaponBuckets))
     }
 
     return weapons

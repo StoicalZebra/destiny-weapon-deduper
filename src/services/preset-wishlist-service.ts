@@ -7,7 +7,7 @@
  */
 
 import type { Wishlist, PresetWishlistConfig, WishlistUpdateStatus } from '@/models/wishlist'
-import { parseDimWishlist, computeContentHash, getWishlistStats } from './dim-wishlist-parser'
+import { parseDimWishlist, computeContentHash } from './dim-wishlist-parser'
 import { wishlistStorageService } from './wishlist-storage-service'
 
 /**
@@ -107,7 +107,6 @@ class PresetWishlistService {
     const content = await response.text()
     const parsed = parseDimWishlist(content)
     const version = await computeContentHash(content)
-    const stats = getWishlistStats(parsed.items)
 
     const wishlist: Wishlist = {
       id: config.id,
@@ -121,11 +120,6 @@ class PresetWishlistService {
       lastUpdated: new Date().toISOString(),
       items: parsed.items
     }
-
-    // Log stats for debugging
-    console.log(
-      `Fetched ${config.name}: ${stats.itemCount} items across ${stats.weaponCount} weapons`
-    )
 
     return wishlist
   }
@@ -211,12 +205,9 @@ class PresetWishlistService {
       await wishlistStorageService.savePreset(wishlist)
       return wishlist
     } catch (error) {
-      console.error(`Failed to fetch preset ${id}:`, error)
-
       // Return cached if available, even if stale
       const cached = await wishlistStorageService.getPreset(id)
       if (cached) {
-        console.log(`Using stale cache for ${id}`)
         return cached
       }
 

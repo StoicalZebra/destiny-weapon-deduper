@@ -41,14 +41,11 @@ export const useManifestStore = defineStore('manifest', () => {
       const cachedVersion = await indexedDBStorage.getManifestVersion()
 
       if (cachedVersion) {
-        console.log('Found cached manifest version:', cachedVersion)
-
         // Verify all required tables exist in cache
         let allTablesExist = true
         for (const tableName of REQUIRED_MANIFEST_TABLES) {
           const tableData = await indexedDBStorage.getManifestTable(tableName)
           if (!tableData) {
-            console.log(`Missing required table: ${tableName}, will re-download manifest`)
             allTablesExist = false
             break
           }
@@ -76,7 +73,6 @@ export const useManifestStore = defineStore('manifest', () => {
       await downloadManifest()
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to initialize manifest'
-      console.error('Manifest initialization error:', err)
       loading.value = false
     }
   }
@@ -95,7 +91,6 @@ export const useManifestStore = defineStore('manifest', () => {
       const cachedVersion = await indexedDBStorage.getManifestVersion()
 
       if (cachedVersion === latestVersion) {
-        console.log('Manifest is up to date')
         version.value = latestVersion
 
         // Load tables into memory
@@ -108,8 +103,6 @@ export const useManifestStore = defineStore('manifest', () => {
         loading.value = false
         return
       }
-
-      console.log('Downloading manifest version:', latestVersion)
 
       // Download all required tables
       const tables = await manifestAPI.downloadAllTables('en', (progress) => {
@@ -132,10 +125,8 @@ export const useManifestStore = defineStore('manifest', () => {
       manifestService.buildTraitMapping()
 
       isInitialized.value = true
-      console.log('Manifest download complete')
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to download manifest'
-      console.error('Manifest download error:', err)
     } finally {
       loading.value = false
       downloadProgress.value = null
@@ -148,8 +139,7 @@ export const useManifestStore = defineStore('manifest', () => {
       const latestVersion = manifestInfo.version
 
       return latestVersion !== version.value
-    } catch (err) {
-      console.error('Failed to check for manifest updates:', err)
+    } catch {
       return false
     }
   }

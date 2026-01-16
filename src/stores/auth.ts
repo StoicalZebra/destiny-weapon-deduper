@@ -34,7 +34,6 @@ export const useAuthStore = defineStore('auth', () => {
 
     // Check for mock mode
     if (import.meta.env.VITE_USE_MOCK === 'true') {
-      console.log('Initializing mock auth session')
       accessToken.value = 'mock-access-token'
       expiresAt.value = Date.now() + 86400000 // 24 hours
       membershipId.value = 'mock-membership-id'
@@ -82,8 +81,7 @@ export const useAuthStore = defineStore('auth', () => {
         // Token expired, clear storage
         clearAuth()
       }
-    } catch (err) {
-      console.error('Failed to parse stored tokens:', err)
+    } catch {
       clearAuth()
     }
   }
@@ -115,8 +113,8 @@ export const useAuthStore = defineStore('auth', () => {
       try {
         user.value = JSON.parse(storedUser)
         return
-      } catch (err) {
-        console.error('Failed to parse stored user:', err)
+      } catch {
+        // Invalid stored user, will fetch from API
       }
     }
 
@@ -125,32 +123,26 @@ export const useAuthStore = defineStore('auth', () => {
       try {
         const userData = await bungieAuth.getCurrentUser(accessToken.value)
         await setUser(userData)
-      } catch (err) {
-        console.error('Failed to fetch user data:', err)
+      } catch {
+        // Failed to fetch user data - will retry on next load
       }
     }
   }
 
   async function loadDestinyMemberships() {
-    console.log('[Auth] loadDestinyMemberships called')
-    console.log('[Auth] Access token exists:', !!accessToken.value)
-
     // Try to load from storage first
     const storedMemberships = localStorage.getItem('destiny_memberships')
     if (storedMemberships) {
-      console.log('[Auth] Found stored memberships')
       try {
         const memberships = JSON.parse(storedMemberships)
         destinyMemberships.value = memberships
-        console.log('[Auth] Loaded memberships from storage:', memberships.length)
         // Select first membership by default
         if (memberships.length > 0 && !selectedMembership.value) {
           selectedMembership.value = memberships[0]
-          console.log('[Auth] Selected membership:', memberships[0].displayName)
         }
         return
-      } catch (err) {
-        console.error('[Auth] Failed to parse stored memberships:', err)
+      } catch {
+        // Invalid stored memberships, will fetch from API
       }
     }
 
@@ -158,24 +150,18 @@ export const useAuthStore = defineStore('auth', () => {
     if (accessToken.value) {
       if (import.meta.env.VITE_USE_MOCK === 'true') return // Skip API fetch in mock mode
 
-      console.log('[Auth] Fetching memberships from API...')
       try {
         const memberships = await inventoryAPI.getMemberships(accessToken.value)
-        console.log('[Auth] API returned memberships:', memberships.length)
         destinyMemberships.value = memberships
         localStorage.setItem('destiny_memberships', JSON.stringify(memberships))
 
         // Select first membership by default (usually the cross-save primary)
         if (memberships.length > 0) {
           selectedMembership.value = memberships[0]
-          console.log('[Auth] Selected membership:', memberships[0].displayName)
         }
-      } catch (err) {
-        console.error('[Auth] Failed to fetch Destiny memberships:', err)
-        console.error('[Auth] Error details:', err)
+      } catch {
+        // Failed to fetch memberships - will retry on next load
       }
-    } else {
-      console.warn('[Auth] No access token available for fetching memberships')
     }
   }
 

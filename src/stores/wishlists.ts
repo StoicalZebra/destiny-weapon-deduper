@@ -91,13 +91,12 @@ export const useWishlistsStore = defineStore('wishlists', () => {
 
       // Check for updates in background
       if (checkUpdates) {
-        checkForUpdates().catch(console.warn)
+        checkForUpdates().catch(() => {})
       }
 
       initialized.value = true
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to initialize wishlists'
-      console.error('Failed to initialize wishlists:', err)
     } finally {
       loading.value = false
     }
@@ -180,7 +179,6 @@ export const useWishlistsStore = defineStore('wishlists', () => {
       buildAllWeaponIndexes()
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to load presets'
-      console.error('Failed to load presets:', err)
     } finally {
       loading.value = false
     }
@@ -210,7 +208,6 @@ export const useWishlistsStore = defineStore('wishlists', () => {
       return wishlist
     } catch (err) {
       error.value = err instanceof Error ? err.message : `Failed to load ${config.name}`
-      console.error(`Failed to load large preset ${presetId}:`, err)
       return null
     } finally {
       loading.value = false
@@ -259,8 +256,8 @@ export const useWishlistsStore = defineStore('wishlists', () => {
         updateStatuses.value.set(status.wishlistId, status)
       }
       triggerRef(updateStatuses)
-    } catch (err) {
-      console.warn('Failed to check for updates:', err)
+    } catch {
+      // Background check failed - not critical
     }
   }
 
@@ -287,7 +284,6 @@ export const useWishlistsStore = defineStore('wishlists', () => {
       }
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to refresh preset'
-      console.error('Failed to refresh preset:', err)
     } finally {
       loading.value = false
     }
@@ -306,7 +302,6 @@ export const useWishlistsStore = defineStore('wishlists', () => {
       updateStatuses.value.clear()
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to refresh presets'
-      console.error('Failed to refresh presets:', err)
     } finally {
       loading.value = false
     }

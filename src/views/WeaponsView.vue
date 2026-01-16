@@ -67,7 +67,6 @@ const duplicateCount = computed(() => {
 const loadWeapons = async () => {
   // Ensure memberships are loaded first
   if (authStore.destinyMemberships.length === 0) {
-    console.log('Loading Destiny memberships...')
     await authStore.loadDestinyMemberships()
   }
 
