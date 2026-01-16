@@ -216,42 +216,13 @@
                 class="relative z-10 flex items-center gap-1.5"
                 :title="getPerkTooltip(perk, column)"
               >
-                <div class="relative flex-shrink-0 ml-0.5 w-8 h-8">
-                  <!-- Perk icon with ring indicator -->
-                  <div
-                    class="w-8 h-8 rounded-full overflow-hidden bg-perk-background"
-                    :class="getPerkIconClassesWishlist(perk, column)"
-                  >
-                    <img
-                      v-if="getPerkIcon(perk, column)"
-                      :src="`https://www.bungie.net${getPerkIcon(perk, column)}`"
-                      class="w-full h-full object-cover"
-                    />
-                    <div v-else class="w-full h-full bg-surface-overlay"></div>
-                  </div>
-
-                  <!-- Enhanced indicator badge (upper-left) -->
-                  <div
-                    v-if="isEnhancedDisplay(perk, column)"
-                    :class="[INDICATOR_STYLES.enhanced, 'absolute -top-0.5 -left-0.5 w-4 h-4 rounded-full flex items-center justify-center shadow-lg']"
-                    :title="TOOLTIP_STRINGS.ENHANCED_PERK"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-2.5 w-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                    </svg>
-                  </div>
-
-                  <!-- Wishlist thumbs-up indicator (upper-right) -->
-                  <div
-                    v-if="isWishlistPerk(perk.hash)"
-                    :class="[INDICATOR_STYLES.wishlist, 'absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center shadow-lg']"
-                    :title="getWishlistBadgeTooltipForPerk(perk.hash)"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-2.5 w-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
-                    </svg>
-                  </div>
-                </div>
+                <PerkIconWithBadges
+                  :icon-path="getPerkIcon(perk, column)"
+                  :ring-class="getPerkIconClassesWishlist(perk, column)"
+                  :show-enhanced="isEnhancedDisplay(perk, column)"
+                  :show-wishlist="isWishlistPerk(perk.hash)"
+                  :wishlist-tooltip="getWishlistBadgeTooltipForPerk(perk.hash)"
+                />
                 <span
                   class="text-xs font-medium truncate select-none leading-tight"
                   :class="perk.isOwned ? 'text-text' : 'text-text-subtle'"
@@ -558,42 +529,13 @@
                   class="relative z-10 flex items-center gap-1.5"
                   :title="getPerkTooltip(perk, column)"
                 >
-                  <div class="relative flex-shrink-0 ml-0.5 w-8 h-8">
-                    <!-- Perk icon with ring indicator -->
-                    <div
-                      class="w-8 h-8 rounded-full overflow-hidden bg-perk-background"
-                      :class="getPerkIconClassesCoverage(perk)"
-                    >
-                      <img
-                        v-if="perk.icon"
-                        :src="`https://www.bungie.net${perk.icon}`"
-                        class="w-full h-full object-cover"
-                      />
-                      <div v-else class="w-full h-full bg-surface-overlay"></div>
-                    </div>
-
-                    <!-- Enhanced indicator badge (upper-left) -->
-                    <div
-                      v-if="isEnhancedDisplay(perk, column)"
-                      :class="[INDICATOR_STYLES.enhanced, 'absolute -top-0.5 -left-0.5 w-4 h-4 rounded-full flex items-center justify-center shadow-lg']"
-                      :title="TOOLTIP_STRINGS.ENHANCED_PERK"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-2.5 w-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                      </svg>
-                    </div>
-
-                    <!-- Wishlist thumbs-up indicator (upper-right) -->
-                    <div
-                      v-if="isWishlistPerk(perk.hash)"
-                      :class="[INDICATOR_STYLES.wishlist, 'absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center shadow-lg']"
-                      :title="getWishlistBadgeTooltipForPerk(perk.hash)"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-2.5 w-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
-                      </svg>
-                    </div>
-                  </div>
+                  <PerkIconWithBadges
+                    :icon-path="perk.icon"
+                    :ring-class="getPerkIconClassesCoverage(perk)"
+                    :show-enhanced="isEnhancedDisplay(perk, column)"
+                    :show-wishlist="isWishlistPerk(perk.hash)"
+                    :wishlist-tooltip="getWishlistBadgeTooltipForPerk(perk.hash)"
+                  />
                   <span
                     class="text-xs font-medium truncate select-none leading-tight"
                     :class="perk.isOwned ? 'text-text' : 'text-text-subtle'"
@@ -730,6 +672,7 @@ import type { PerkColumnInfo } from '@/services/dim-wishlist-parser'
 import { getWishlistPerkAnnotations, selectionToWishlistItem } from '@/services/dim-wishlist-parser'
 import InstancePerkGrid from './InstancePerkGrid.vue'
 import InstanceFilterBar from './InstanceFilterBar.vue'
+import PerkIconWithBadges from './PerkIconWithBadges.vue'
 import WishlistPerkMatrix from '@/components/wishlists/WishlistPerkMatrix.vue'
 import WishlistsApplied from './WishlistsApplied.vue'
 import {
@@ -737,13 +680,12 @@ import {
   PERK_RING_STYLES,
   PERK_ROW_STYLES,
   BADGE_STYLES,
-  INDICATOR_STYLES,
   BUTTON_STYLES,
   INSTANCE_PALETTE,
   MASTERWORK_ICON_STYLES,
   DROPDOWN_STYLES,
 } from '@/styles/ui-states'
-import { TOOLTIP_STRINGS, getWishlistBadgeTooltip, formatWishlistTooltipSuffix } from '@/utils/tooltip-helpers'
+import { getWishlistBadgeTooltip, formatWishlistTooltipSuffix } from '@/utils/tooltip-helpers'
 import {
   isPerkInHashSet,
   findPerkHashInSet,
