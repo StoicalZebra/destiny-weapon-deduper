@@ -89,58 +89,62 @@
           :class="{ 'ring-2 ring-blue-500/50 border-blue-500/50 bg-blue-900/10': isProfileActive(profile) }"
           @click="loadProfile(profile)"
         >
-          <!-- Header row with wishlist name and actions -->
-          <div class="flex justify-between items-start mb-2">
-            <div class="flex flex-col gap-0.5">
-              <span class="text-xs font-medium text-text-muted truncate max-w-[120px]" :title="profile.wishlistName">
-                {{ profile.wishlistName }}
-              </span>
-              <span class="text-xs text-text-subtle">
-                {{ profile.item.perkHashes.length }} perks
-              </span>
-            </div>
-
-            <!-- Actions - only show delete for user wishlists -->
-            <div v-if="profile.isUserWishlist" class="flex items-center gap-2" @click.stop>
-              <template v-if="profile.showDeleteConfirm">
-                <span class="text-xs text-red-600 dark:text-red-400 font-bold">Sure?</span>
-                <button
-                  @click="deleteProfile(profile.id)"
-                  class="text-xs px-2 py-0.5 bg-red-900/50 hover:bg-red-900 text-red-200 border border-red-800 rounded"
-                >
-                  Yes
-                </button>
-                <button
-                  @click="profile.showDeleteConfirm = false"
-                  class="text-xs px-2 py-0.5 bg-surface-overlay hover:bg-surface-elevated text-text-muted rounded"
-                >
-                  Cancel
-                </button>
-              </template>
-              <template v-else>
-                <button
-                  @click="profile.showDeleteConfirm = true"
-                  class="p-1 text-text-subtle hover:text-red-600 dark:hover:text-red-400 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                  title="Delete"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
-              </template>
-            </div>
-          </div>
-
-          <!-- Tags (if any) -->
-          <div v-if="profile.item.tags?.length" class="flex flex-wrap gap-1 mb-2">
-            <span
-              v-for="tag in sortTagsForDisplay(profile.item.tags)"
-              :key="tag"
-              :class="getTagDisplayClasses(tag)"
-              class="text-[10px] font-bold px-1.5 py-0.5 rounded uppercase"
-            >
-              {{ tag }}
+          <!-- Header row with wishlist name, perks count, tags, and actions -->
+          <div class="flex justify-between items-start mb-2 gap-2">
+            <!-- Left: wishlist name only -->
+            <span class="text-xs font-medium text-text-muted truncate min-w-0" :title="profile.wishlistName">
+              {{ profile.wishlistName }}
             </span>
+
+            <!-- Right: perks count, tags, and delete action -->
+            <div class="flex flex-col items-end gap-1 flex-shrink-0">
+              <!-- Top row: perks count and delete button -->
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-text-subtle">
+                  {{ profile.item.perkHashes.length }} perks
+                </span>
+                <!-- Actions - only show delete for user wishlists -->
+                <div v-if="profile.isUserWishlist" class="flex items-center gap-2" @click.stop>
+                  <template v-if="profile.showDeleteConfirm">
+                    <span class="text-xs text-red-600 dark:text-red-400 font-bold">Sure?</span>
+                    <button
+                      @click="deleteProfile(profile.id)"
+                      class="text-xs px-2 py-0.5 bg-red-900/50 hover:bg-red-900 text-red-200 border border-red-800 rounded"
+                    >
+                      Yes
+                    </button>
+                    <button
+                      @click="profile.showDeleteConfirm = false"
+                      class="text-xs px-2 py-0.5 bg-surface-overlay hover:bg-surface-elevated text-text-muted rounded"
+                    >
+                      Cancel
+                    </button>
+                  </template>
+                  <template v-else>
+                    <button
+                      @click="profile.showDeleteConfirm = true"
+                      class="p-1 text-text-subtle hover:text-red-600 dark:hover:text-red-400 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                      title="Delete"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </template>
+                </div>
+              </div>
+              <!-- Tags below perks count -->
+              <div v-if="profile.item.tags?.length" class="flex flex-wrap gap-1 justify-end">
+                <span
+                  v-for="tag in sortTagsForDisplay(profile.item.tags)"
+                  :key="tag"
+                  :class="getTagDisplayClasses(tag)"
+                  class="text-[10px] font-bold px-1.5 py-0.5 rounded uppercase"
+                >
+                  {{ tag }}
+                </span>
+              </div>
+            </div>
           </div>
 
           <!-- DIM-style perk matrix -->

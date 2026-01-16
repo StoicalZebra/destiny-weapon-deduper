@@ -1,14 +1,18 @@
 <template>
   <div class="wishlist-perk-matrix">
-    <!-- DIM-style perk columns layout -->
+    <!-- DIM-style perk columns layout with headers -->
     <div class="flex gap-1.5">
-      <!-- Each column is a vertical stack of perks -->
+      <!-- Each column is a vertical stack: label + perks -->
       <div
         v-for="(column, colIdx) in organizedPerks"
         :key="colIdx"
-        class="flex flex-col gap-1"
-        :title="column.label"
+        class="flex flex-col gap-1 items-center"
       >
+        <!-- Column header label -->
+        <span class="text-[9px] uppercase font-bold text-text-subtle tracking-wide">
+          {{ column.label }}
+        </span>
+
         <!-- Masterwork column uses special styling with wishlist gold ring -->
         <template v-if="column.isMasterwork">
           <div
@@ -125,14 +129,14 @@ const weaponSocketInfo = computed((): WeaponSocketInfo | null => {
       }
     }
 
-    // Column labels
-    let label = `Column ${socketIdx}`
+    // Column labels (short versions for compact display)
+    let label = `Col ${socketIdx}`
     if (socketIdx === 1) label = 'Barrel'
-    else if (socketIdx === 2) label = 'Magazine'
-    else if (socketIdx === 3) label = 'Left Trait'
-    else if (socketIdx === 4) label = 'Right Trait'
+    else if (socketIdx === 2) label = 'Mag'
+    else if (socketIdx === 3) label = 'Trait 1'
+    else if (socketIdx === 4) label = 'Trait 2'
     else if (socketIdx === 5) label = 'Origin'
-    if (socketIdx === masterworkSocketIndex) label = 'Masterwork'
+    if (socketIdx === masterworkSocketIndex) label = 'MW'
     columnLabels.set(socketIdx, label)
   }
 
