@@ -333,6 +333,7 @@ import WishlistPerkMatrix from '@/components/wishlists/WishlistPerkMatrix.vue'
 import type { WishlistItem, WishlistTag } from '@/models/wishlist'
 import { formatHashSuffix } from '@/utils/formatting'
 import { getTimestampedUrl } from '@/utils/youtube'
+import { sortItemsByTagPriority, sortTagsForDisplay } from '@/utils/wishlist-sorting'
 import { TAG_DISPLAY_STYLES, TAG_TOOLTIPS } from '@/styles/ui-states'
 
 const route = useRoute()
@@ -498,53 +499,6 @@ function getTagClasses(tag: WishlistTag): string {
 
 function getTagTooltip(tag: WishlistTag): string {
   return TAG_TOOLTIPS[tag] || tag
-}
-
-// Get tag-based priority for sorting items: PVE > PVE+ALT > PVP > PVP+ALT > others
-function getItemTagPriority(item: WishlistItem): number {
-  const tags = item.tags || []
-  const hasPve = tags.includes('pve')
-  const hasPvp = tags.includes('pvp')
-  const hasAlt = tags.includes('alt')
-
-  if (hasPve && !hasAlt) return 0      // PVE
-  if (hasPve && hasAlt) return 1       // PVE ALT
-  if (hasPvp && !hasAlt) return 2      // PVP
-  if (hasPvp && hasAlt) return 3       // PVP ALT
-  return 4                              // No matching tags
-}
-
-// Sort items by tag priority
-function sortItemsByTagPriority(items: WishlistItem[]): WishlistItem[] {
-  return [...items].sort((a, b) => getItemTagPriority(a) - getItemTagPriority(b))
-}
-
-// Sort tags for display: PVE first, then PVP, then ALT repositioned based on context
-function sortTagsForDisplay(tags: WishlistTag[] | undefined): WishlistTag[] {
-  if (!tags || tags.length === 0) return []
-
-  const tagPriority: Record<string, number> = {
-    pve: 0,
-    pvp: 2,
-    alt: 10,
-    controller: 20,
-    mkb: 21,
-    trash: 99
-  }
-
-  return [...tags].sort((a, b) => {
-    const hasPve = tags.includes('pve')
-    const hasPvp = tags.includes('pvp')
-
-    // Position ALT right after PVE or PVP
-    let aPriority = tagPriority[a] ?? 50
-    let bPriority = tagPriority[b] ?? 50
-
-    if (a === 'alt') aPriority = hasPve ? 1 : hasPvp ? 3 : 10
-    if (b === 'alt') bPriority = hasPve ? 1 : hasPvp ? 3 : 10
-
-    return aPriority - bPriority
-  })
 }
 
 // Name/description save handlers
