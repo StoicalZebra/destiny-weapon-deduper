@@ -5,12 +5,12 @@ test.describe('Wishlist CRUD Operations', () => {
     // Navigate to wishlists page
     await page.goto('/wishlists')
     // Wait for page to load
-    await expect(page.getByRole('heading', { name: 'Wishlists' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Wishlists', exact: true })).toBeVisible()
 
-    // Wait for presets to load - look for either a wishlist card OR the "Load Preset Wishlists" button
+    // Wait for presets to load - look for either a wishlist card OR the "Load Premade Wishlists" button
     // Presets are fetched from network on first load, may take time
     const presetLoaded = page.getByRole('heading', { name: 'StoicalZebra' })
-    const loadButton = page.getByRole('button', { name: /Load Preset Wishlists/i })
+    const loadButton = page.getByRole('button', { name: /Load Premade Wishlists/i })
 
     // Wait for either condition - presets loaded OR button to load them
     await Promise.race([
@@ -68,13 +68,13 @@ test.describe('Wishlist CRUD Operations', () => {
       await expect(page.getByRole('heading', { name: 'Voltron', exact: true })).toBeVisible()
     })
 
-    test('preset wishlists have View on GitHub link', async ({ page }) => {
-      // Preset wishlists should show "View on GitHub" external link instead of internal View
-      const viewOnGitHubLink = page.getByRole('link', { name: /View on GitHub/i }).first()
-      await expect(viewOnGitHubLink).toBeVisible()
+    test('preset wishlists have GitHub link', async ({ page }) => {
+      // Preset wishlists should show "GitHub" external link
+      const githubLink = page.getByRole('link', { name: 'GitHub' }).first()
+      await expect(githubLink).toBeVisible()
 
       // Should be an external link (raw.githubusercontent.com or github.com)
-      const href = await viewOnGitHubLink.getAttribute('href')
+      const href = await githubLink.getAttribute('href')
       expect(href).toMatch(/github/)
     })
 
@@ -86,10 +86,9 @@ test.describe('Wishlist CRUD Operations', () => {
       await page.getByRole('button', { name: /^Create$/i }).click()
       await expect(page.getByRole('heading', { name: 'View Test Wishlist' })).toBeVisible()
 
-      // Custom wishlists should have an internal View link (not "View on GitHub")
-      // The View link should appear after the heading in the same card
+      // Custom wishlists should have an internal View/Edit link
       // Use a more reliable locator - find the card container with the custom wishlist heading
-      const viewLink = page.locator('div').filter({ has: page.getByRole('heading', { name: 'View Test Wishlist' }) }).getByRole('link', { name: 'View', exact: true })
+      const viewLink = page.locator('.rounded-xl').filter({ has: page.getByRole('heading', { name: 'View Test Wishlist' }) }).getByRole('link', { name: 'View / Edit' })
       await viewLink.click()
 
       // Wait for navigation
@@ -154,11 +153,11 @@ test.describe('Wishlist CRUD Operations', () => {
 test.describe('Roll CRUD Operations', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/wishlists')
-    await expect(page.getByRole('heading', { name: 'Wishlists' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Wishlists', exact: true })).toBeVisible()
 
     // Wait for presets to load - same logic as above
     const presetLoaded = page.getByRole('heading', { name: 'StoicalZebra' })
-    const loadButton = page.getByRole('button', { name: /Load Preset Wishlists/i })
+    const loadButton = page.getByRole('button', { name: /Load Premade Wishlists/i })
 
     await Promise.race([
       expect(presetLoaded).toBeVisible({ timeout: 15000 }),
@@ -182,12 +181,12 @@ test.describe('Roll CRUD Operations', () => {
       await expect(page.getByRole('heading', { name: 'Rolls Display Test' })).toBeVisible()
 
       // Navigate to its detail view using filter
-      const viewLink = page.locator('div').filter({ has: page.getByRole('heading', { name: 'Rolls Display Test' }) }).getByRole('link', { name: 'View', exact: true })
+      const viewLink = page.locator('.rounded-xl').filter({ has: page.getByRole('heading', { name: 'Rolls Display Test' }) }).getByRole('link', { name: 'View / Edit' })
       await viewLink.click()
 
       // Wait for page to load
       await page.waitForURL(/\/wishlists\//)
-      await expect(page.getByRole('heading', { level: 1 })).toBeVisible({ timeout: 10000 })
+      await expect(page.getByRole('link', { name: /Back to Wishlists/i })).toBeVisible({ timeout: 10000 })
 
       // Should show stats (even if empty)
       await expect(page.getByText(/Items:/)).toBeVisible()
@@ -200,11 +199,11 @@ test.describe('Admin Mode Features', () => {
 
   test('admin editable badge appears on StoicalZebra when in admin mode', async ({ page }) => {
     await page.goto('/wishlists')
-    await expect(page.getByRole('heading', { name: 'Wishlists' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Wishlists', exact: true })).toBeVisible()
 
     // Wait for presets
     const presetLoaded = page.getByRole('heading', { name: 'StoicalZebra' })
-    const loadButton = page.getByRole('button', { name: /Load Preset Wishlists/i })
+    const loadButton = page.getByRole('button', { name: /Load Premade Wishlists/i })
 
     await Promise.race([
       expect(presetLoaded).toBeVisible({ timeout: 15000 }),
@@ -238,11 +237,11 @@ test.describe('Admin Mode Features', () => {
 
   test('unsaved changes badge appears after editing in admin mode', async ({ page }) => {
     await page.goto('/wishlists')
-    await expect(page.getByRole('heading', { name: 'Wishlists' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Wishlists', exact: true })).toBeVisible()
 
     // Wait for presets
     const presetLoaded = page.getByRole('heading', { name: 'StoicalZebra' })
-    const loadButton = page.getByRole('button', { name: /Load Preset Wishlists/i })
+    const loadButton = page.getByRole('button', { name: /Load Premade Wishlists/i })
 
     await Promise.race([
       expect(presetLoaded).toBeVisible({ timeout: 15000 }),
