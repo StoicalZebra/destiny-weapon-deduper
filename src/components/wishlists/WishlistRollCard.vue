@@ -59,16 +59,17 @@
     </div>
 
     <!-- Bottom row: Metadata left, YouTube center, Actions right (anchored to bottom) -->
+    <!-- Uses same flex-1 pattern as header row for true centering -->
     <div v-if="hasBottomRowContent" class="mt-auto pt-2 flex items-center gap-2 text-xs">
-      <!-- Left: Updated date (with createdBy in tooltip) -->
-      <div class="text-text-subtle flex-shrink-0">
+      <!-- Left: Updated date (with createdBy in tooltip) - flex-1 to balance right side -->
+      <div class="text-text-subtle flex-1 min-w-0">
         <span v-if="formattedUpdatedAt" :title="item.createdBy ? `by ${item.createdBy}` : undefined">
           {{ formattedUpdatedAt }}
         </span>
       </div>
 
-      <!-- Center: YouTube info (flex-1 to take remaining space, centered) -->
-      <div v-if="item.youtubeLink || item.youtubeAuthor" class="flex-1 text-center text-text-subtle truncate">
+      <!-- Center: YouTube info (flex-shrink-0 to stay centered) -->
+      <div v-if="item.youtubeLink || item.youtubeAuthor" class="flex-shrink-0 text-text-subtle">
         <span v-if="item.youtubeAuthor" class="mr-1">{{ item.youtubeAuthor }}</span>
         <a
           v-if="item.youtubeLink"
@@ -80,29 +81,29 @@
         >YouTube<template v-if="item.youtubeTimestamp"> @ {{ item.youtubeTimestamp }}</template></a>
         <span v-else-if="item.youtubeTimestamp">@ {{ item.youtubeTimestamp }}</span>
       </div>
-      <!-- Spacer when no YouTube info -->
-      <div v-else class="flex-1"></div>
 
-      <!-- Right: Action links (for editable wishlists) -->
-      <div v-if="showActions" class="flex gap-3 flex-shrink-0" @click.stop>
-        <button
-          @click="emit('view')"
-          class="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300"
-        >
-          View
-        </button>
-        <button
-          @click="emit('edit')"
-          class="text-accent-primary hover:text-accent-primary/80"
-        >
-          Edit
-        </button>
-        <button
-          @click="emit('remove')"
-          class="text-red-600 dark:text-red-400 hover:text-red-500 dark:hover:text-red-300"
-        >
-          Remove
-        </button>
+      <!-- Right: Action links (for editable wishlists) - flex-1 to balance left side -->
+      <div class="flex-1 flex justify-end gap-3" @click.stop>
+        <template v-if="showActions">
+          <button
+            @click="emit('view')"
+            class="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300"
+          >
+            View
+          </button>
+          <button
+            @click="emit('edit')"
+            class="text-accent-primary hover:text-accent-primary/80"
+          >
+            Edit
+          </button>
+          <button
+            @click="emit('remove')"
+            class="text-red-600 dark:text-red-400 hover:text-red-500 dark:hover:text-red-300"
+          >
+            Remove
+          </button>
+        </template>
       </div>
     </div>
   </div>
