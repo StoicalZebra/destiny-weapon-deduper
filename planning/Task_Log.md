@@ -277,6 +277,32 @@ As for how the user changes from Wishlist Mode → Perk Analysis mode - I am ope
   - Hit "Cancel analysis mode" to return to main WIshlist mode
 - Wishlist is primary mode but Analysis is an overlay / modal pop-up?
 
+## 2026-01-16
+CRUD update in weapon detail view
+I'm trying to work through CRUD changes to Saved Wishlist rolls
+
+What I think I want...
+
+Saved Wishlist Rolls:
+Bottom row, right corner of Saved wishlist rolls card: add "View" and "Edit" buttons
+- View: populates Perk Matrix with wishlist roll perks to allow matches to be shown in Inventoru
+- Edit: populates Perk Matrix with wishlist roll perks and opens up the "Update Wishlist Roll" form
+- Delete: deletes saved roll (with warning beforehand)
+
+Perk Matrix
+- Clicking on random Perk Matrix options: just keeps us in "read" or "View" mode: "does this match inventory rolls" functionality" and also displays a "Create Wishlist Roll" button to left of "Clear Perks" button in case user wants to Create a roll
+
+Create: User clicks on "Create Wishlist Roll" button when perks are selected in Perk Matrix - "Save to Wishlist" form appears but rename button to "Create In Wishlist"
+
+Read: User clicks on "View" button" on Saved Wishlist card. Populates Perk Matrix with wishlist roll perks. No form opens.
+
+Update: triggered by user clicking "Edit" on Saved Wishlist card. Same workflow as now. Populates Perk Matrix with wishlist roll perks and opens up the "Update Wishlist Roll" form
+
+Delete: triggered by user clicking "Delete" on Saved Wishlist card. deletes saved roll (with warning beforehand)
+
+
+
+
 
 
 

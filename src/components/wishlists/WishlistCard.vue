@@ -96,7 +96,7 @@
       </div>
 
       <!-- Normal size wishlists: show full action buttons -->
-      <div v-else class="flex flex-wrap gap-2">
+      <div v-else class="flex flex-wrap gap-2 justify-end">
         <!-- View/Edit button for all editable wishlists -->
         <router-link
           :to="{ name: 'wishlist-detail', params: { id: wishlist.id } }"

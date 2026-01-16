@@ -88,47 +88,17 @@
           :item="profile.item"
           :weapon-hash="weapon.weaponHash"
           :wishlist-name="profile.wishlistName"
-          :clickable="true"
           :is-active="isProfileActive(profile)"
-          @click="loadProfile(profile)"
-        >
-          <!-- Delete action in header - only show for user wishlists -->
-          <template v-if="profile.isUserWishlist" #header-actions>
-            <div class="flex items-center gap-2 flex-shrink-0" @click.stop>
-              <template v-if="profile.showDeleteConfirm">
-                <span class="text-xs text-red-600 dark:text-red-400 font-bold">Sure?</span>
-                <button
-                  @click="deleteProfile(profile.id)"
-                  class="text-xs px-2 py-0.5 bg-red-900/50 hover:bg-red-900 text-red-200 border border-red-800 rounded"
-                >
-                  Yes
-                </button>
-                <button
-                  @click="profile.showDeleteConfirm = false"
-                  class="text-xs px-2 py-0.5 bg-surface-overlay hover:bg-surface-elevated text-text-muted rounded"
-                >
-                  Cancel
-                </button>
-              </template>
-              <template v-else>
-                <button
-                  @click="profile.showDeleteConfirm = true"
-                  class="p-1 text-text-subtle hover:text-red-600 dark:hover:text-red-400 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                  title="Delete"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
-              </template>
-            </div>
-          </template>
-        </WishlistRollCard>
+          :show-actions="profile.isUserWishlist"
+          @view="handleView(profile)"
+          @edit="handleEdit(profile)"
+          @remove="deletingProfile = profile"
+        />
       </div>
     </div>
 
-      <!-- Inline Save Form (when perks selected) - positioned between Saved Rolls and Perk Matrix -->
-      <div v-if="hasSelection" class="bg-surface-elevated/80 rounded-lg border border-border p-4 animate-in fade-in slide-in-from-top-2 duration-200">
+      <!-- Inline Save Form (only in edit mode) - positioned between Saved Rolls and Perk Matrix -->
+      <div v-if="hasSelection && editorMode === 'edit'" class="bg-surface-elevated/80 rounded-lg border border-border p-4 animate-in fade-in slide-in-from-top-2 duration-200">
         <div class="space-y-3">
           <!-- Tags Selection -->
           <div>
@@ -218,8 +188,24 @@
         <!-- Header with controls -->
         <div class="flex items-center justify-between">
           <h4 class="font-bold text-lg">Perk Matrix</h4>
-          <div class="flex items-center gap-4">
-            <!-- Clear Selection -->
+          <div class="flex items-center gap-3">
+            <!-- Edit This Roll button (when viewing a saved roll) -->
+            <button
+              v-if="editorMode === 'view' && viewingProfileId"
+              @click="switchToEditMode"
+              :class="['px-3 py-1.5 rounded-lg text-sm font-medium transition-colors', BUTTON_STYLES.primary]"
+            >
+              Edit This Roll
+            </button>
+            <!-- Create Wishlist Roll button (when perks selected but not in edit mode) -->
+            <button
+              v-if="hasSelection && editorMode !== 'edit'"
+              @click="startCreateRoll"
+              :class="['px-3 py-1.5 rounded-lg text-sm font-medium transition-colors', BUTTON_STYLES.success]"
+            >
+              Create Wishlist Roll
+            </button>
+            <!-- Clear Perks button -->
             <button
               v-if="hasSelection"
               @click="clearSelection"
@@ -655,6 +641,36 @@
         </div>
       </div>
     </Transition>
+
+    <!-- Delete Confirmation Modal (following WishlistsView pattern) -->
+    <div
+      v-if="deletingProfile"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+      @click.self="deletingProfile = null"
+    >
+      <div class="w-full max-w-md rounded-xl bg-surface-elevated border border-border p-6">
+        <h2 class="text-xl font-semibold mb-4 text-red-600 dark:text-red-400">
+          Delete Wishlist Roll
+        </h2>
+        <p class="text-sm text-text-muted mb-6">
+          Are you sure you want to delete this roll? This cannot be undone.
+        </p>
+        <div class="flex justify-end gap-3">
+          <button
+            @click="deletingProfile = null"
+            class="px-4 py-2 rounded-lg text-sm font-medium bg-surface-overlay text-text-muted hover:bg-surface hover:text-text transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            @click="confirmDeleteProfile"
+            :class="['px-4 py-2 rounded-lg text-sm font-medium transition-colors', BUTTON_STYLES.danger]"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -684,6 +700,7 @@ import {
   TAG_BUTTON_STYLES,
   TAG_TOOLTIPS,
 } from '@/styles/ui-states'
+// Note: BUTTON_STYLES already imported above, used for CRUD action buttons
 import { getWishlistBadgeTooltip, formatWishlistTooltipSuffix } from '@/utils/tooltip-helpers'
 import {
   isPerkInHashSet,
@@ -807,11 +824,17 @@ interface DisplayProfile {
   wishlistId: string
   wishlistName: string
   isUserWishlist: boolean
-  showDeleteConfirm?: boolean
 }
 const displayProfiles = ref<DisplayProfile[]>([])
 const currentProfileId = ref<string | null>(null)
 const sourceWishlistId = ref<string | null>(null)
+
+// CRUD mode tracking
+const editorMode = ref<'view' | 'edit' | null>(null)
+const viewingProfileId = ref<string | null>(null)
+
+// Delete modal state (following WishlistsView pattern)
+const deletingProfile = ref<DisplayProfile | null>(null)
 
 // ============ COMPUTED ============
 const matrixColumns = computed(() => props.weapon.perkMatrix)
@@ -1026,6 +1049,8 @@ const clearSelection = () => {
   selection.value = new Set()
   currentProfileId.value = null
   sourceWishlistId.value = null
+  viewingProfileId.value = null
+  editorMode.value = null
   profileNotesInput.value = ''
   saveMessage.value = null
   selectedTags.value = new Set()
@@ -1371,8 +1396,7 @@ const loadProfilesFromStore = async () => {
         item,
         wishlistId: wishlist.id,
         wishlistName: wishlist.name,
-        isUserWishlist: wishlist.sourceType === 'user',
-        showDeleteConfirm: false
+        isUserWishlist: wishlist.sourceType === 'user'
       })
     }
   }
@@ -1403,6 +1427,7 @@ const loadProfile = (profile: DisplayProfile) => {
     perkColumnsForStore.value
   )
   currentProfileId.value = profile.id
+  sourceWishlistId.value = profile.wishlistId
   profileNotesInput.value = profile.item.notes || ''
   selectedTags.value = new Set(profile.item.tags || [])
   youtubeLink.value = profile.item.youtubeLink || ''
@@ -1410,21 +1435,67 @@ const loadProfile = (profile: DisplayProfile) => {
   youtubeTimestamp.value = profile.item.youtubeTimestamp || ''
 }
 
+// ============ CRUD HANDLERS ============
+// View: load perks but don't open form
+const handleView = (profile: DisplayProfile) => {
+  editorMode.value = 'view'
+  viewingProfileId.value = profile.id
+  viewMode.value = 'wishlist'
+  selection.value = wishlistsStore.loadWishlistItemAsSelection(
+    profile.item,
+    perkColumnsForStore.value
+  )
+  // DON'T set currentProfileId (that's for edit mode)
+  // DON'T populate form fields
+}
+
+// Edit: load perks AND open form
+const handleEdit = (profile: DisplayProfile) => {
+  editorMode.value = 'edit'
+  viewingProfileId.value = profile.id
+  loadProfile(profile) // existing function sets currentProfileId and form fields
+}
+
+// Start creating a new roll from current selection
+const startCreateRoll = () => {
+  editorMode.value = 'edit'
+  currentProfileId.value = null
+  sourceWishlistId.value = null
+  viewingProfileId.value = null
+  // Keep current selection, clear form fields
+  profileNotesInput.value = ''
+  selectedTags.value = new Set()
+  youtubeLink.value = ''
+  youtubeAuthor.value = ''
+  youtubeTimestamp.value = ''
+}
+
+// Switch from view mode to edit mode
+const switchToEditMode = () => {
+  if (!viewingProfileId.value) return
+  const profile = displayProfiles.value.find(p => p.id === viewingProfileId.value)
+  if (profile) {
+    handleEdit(profile)
+  }
+}
+
+// Confirm delete from modal
+const confirmDeleteProfile = () => {
+  if (!deletingProfile.value) return
+  deleteProfile(deletingProfile.value.id)
+  deletingProfile.value = null
+}
+
 const deleteProfile = (id: string) => {
   wishlistsStore.deleteGodRoll(id)
   displayProfiles.value = displayProfiles.value.filter(p => p.id !== id)
-  if (currentProfileId.value === id) {
+  if (currentProfileId.value === id || viewingProfileId.value === id) {
     clearSelection()
   }
 }
 
 const isProfileActive = (profile: DisplayProfile): boolean => {
-  const profilePerkHashes = new Set(profile.item.perkHashes)
-  if (selection.value.size !== profilePerkHashes.size) return false
-  for (const hash of selection.value) {
-    if (!profilePerkHashes.has(hash)) return false
-  }
-  return true
+  return viewingProfileId.value === profile.id
 }
 
 // ============ SAVE LOGIC ============
@@ -1546,8 +1617,7 @@ const handleSave = async () => {
         item: savedItem,
         wishlistId: defaultWishlist.id,
         wishlistName: defaultWishlist.name,
-        isUserWishlist: true,
-        showDeleteConfirm: false
+        isUserWishlist: true
       })
       currentProfileId.value = savedItem.id
     }
@@ -1561,7 +1631,7 @@ const handleSave = async () => {
 }
 
 const buttonLabel = computed(() => {
-  if (!currentProfileId.value) return 'Save to Wishlist'
+  if (!currentProfileId.value) return 'Create In Wishlist'
   return 'Update Wishlist Roll'
 })
 
@@ -1625,8 +1695,7 @@ const editWishlistItem = (item: WishlistItem, wishlist: Wishlist) => {
       item,
       wishlistId: wishlist.id,
       wishlistName: wishlist.name,
-      isUserWishlist: wishlist.sourceType === 'user',
-      showDeleteConfirm: false
+      isUserWishlist: wishlist.sourceType === 'user'
     })
   }
 }
