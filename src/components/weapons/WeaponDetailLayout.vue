@@ -13,7 +13,22 @@
           <div>
             <h1 class="text-2xl font-bold">{{ weapon.weaponName }}</h1>
             <p v-if="weapon.seasonName" class="text-xs text-text-subtle">{{ weapon.seasonName }}</p>
-            <p class="text-xs text-text-subtle">Hash: {{ weapon.weaponHash }}</p>
+            <!-- Single variant: simple hash display -->
+            <p v-if="weapon.variantHashes.length === 1" class="text-xs text-text-subtle">
+              Hash ...{{ formatHashSuffix(weapon.variantHashes[0].hash) }}
+            </p>
+            <!-- Multiple variants: show labels for each -->
+            <div v-else class="flex flex-wrap gap-x-3 gap-y-0.5 text-xs">
+              <div
+                v-for="variant in weapon.variantHashes"
+                :key="variant.hash"
+                class="flex items-center gap-1"
+              >
+                <span v-if="variant.isHolofoil" class="text-purple-400">Holofoil</span>
+                <span v-else class="text-text-subtle">Normal</span>
+                <span class="text-text-subtle font-mono">...{{ formatHashSuffix(variant.hash) }}</span>
+              </div>
+            </div>
             <p class="text-xs text-text-subtle">
               {{ weapon.instances.length }} {{ weapon.instances.length === 1 ? 'Copy' : 'Copies' }}<span v-if="subtitle"> {{ subtitle }}</span>
             </p>
@@ -78,6 +93,7 @@ import ErrorMessage from '@/components/common/ErrorMessage.vue'
 import WeaponIcon from '@/components/common/WeaponIcon.vue'
 import LegacyMigrationBanner from '@/components/common/LegacyMigrationBanner.vue'
 import { useWishlistsStore } from '@/stores/wishlists'
+import { formatHashSuffix } from '@/utils/formatting'
 import type { DedupedWeapon } from '@/models/deduped-weapon'
 
 interface Props {
