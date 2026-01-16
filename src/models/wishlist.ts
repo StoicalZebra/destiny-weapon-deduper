@@ -33,6 +33,9 @@ export interface WishlistItem {
   youtubeLink?: string // Full YouTube URL
   youtubeAuthor?: string // Creator/channel name
   youtubeTimestamp?: string // Timestamp in video (e.g., "2:34")
+  // Metadata for attribution and tracking
+  createdBy?: string // Bungie display name (e.g., "Guardian#1234")
+  updatedAt?: string // ISO timestamp of last update
 }
 
 /**

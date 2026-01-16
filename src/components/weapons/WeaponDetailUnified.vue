@@ -159,6 +159,16 @@
             </div>
           </div>
 
+          <!-- Metadata display (when editing existing roll) -->
+          <div v-if="editingRollMetadata" class="flex items-center gap-4 text-xs text-text-subtle border-t border-border pt-3">
+            <span v-if="editingRollMetadata.createdBy">
+              Created by <span class="text-text-muted">{{ editingRollMetadata.createdBy }}</span>
+            </span>
+            <span v-if="editingRollMetadata.updatedAt">
+              Last updated <span class="text-text-muted">{{ editingRollMetadata.formattedDate }}</span>
+            </span>
+          </div>
+
           <div class="flex justify-between items-center gap-3">
             <p class="text-xs text-text-subtle">
               {{ saveTargetText }}
@@ -1650,6 +1660,31 @@ const buttonClasses = computed(() => {
     return BUTTON_STYLES.success
   }
   return BUTTON_STYLES.warning
+})
+
+// Metadata for the roll being edited (shown in form)
+const editingRollMetadata = computed(() => {
+  if (!viewingProfileId.value) return null
+  const profile = displayProfiles.value.find(p => p.id === viewingProfileId.value)
+  if (!profile?.item.updatedAt && !profile?.item.createdBy) return null
+
+  let formattedDate: string | undefined
+  if (profile.item.updatedAt) {
+    const date = new Date(profile.item.updatedAt)
+    formattedDate = date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit'
+    })
+  }
+
+  return {
+    createdBy: profile.item.createdBy,
+    updatedAt: profile.item.updatedAt,
+    formattedDate
+  }
 })
 
 // Clear message when user types

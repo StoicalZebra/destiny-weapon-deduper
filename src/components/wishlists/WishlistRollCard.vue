@@ -58,23 +58,30 @@
       </div>
     </div>
 
-    <!-- Bottom row: Creator/YouTube left, Actions right (anchored to bottom) -->
-    <div v-if="(item.youtubeLink || item.youtubeAuthor) || showActions" class="mt-auto pt-2 flex items-center justify-between gap-2 text-xs">
-      <!-- Left: Creator and YouTube Reference -->
-      <div v-if="item.youtubeLink || item.youtubeAuthor" class="text-text-subtle">
-        <span v-if="item.youtubeAuthor" class="mr-1">{{ item.youtubeAuthor }}</span>
-        <a
-          v-if="item.youtubeLink"
-          :href="timestampedYoutubeUrl || item.youtubeLink"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="text-blue-400 hover:text-blue-300 hover:underline"
-          @click.stop
-        >YouTube<template v-if="item.youtubeTimestamp"> @ {{ item.youtubeTimestamp }}</template></a>
-        <span v-else-if="item.youtubeTimestamp">@ {{ item.youtubeTimestamp }}</span>
+    <!-- Bottom row: Metadata/YouTube left, Actions right (anchored to bottom) -->
+    <div v-if="hasBottomRowContent" class="mt-auto pt-2 flex items-center justify-between gap-2 text-xs">
+      <!-- Left: Updated date, Creator, YouTube Reference -->
+      <div class="text-text-subtle flex items-center gap-2">
+        <!-- Updated date -->
+        <span v-if="formattedUpdatedAt" :title="item.createdBy ? `by ${item.createdBy}` : undefined">
+          {{ formattedUpdatedAt }}
+        </span>
+        <!-- Separator if both date and youtube info -->
+        <span v-if="formattedUpdatedAt && (item.youtubeLink || item.youtubeAuthor)" class="text-text-muted">·</span>
+        <!-- YouTube info -->
+        <span v-if="item.youtubeLink || item.youtubeAuthor">
+          <span v-if="item.youtubeAuthor" class="mr-1">{{ item.youtubeAuthor }}</span>
+          <a
+            v-if="item.youtubeLink"
+            :href="timestampedYoutubeUrl || item.youtubeLink"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-blue-400 hover:text-blue-300 hover:underline"
+            @click.stop
+          >YouTube<template v-if="item.youtubeTimestamp"> @ {{ item.youtubeTimestamp }}</template></a>
+          <span v-else-if="item.youtubeTimestamp">@ {{ item.youtubeTimestamp }}</span>
+        </span>
       </div>
-      <!-- Spacer if no youtube info but actions exist -->
-      <div v-else></div>
 
       <!-- Right: Action links (for editable wishlists) -->
       <div v-if="showActions" class="flex gap-3" @click.stop>
@@ -144,6 +151,27 @@ const timestampedYoutubeUrl = computed(() => {
   }
   return null
 })
+
+// Format updatedAt for display (e.g., "Jan 16" or "Jan 16, 2025" if not current year)
+const formattedUpdatedAt = computed(() => {
+  if (!props.item.updatedAt) return null
+  const date = new Date(props.item.updatedAt)
+  const now = new Date()
+  const sameYear = date.getFullYear() === now.getFullYear()
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    ...(sameYear ? {} : { year: 'numeric' })
+  })
+})
+
+// Check if bottom row should be shown
+const hasBottomRowContent = computed(() =>
+  props.item.youtubeLink ||
+  props.item.youtubeAuthor ||
+  props.item.updatedAt ||
+  props.showActions
+)
 
 // Handlers
 function handleClick() {

@@ -11,6 +11,7 @@ import { defineStore } from 'pinia'
 import { ref, computed, triggerRef } from 'vue'
 import type { Wishlist, WishlistItem, WishlistUpdateStatus, WishlistTag } from '@/models/wishlist'
 import { wishlistStorageService } from '@/services/wishlist-storage-service'
+import { useAuthStore } from '@/stores/auth'
 import {
   presetWishlistService,
   PRESET_WISHLISTS
@@ -641,6 +642,21 @@ export const useWishlistsStore = defineStore('wishlists', () => {
   }
 
   /**
+   * Get the current user's Bungie display name for attribution
+   */
+  function getBungieDisplayName(): string | undefined {
+    const authStore = useAuthStore()
+    const membership = authStore.selectedMembership
+    if (!membership) return undefined
+
+    // Format as "Name#Code" (e.g., "Guardian#1234")
+    if (membership.bungieGlobalDisplayName && membership.bungieGlobalDisplayNameCode) {
+      return `${membership.bungieGlobalDisplayName}#${membership.bungieGlobalDisplayNameCode}`
+    }
+    return membership.displayName || undefined
+  }
+
+  /**
    * Save a god roll selection to the default user wishlist
    * Returns the created/updated WishlistItem
    */
@@ -658,6 +674,7 @@ export const useWishlistsStore = defineStore('wishlists', () => {
     }
   ): WishlistItem {
     const wishlist = getOrCreateDefaultWishlist()
+    const createdBy = getBungieDisplayName()
 
     const item = selectionToWishlistItem(selection, weaponHash, perkColumns, {
       notes: options?.notes,
@@ -665,21 +682,24 @@ export const useWishlistsStore = defineStore('wishlists', () => {
       youtubeLink: options?.youtubeLink,
       youtubeAuthor: options?.youtubeAuthor,
       youtubeTimestamp: options?.youtubeTimestamp,
-      existingId: options?.existingItemId
+      existingId: options?.existingItemId,
+      createdBy
     })
 
     if (options?.existingItemId) {
-      // Update existing item
+      // Update existing item - preserve original createdBy, update timestamp
       updateItemInWishlist(wishlist.id, options.existingItemId, {
         perkHashes: item.perkHashes,
         notes: item.notes,
         tags: item.tags,
         youtubeLink: item.youtubeLink,
         youtubeAuthor: item.youtubeAuthor,
-        youtubeTimestamp: item.youtubeTimestamp
+        youtubeTimestamp: item.youtubeTimestamp,
+        updatedAt: item.updatedAt
+        // Note: createdBy is intentionally NOT updated on edits
       })
     } else {
-      // Add new item
+      // Add new item (includes createdBy and updatedAt)
       addItemToWishlist(wishlist.id, item)
     }
 

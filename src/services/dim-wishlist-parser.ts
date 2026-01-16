@@ -312,6 +312,7 @@ export function selectionToWishlistItem(
     youtubeLink?: string
     youtubeAuthor?: string
     youtubeTimestamp?: string
+    createdBy?: string
   }
 ): WishlistItem {
   // Build set of valid perk hashes for this weapon
@@ -333,7 +334,9 @@ export function selectionToWishlistItem(
     tags: options?.tags,
     youtubeLink: options?.youtubeLink,
     youtubeAuthor: options?.youtubeAuthor,
-    youtubeTimestamp: options?.youtubeTimestamp
+    youtubeTimestamp: options?.youtubeTimestamp,
+    createdBy: options?.createdBy,
+    updatedAt: new Date().toISOString()
   }
 }
 
