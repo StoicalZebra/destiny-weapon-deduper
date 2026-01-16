@@ -1,6 +1,6 @@
 <template>
   <div
-    class="group bg-surface-elevated border border-border hover:border-border-subtle rounded-lg p-3 transition-colors"
+    class="group flex flex-col bg-surface-elevated border border-border hover:border-border-subtle rounded-lg p-3 transition-colors"
     :class="[
       clickable ? 'cursor-pointer' : '',
       isActive ? 'ring-2 ring-blue-500/50 border-blue-500/50 bg-blue-900/10' : ''
@@ -58,8 +58,8 @@
       </div>
     </div>
 
-    <!-- Bottom row: Creator/YouTube left, Actions right -->
-    <div v-if="(item.youtubeLink || item.youtubeAuthor) || showActions" class="mt-2 flex items-center justify-between gap-2 text-xs">
+    <!-- Bottom row: Creator/YouTube left, Actions right (anchored to bottom) -->
+    <div v-if="(item.youtubeLink || item.youtubeAuthor) || showActions" class="mt-auto pt-2 flex items-center justify-between gap-2 text-xs">
       <!-- Left: Creator and YouTube Reference -->
       <div v-if="item.youtubeLink || item.youtubeAuthor" class="text-text-subtle">
         <span v-if="item.youtubeAuthor" class="mr-1">{{ item.youtubeAuthor }}</span>
