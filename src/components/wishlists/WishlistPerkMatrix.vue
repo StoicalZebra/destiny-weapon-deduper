@@ -200,10 +200,10 @@ const organizedPerks = computed((): PerkColumnDisplay[] => {
 })
 
 // Helper functions for masterwork display
-function getPerkIcon(perkHash: number): string | null {
+function getPerkIcon(perkHash: number): string | undefined {
   const perkDef = manifestService.getInventoryItem(perkHash)
   const iconPath = perkDef?.displayProperties?.icon
-  return iconPath ? `https://www.bungie.net${iconPath}` : null
+  return iconPath ? `https://www.bungie.net${iconPath}` : undefined
 }
 
 function getPerkName(perkHash: number): string {
