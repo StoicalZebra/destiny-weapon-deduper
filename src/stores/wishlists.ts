@@ -555,12 +555,12 @@ export const useWishlistsStore = defineStore('wishlists', () => {
   /**
    * Get all wishlist items for a weapon and its variants (e.g., holofoil + normal)
    * Checks all variant hashes to find matching wishlist items
+   * Dedupes by variantGroupId (for user-created multi-hash entries) or item.id
    */
   function getItemsForWeaponVariants(
     variantHashes: number[]
   ): Array<{ wishlist: Wishlist; items: WishlistItem[] }> {
     const results: Array<{ wishlist: Wishlist; items: WishlistItem[] }> = []
-    const seenItems = new Set<string>() // Dedupe by item.id across all hashes
 
     for (const wishlist of allWishlists.value) {
       if (!isWishlistEnabled(wishlist.id)) continue
@@ -568,15 +568,24 @@ export const useWishlistsStore = defineStore('wishlists', () => {
       const index = weaponIndexes.value.get(wishlist.id)
       if (!index) continue
 
+      // Track seen items - dedupe by variantGroupId if present, otherwise by id
+      const seenGroups = new Set<string>()
+      const seenIds = new Set<string>()
+
       // Collect items matching ANY variant hash
       const matchingItems: WishlistItem[] = []
       for (const hash of variantHashes) {
         const items = index.get(hash) || []
         for (const item of items) {
-          if (!seenItems.has(item.id)) {
-            seenItems.add(item.id)
-            matchingItems.push(item)
+          // Dedupe: if item has variantGroupId, only include one per group
+          if (item.variantGroupId) {
+            if (seenGroups.has(item.variantGroupId)) continue
+            seenGroups.add(item.variantGroupId)
+          } else {
+            if (seenIds.has(item.id)) continue
+            seenIds.add(item.id)
           }
+          matchingItems.push(item)
         }
       }
 
@@ -694,7 +703,8 @@ export const useWishlistsStore = defineStore('wishlists', () => {
 
   /**
    * Save a god roll selection to the default user wishlist
-   * Returns the created/updated WishlistItem
+   * Creates entries for ALL variant hashes so the roll works for any weapon variant
+   * Returns the primary WishlistItem (first variant hash)
    */
   function saveGodRollSelection(
     selection: GodRollSelection,
@@ -707,39 +717,77 @@ export const useWishlistsStore = defineStore('wishlists', () => {
       youtubeAuthor?: string
       youtubeTimestamp?: string
       existingItemId?: string // If updating existing item
+      variantHashes?: number[] // All weapon variant hashes (for multi-hash weapons)
     }
   ): WishlistItem {
     const wishlist = getOrCreateDefaultWishlist()
     const createdBy = getBungieDisplayName()
 
-    const item = selectionToWishlistItem(selection, weaponHash, perkColumns, {
-      notes: options?.notes,
-      tags: options?.tags,
-      youtubeLink: options?.youtubeLink,
-      youtubeAuthor: options?.youtubeAuthor,
-      youtubeTimestamp: options?.youtubeTimestamp,
-      existingId: options?.existingItemId,
-      createdBy
-    })
+    // Determine all hashes to save to (use variants if provided, otherwise just primary)
+    const hashesToSave = options?.variantHashes?.length
+      ? options.variantHashes
+      : [weaponHash]
+
+    // Generate a group ID to link all variant entries
+    const variantGroupId = hashesToSave.length > 1 ? crypto.randomUUID() : undefined
 
     if (options?.existingItemId) {
-      // Update existing item - preserve original createdBy, update timestamp
-      updateItemInWishlist(wishlist.id, options.existingItemId, {
-        perkHashes: item.perkHashes,
-        notes: item.notes,
-        tags: item.tags,
-        youtubeLink: item.youtubeLink,
-        youtubeAuthor: item.youtubeAuthor,
-        youtubeTimestamp: item.youtubeTimestamp,
-        updatedAt: item.updatedAt
-        // Note: createdBy is intentionally NOT updated on edits
-      })
-    } else {
-      // Add new item (includes createdBy and updatedAt)
-      addItemToWishlist(wishlist.id, item)
-    }
+      // Update existing item and all its variant group members
+      const existingItem = wishlist.items.find(i => i.id === options.existingItemId)
+      const groupId = existingItem?.variantGroupId
 
-    return item
+      // Find all items in the same variant group
+      const itemsToUpdate = groupId
+        ? wishlist.items.filter(i => i.variantGroupId === groupId)
+        : wishlist.items.filter(i => i.id === options.existingItemId)
+
+      const updates = {
+        perkHashes: selectionToWishlistItem(selection, weaponHash, perkColumns, {}).perkHashes,
+        notes: options?.notes,
+        tags: options?.tags,
+        youtubeLink: options?.youtubeLink,
+        youtubeAuthor: options?.youtubeAuthor,
+        youtubeTimestamp: options?.youtubeTimestamp,
+        updatedAt: new Date().toISOString()
+        // Note: createdBy is intentionally NOT updated on edits
+      }
+
+      // Update all variant entries
+      for (const item of itemsToUpdate) {
+        updateItemInWishlist(wishlist.id, item.id, updates)
+      }
+
+      // Return the primary item
+      return { ...existingItem!, ...updates }
+    } else {
+      // Create new entries - one per variant hash
+      let primaryItem: WishlistItem | null = null
+
+      for (const hash of hashesToSave) {
+        const item = selectionToWishlistItem(selection, hash, perkColumns, {
+          notes: options?.notes,
+          tags: options?.tags,
+          youtubeLink: options?.youtubeLink,
+          youtubeAuthor: options?.youtubeAuthor,
+          youtubeTimestamp: options?.youtubeTimestamp,
+          createdBy
+        })
+
+        // Add variantGroupId to link entries
+        if (variantGroupId) {
+          item.variantGroupId = variantGroupId
+        }
+
+        addItemToWishlist(wishlist.id, item)
+
+        // First entry is the "primary" one we return
+        if (!primaryItem) {
+          primaryItem = item
+        }
+      }
+
+      return primaryItem!
+    }
   }
 
   /**
@@ -765,16 +813,27 @@ export const useWishlistsStore = defineStore('wishlists', () => {
 
   /**
    * Delete a god roll from the user's custom wishlist
+   * Also deletes all variant group members (entries for other weapon hashes)
    */
   function deleteGodRoll(itemId: string): boolean {
     // Use the first (and only) user wishlist
     const wishlist = userWishlists.value[0]
     if (!wishlist) return false
 
-    const itemExists = wishlist.items.some((i) => i.id === itemId)
-    if (!itemExists) return false
+    const item = wishlist.items.find((i) => i.id === itemId)
+    if (!item) return false
 
-    removeItemFromWishlist(wishlist.id, itemId)
+    // If item has a variantGroupId, delete all items in the group
+    if (item.variantGroupId) {
+      const groupItems = wishlist.items.filter(i => i.variantGroupId === item.variantGroupId)
+      for (const groupItem of groupItems) {
+        removeItemFromWishlist(wishlist.id, groupItem.id)
+      }
+    } else {
+      // Single item, no variants
+      removeItemFromWishlist(wishlist.id, itemId)
+    }
+
     return true
   }
 

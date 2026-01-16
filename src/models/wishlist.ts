@@ -36,6 +36,10 @@ export interface WishlistItem {
   // Metadata for attribution and tracking
   createdBy?: string // Bungie display name (e.g., "Guardian#1234")
   updatedAt?: string // ISO timestamp of last update
+  // Multi-hash variant support: links entries for same roll across weapon variants
+  // When a weapon has multiple hashes (e.g., holofoil + normal), we create one entry
+  // per hash, all sharing the same variantGroupId for coordinated update/delete
+  variantGroupId?: string // UUID linking related variant entries
 }
 
 /**

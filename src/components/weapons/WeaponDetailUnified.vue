@@ -1640,7 +1640,8 @@ const handleSave = async () => {
         youtubeLink: ytLink,
         youtubeAuthor: ytAuthor,
         youtubeTimestamp: ytTimestamp,
-        existingItemId: currentProfileId.value || undefined
+        existingItemId: currentProfileId.value || undefined,
+        variantHashes: allWeaponVariantHashes.value // Save to ALL weapon variant hashes
       }
     )
 
