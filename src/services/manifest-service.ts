@@ -104,6 +104,13 @@ class ManifestService {
   private cache: Map<ManifestTableName, Record<string, any>> = new Map()
 
   /**
+   * Pre-computed map of weapon hash → all variant hashes for that weapon
+   * Built once when DestinyInventoryItemDefinition is loaded
+   * Key: any weapon hash, Value: array of all hashes for same weapon (same name + season)
+   */
+  private variantGroups: Map<number, number[]> = new Map()
+
+  /**
    * Load a manifest table into memory cache
    */
   async loadTable(tableName: ManifestTableName): Promise<void> {
@@ -118,6 +125,61 @@ class ManifestService {
     }
 
     this.cache.set(tableName, data)
+
+    // Build variant groups when inventory items are loaded
+    if (tableName === 'DestinyInventoryItemDefinition') {
+      this.buildVariantGroups(data as Record<string, DestinyInventoryItemDefinition>)
+    }
+  }
+
+  /**
+   * Build the pre-computed variant groups map
+   * Groups weapons by name + season/watermark to find all hash variants
+   */
+  private buildVariantGroups(table: Record<string, DestinyInventoryItemDefinition>): void {
+    // First pass: group weapons by name + season/watermark key
+    const groupsByKey = new Map<string, number[]>()
+
+    for (const key in table) {
+      const def = table[key]
+      if (!def?.displayProperties?.name) continue
+      if (def.itemType !== 3) continue // Only weapons
+
+      const name = def.displayProperties.name
+      const watermark = def.iconWatermark || def.quality?.displayVersionWatermarkIcons?.[0]
+      const seasonHash = def.seasonHash
+
+      // Create a grouping key from name + season/watermark
+      // Prefer seasonHash if available, fall back to watermark
+      const groupKey = seasonHash
+        ? `${name}|season:${seasonHash}`
+        : watermark
+          ? `${name}|watermark:${watermark}`
+          : `${name}|none`
+
+      const hash = typeof def.hash === 'number' ? def.hash : parseInt(key)
+
+      if (!groupsByKey.has(groupKey)) {
+        groupsByKey.set(groupKey, [])
+      }
+      groupsByKey.get(groupKey)!.push(hash)
+    }
+
+    // Second pass: populate variantGroups map (hash → all hashes in group)
+    this.variantGroups.clear()
+    let multiVariantCount = 0
+
+    for (const hashes of groupsByKey.values()) {
+      if (hashes.length > 1) {
+        multiVariantCount++
+      }
+      // Map each hash to the full group
+      for (const hash of hashes) {
+        this.variantGroups.set(hash, hashes)
+      }
+    }
+
+    console.log(`[ManifestService] Built variant groups: ${multiVariantCount} weapons with multiple variants`)
   }
 
   /**
@@ -205,55 +267,19 @@ class ManifestService {
 
   /**
    * Find all variant hashes for a weapon (same name + season, different hashes)
-   * Used to ensure wishlist rolls are saved to ALL possible variants
+   * Uses pre-computed variant groups built during manifest load for O(1) lookup
    * Returns array of hashes including the input hash
    */
   getWeaponVariantHashes(hash: number): number[] {
-    const table = this.cache.get('DestinyInventoryItemDefinition') as Record<string, DestinyInventoryItemDefinition> | undefined
-    if (!table) return [hash]
-
-    const sourceDef = this.getInventoryItem(hash)
-    if (!sourceDef) return [hash]
-
-    const sourceName = sourceDef.displayProperties?.name
-    const sourceWatermark = sourceDef.iconWatermark || sourceDef.quality?.displayVersionWatermarkIcons?.[0]
-    const sourceSeason = sourceDef.seasonHash
-
-    if (!sourceName) return [hash]
-
-    // Find all items with matching name and season/watermark
-    const variants: number[] = []
-
-    for (const key in table) {
-      const def = table[key]
-      if (!def?.displayProperties?.name) continue
-
-      // Must have same name
-      if (def.displayProperties.name !== sourceName) continue
-
-      // Must be a weapon (itemType 3 = weapon)
-      if (def.itemType !== 3) continue
-
-      // Must have same season or watermark (to avoid matching different season versions)
-      const defWatermark = def.iconWatermark || def.quality?.displayVersionWatermarkIcons?.[0]
-      const sameSeason = sourceSeason && def.seasonHash === sourceSeason
-      const sameWatermark = sourceWatermark && defWatermark === sourceWatermark
-
-      if (!sameSeason && !sameWatermark) continue
-
-      // Add this variant
-      const variantHash = typeof def.hash === 'number' ? def.hash : parseInt(key)
-      if (!variants.includes(variantHash)) {
-        variants.push(variantHash)
-      }
+    // Use pre-computed map for O(1) lookup
+    const variants = this.variantGroups.get(hash)
+    if (variants) {
+      return variants
     }
 
-    // Ensure source hash is included
-    if (!variants.includes(hash)) {
-      variants.push(hash)
-    }
-
-    return variants
+    // Fallback: return just the input hash if not in map
+    // (happens if manifest not loaded or hash not a weapon)
+    return [hash]
   }
 
   /**
@@ -261,6 +287,7 @@ class ManifestService {
    */
   clearCache(): void {
     this.cache.clear()
+    this.variantGroups.clear()
   }
 
   /**

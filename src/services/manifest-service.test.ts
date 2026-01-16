@@ -180,4 +180,113 @@ describe('ManifestService', () => {
     })
   })
 
+  describe('getWeaponVariantHashes', () => {
+    it('returns single hash when no variants exist', async () => {
+      const mockData = {
+        '12345': {
+          hash: 12345,
+          displayProperties: { name: 'Austringer', description: '', icon: '', hasIcon: true },
+          itemType: 3,
+          seasonHash: 100
+        }
+      }
+      vi.mocked(indexedDBStorage.getManifestTable).mockResolvedValue(mockData)
+      await manifestService.loadTable('DestinyInventoryItemDefinition')
+
+      const result = manifestService.getWeaponVariantHashes(12345)
+      expect(result).toEqual([12345])
+    })
+
+    it('returns all variant hashes for weapons with same name and season', async () => {
+      const mockData = {
+        '11111': {
+          hash: 11111,
+          displayProperties: { name: 'All Or Nothing', description: '', icon: '', hasIcon: true },
+          itemType: 3,
+          seasonHash: 200
+        },
+        '22222': {
+          hash: 22222,
+          displayProperties: { name: 'All Or Nothing', description: '', icon: '', hasIcon: true },
+          itemType: 3,
+          seasonHash: 200,
+          isHolofoil: true
+        },
+        '33333': {
+          hash: 33333,
+          displayProperties: { name: 'Different Weapon', description: '', icon: '', hasIcon: true },
+          itemType: 3,
+          seasonHash: 200
+        }
+      }
+      vi.mocked(indexedDBStorage.getManifestTable).mockResolvedValue(mockData)
+      await manifestService.loadTable('DestinyInventoryItemDefinition')
+
+      // Looking up either hash should return both variants
+      const result1 = manifestService.getWeaponVariantHashes(11111)
+      expect(result1).toContain(11111)
+      expect(result1).toContain(22222)
+      expect(result1).not.toContain(33333)
+      expect(result1).toHaveLength(2)
+
+      const result2 = manifestService.getWeaponVariantHashes(22222)
+      expect(result2).toContain(11111)
+      expect(result2).toContain(22222)
+      expect(result2).toHaveLength(2)
+    })
+
+    it('does not group weapons with same name but different seasons', async () => {
+      const mockData = {
+        '11111': {
+          hash: 11111,
+          displayProperties: { name: 'Austringer', description: '', icon: '', hasIcon: true },
+          itemType: 3,
+          seasonHash: 100
+        },
+        '22222': {
+          hash: 22222,
+          displayProperties: { name: 'Austringer', description: '', icon: '', hasIcon: true },
+          itemType: 3,
+          seasonHash: 200 // Different season
+        }
+      }
+      vi.mocked(indexedDBStorage.getManifestTable).mockResolvedValue(mockData)
+      await manifestService.loadTable('DestinyInventoryItemDefinition')
+
+      const result = manifestService.getWeaponVariantHashes(11111)
+      expect(result).toEqual([11111])
+    })
+
+    it('returns input hash when manifest not loaded', () => {
+      // Don't load manifest
+      const result = manifestService.getWeaponVariantHashes(99999)
+      expect(result).toEqual([99999])
+    })
+
+    it('groups by watermark when seasonHash not available', async () => {
+      const mockData = {
+        '11111': {
+          hash: 11111,
+          displayProperties: { name: 'Legacy Weapon', description: '', icon: '', hasIcon: true },
+          itemType: 3,
+          iconWatermark: '/common/destiny2_content/icons/watermark_abc.png'
+        },
+        '22222': {
+          hash: 22222,
+          displayProperties: { name: 'Legacy Weapon', description: '', icon: '', hasIcon: true },
+          itemType: 3,
+          iconWatermark: '/common/destiny2_content/icons/watermark_abc.png',
+          isHolofoil: true
+        }
+      }
+      vi.mocked(indexedDBStorage.getManifestTable).mockResolvedValue(mockData)
+      await manifestService.loadTable('DestinyInventoryItemDefinition')
+
+      const result = manifestService.getWeaponVariantHashes(11111)
+      expect(result).toContain(11111)
+      expect(result).toContain(22222)
+      expect(result).toHaveLength(2)
+    })
+  })
+
 })
