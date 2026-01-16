@@ -122,8 +122,54 @@
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
           <span v-if="store.loading">Loading premade wishlists...</span>
-          <span v-else>Load Premade Wishlists (Voltron, Pandapaxxy, etc.)</span>
+          <span v-else>Load Premade Wishlists</span>
         </button>
+      </div>
+
+      <!-- Large Wishlists Section (not auto-loaded to save storage) -->
+      <div v-if="unloadedLargePresets.length > 0" class="mb-8">
+        <div class="flex items-center gap-2 mb-3">
+          <h2 class="text-lg font-semibold text-text">Large Wishlists</h2>
+          <span class="text-xs text-text-subtle bg-surface-overlay px-2 py-0.5 rounded">On-demand</span>
+        </div>
+        <p class="text-sm text-text-muted mb-4">
+          These wishlists have many rolls and are loaded on-demand to save storage space.
+        </p>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div
+            v-for="config in unloadedLargePresets"
+            :key="config.id"
+            class="rounded-xl border border-border bg-surface-elevated p-5"
+          >
+            <div class="flex items-start justify-between gap-4 mb-3">
+              <div>
+                <h3 class="text-lg font-semibold text-text">{{ config.name }}</h3>
+                <p v-if="config.author" class="text-sm text-text-muted">by {{ config.author }}</p>
+              </div>
+              <span class="inline-flex items-center rounded-full bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-700/50 px-2 py-0.5 text-xs font-medium">
+                Large
+              </span>
+            </div>
+
+            <p class="text-sm text-text-muted mb-4 line-clamp-2">{{ config.description }}</p>
+
+            <button
+              @click="handleLoadLargePreset(config.id)"
+              :disabled="loadingPresetId === config.id"
+              class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-overlay text-text hover:bg-surface-elevated disabled:opacity-50 transition-colors"
+            >
+              <svg v-if="loadingPresetId === config.id" class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <svg v-else class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              {{ loadingPresetId === config.id ? 'Loading...' : 'Load Wishlist' }}
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- Import Section -->
@@ -211,7 +257,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useWishlistsStore } from '@/stores/wishlists'
 import { WishlistCard, WishlistImportExport } from '@/components/wishlists'
 import type { Wishlist } from '@/models/wishlist'
@@ -223,6 +269,10 @@ const showCreateModal = ref(false)
 const newWishlistName = ref('')
 const newWishlistDescription = ref('')
 const deletingWishlist = ref<Wishlist | null>(null)
+const loadingPresetId = ref<string | null>(null)
+
+// Computed
+const unloadedLargePresets = computed(() => store.getUnloadedLargePresetConfigs())
 
 // Initialize on mount
 onMounted(async () => {
@@ -234,6 +284,15 @@ onMounted(async () => {
 // Actions
 async function handleLoadPresets() {
   await store.loadPresets()
+}
+
+async function handleLoadLargePreset(presetId: string) {
+  loadingPresetId.value = presetId
+  try {
+    await store.loadLargePreset(presetId)
+  } finally {
+    loadingPresetId.value = null
+  }
 }
 
 async function handleCheckUpdates() {

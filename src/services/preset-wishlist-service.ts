@@ -1,8 +1,9 @@
 /**
- * Preset Wishlist Service
+ * Premade Wishlist Service
  *
- * Manages fetching and caching of preset wishlists from GitHub
- * Includes update detection via content hashing
+ * Manages fetching and caching of premade wishlists from GitHub.
+ * Note: Called "preset" internally for storage compatibility, shown as "Premade" in UI.
+ * Includes update detection via content hashing.
  */
 
 import type { Wishlist, PresetWishlistConfig, WishlistUpdateStatus } from '@/models/wishlist'
@@ -10,7 +11,7 @@ import { parseDimWishlist, computeContentHash, getWishlistStats } from './dim-wi
 import { wishlistStorageService } from './wishlist-storage-service'
 
 /**
- * Configured preset wishlists
+ * Configured premade wishlists
  * These are popular community wishlists that users can subscribe to
  */
 export const PRESET_WISHLISTS: PresetWishlistConfig[] = [
@@ -21,8 +22,7 @@ export const PRESET_WISHLISTS: PresetWishlistConfig[] = [
       'Personal god rolls curated from YouTube reviews. Compiled from Legoleflash, IFrostBolt, Maven, and other community creators.',
     githubUrl:
       'https://raw.githubusercontent.com/StoicalZebra/destiny-weapon-deduper/main/data/wishlists/StoicalZebra-wishlist.txt',
-    author: 'StoicalZebra',
-    isAdminCurated: true
+    author: 'StoicalZebra'
   },
   {
     id: 'voltron',
@@ -31,7 +31,8 @@ export const PRESET_WISHLISTS: PresetWishlistConfig[] = [
       'A master list curated by expert item reviewers (u/pandapaxxy, u/mercules904, and u/HavocsCall). This is the default wishlist used by DIM.',
     githubUrl:
       'https://raw.githubusercontent.com/48klocs/dim-wish-list-sources/master/voltron.txt',
-    author: '48klocs'
+    author: '48klocs',
+    large: true // ~1200+ rolls, load on demand
   },
   {
     id: 'choosy-voltron',
@@ -40,7 +41,8 @@ export const PRESET_WISHLISTS: PresetWishlistConfig[] = [
       'A more opinionated version of Voltron that will thumbs-down some of your items. Use this if you want stricter roll recommendations.',
     githubUrl:
       'https://raw.githubusercontent.com/48klocs/dim-wish-list-sources/master/choosy_voltron.txt',
-    author: '48klocs'
+    author: '48klocs',
+    large: true // Similar size to Voltron
   },
   {
     id: 'jat-mnk',
@@ -48,7 +50,8 @@ export const PRESET_WISHLISTS: PresetWishlistConfig[] = [
     description: 'Mouse & Keyboard focused wishlist by Just Another Team',
     githubUrl:
       'https://raw.githubusercontent.com/dsf000z/JAT-wishlists-bundler/refs/heads/main/bundles/DIM/just-another-team-mnk.txt',
-    author: 'Just Another Team'
+    author: 'Just Another Team',
+    large: true // Large community wishlist
   }
 ]
 
@@ -68,6 +71,20 @@ class PresetWishlistService {
    */
   getPresetConfigs(): PresetWishlistConfig[] {
     return PRESET_WISHLISTS
+  }
+
+  /**
+   * Get preset configs for small wishlists (auto-load)
+   */
+  getSmallPresetConfigs(): PresetWishlistConfig[] {
+    return PRESET_WISHLISTS.filter((p) => !p.large)
+  }
+
+  /**
+   * Get preset configs for large wishlists (manual load)
+   */
+  getLargePresetConfigs(): PresetWishlistConfig[] {
+    return PRESET_WISHLISTS.filter((p) => p.large)
   }
 
   /**

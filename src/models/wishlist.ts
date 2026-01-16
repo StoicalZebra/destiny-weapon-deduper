@@ -4,6 +4,8 @@
 
 /**
  * Source type for wishlists
+ * - 'preset': Premade wishlists from GitHub (shown as "Premade" in UI)
+ * - 'user': Custom wishlists created by the user (shown as "Custom" in UI)
  */
 export type WishlistSourceType = 'preset' | 'user'
 
@@ -32,8 +34,8 @@ export interface Wishlist {
   id: string // UUID
   name: string // Display name (title: in DIM format)
   description?: string // Optional description (description: in DIM format)
-  sourceType: WishlistSourceType // 'preset' or 'user'
-  sourceUrl?: string // GitHub URL for presets
+  sourceType: WishlistSourceType // 'preset' (premade) or 'user' (custom)
+  sourceUrl?: string // GitHub URL for premade wishlists
   author?: string // Author name for attribution
   version?: string // Content hash for update detection
   lastFetched?: string // ISO timestamp of last fetch
@@ -58,7 +60,8 @@ export function getWishlistRollCount(wishlist: Wishlist): number {
 }
 
 /**
- * Preset wishlist configuration (metadata before fetching full content)
+ * Premade wishlist configuration (metadata before fetching full content)
+ * Note: Called "Preset" internally for storage compatibility, shown as "Premade" in UI
  */
 export interface PresetWishlistConfig {
   id: string
@@ -66,11 +69,11 @@ export interface PresetWishlistConfig {
   description: string
   githubUrl: string // Raw GitHub URL to .txt file
   author?: string
-  isAdminCurated?: boolean // Admin-maintained list
+  large?: boolean // Large wishlists (>500 rolls) are not auto-loaded
 }
 
 /**
- * Update status for preset wishlists
+ * Update status for premade wishlists
  */
 export interface WishlistUpdateStatus {
   wishlistId: string

@@ -2,8 +2,8 @@
  * Wishlists Pinia Store
  *
  * Manages state for DIM-compatible wishlists including:
- * - Preset wishlists (from GitHub)
- * - User-created wishlists
+ * - Premade wishlists (from GitHub, stored internally as 'preset')
+ * - Custom wishlists (user-created, stored as 'user')
  * - Update status tracking
  */
 
@@ -45,8 +45,8 @@ export const useWishlistsStore = defineStore('wishlists', () => {
   // Structure: Map<wishlistId, Map<weaponHash, WishlistItem[]>>
   const weaponIndexes = ref<Map<string, Map<number, WishlistItem[]>>>(new Map())
 
-  // Track local edits to preset wishlists (for admin mode)
-  // When a preset is edited locally, we need to know so we can show "unsaved changes"
+  // Track local edits to premade wishlists (legacy - no longer used with fork model)
+  // Kept for backward compatibility
   // Using a plain object instead of Map for better Vue reactivity (Map.get() doesn't trigger updates)
   const hasUnsavedPresetChanges = ref<Record<string, boolean>>({})
 
@@ -79,7 +79,7 @@ export const useWishlistsStore = defineStore('wishlists', () => {
       // Load user wishlists from localStorage and IndexedDB
       await loadUserWishlists()
 
-      // Load preset wishlists from IndexedDB cache
+      // Load premade wishlists from IndexedDB cache
       const cachedPresets = await wishlistStorageService.getAllPresets()
       presetWishlists.value = cachedPresets
 
@@ -152,20 +152,77 @@ export const useWishlistsStore = defineStore('wishlists', () => {
 
   /**
    * Load preset wishlists, fetching from GitHub if not cached
+   * By default only loads small presets; large ones require explicit loadLargePreset() call
    */
-  async function loadPresets(): Promise<void> {
+  async function loadPresets(includeLarge = false): Promise<void> {
     loading.value = true
     error.value = null
 
     try {
-      const presets = await presetWishlistService.getAllPresets()
+      const configs = includeLarge
+        ? presetWishlistService.getPresetConfigs()
+        : presetWishlistService.getSmallPresetConfigs()
+
+      const presets: Wishlist[] = []
+      for (const config of configs) {
+        try {
+          const wishlist = await presetWishlistService.getPreset(config.id)
+          if (wishlist) {
+            presets.push(wishlist)
+          }
+        } catch (err) {
+          console.warn(`Skipping preset ${config.id}:`, err)
+        }
+      }
       presetWishlists.value = presets
+
+      // Rebuild indexes after loading
+      buildAllWeaponIndexes()
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to load presets'
       console.error('Failed to load presets:', err)
     } finally {
       loading.value = false
     }
+  }
+
+  /**
+   * Load a specific large preset on demand
+   */
+  async function loadLargePreset(presetId: string): Promise<Wishlist | null> {
+    const config = presetWishlistService.getLargePresetConfigs().find((c) => c.id === presetId)
+    if (!config) return null
+
+    // Check if already loaded
+    if (presetWishlists.value.some((w) => w.id === presetId)) {
+      return presetWishlists.value.find((w) => w.id === presetId) || null
+    }
+
+    loading.value = true
+    error.value = null
+
+    try {
+      const wishlist = await presetWishlistService.getPreset(presetId, true)
+      if (wishlist) {
+        presetWishlists.value.push(wishlist)
+        weaponIndexes.value.set(wishlist.id, buildWeaponIndex(wishlist))
+      }
+      return wishlist
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : `Failed to load ${config.name}`
+      console.error(`Failed to load large preset ${presetId}:`, err)
+      return null
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Get configs for large presets that haven't been loaded yet
+   */
+  function getUnloadedLargePresetConfigs() {
+    const loadedIds = new Set(presetWishlists.value.map((w) => w.id))
+    return presetWishlistService.getLargePresetConfigs().filter((c) => !loadedIds.has(c.id))
   }
 
   /**
@@ -253,14 +310,18 @@ export const useWishlistsStore = defineStore('wishlists', () => {
   /**
    * Fork a preset to create a user wishlist copy
    */
-  async function forkPreset(presetId: string, newName: string): Promise<Wishlist | null> {
+  async function forkPreset(
+    presetId: string,
+    newName: string,
+    newDescription?: string
+  ): Promise<Wishlist | null> {
     const preset = presetWishlists.value.find((w) => w.id === presetId)
     if (!preset) return null
 
     const forked: Wishlist = {
       id: crypto.randomUUID(),
       name: newName,
-      description: `Forked from ${preset.name}`,
+      description: newDescription || `Based on ${preset.name}`,
       sourceType: 'user',
       lastUpdated: new Date().toISOString(),
       items: preset.items.map((item) => ({
@@ -273,6 +334,9 @@ export const useWishlistsStore = defineStore('wishlists', () => {
     await wishlistStorageService.saveUserWishlistAsync(forked)
     userWishlists.value.push(forked)
 
+    // Build weapon index for the new wishlist
+    weaponIndexes.value.set(forked.id, buildWeaponIndex(forked))
+
     return forked
   }
 
@@ -284,7 +348,7 @@ export const useWishlistsStore = defineStore('wishlists', () => {
     if (index < 0) return
 
     const wishlist = userWishlists.value[index]
-    if (wishlist.sourceType !== 'user') return // Can't update presets
+    if (wishlist.sourceType !== 'user') return // Can't update premade wishlists directly
 
     const updated = {
       ...wishlist,
@@ -304,7 +368,7 @@ export const useWishlistsStore = defineStore('wishlists', () => {
     if (index < 0) return
 
     const wishlist = userWishlists.value[index]
-    if (wishlist.sourceType !== 'user') return // Can't delete presets
+    if (wishlist.sourceType !== 'user') return // Can't delete premade wishlists
 
     wishlistStorageService.deleteUserWishlist(id)
     userWishlists.value.splice(index, 1)
@@ -778,6 +842,8 @@ export const useWishlistsStore = defineStore('wishlists', () => {
     initialize,
     loadUserWishlists,
     loadPresets,
+    loadLargePreset,
+    getUnloadedLargePresetConfigs,
     checkForUpdates,
     refreshPreset,
     refreshAllPresets,

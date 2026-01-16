@@ -16,13 +16,7 @@
             {{ wishlist.sourceType === 'preset' ? 'Premade' : 'Custom' }}
           </span>
           <span
-            v-if="hasLocalChanges"
-            class="inline-flex items-center rounded-full bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-700/50 px-2 py-0.5 text-xs font-medium"
-          >
-            Unsaved Changes
-          </span>
-          <span
-            v-if="hasUpdate && !hasLocalChanges"
+            v-if="hasUpdate"
             class="inline-flex items-center rounded-full bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-700/50 px-2 py-0.5 text-xs font-medium"
           >
             Update Available
@@ -140,14 +134,11 @@ import type { Wishlist, WishlistUpdateStatus } from '@/models/wishlist'
 import { MAX_EDITABLE_ROLLS } from '@/models/wishlist'
 import { getWishlistStats } from '@/services/dim-wishlist-parser'
 import { isWishlistTooLarge } from '@/utils/admin'
-import { useWishlistsStore } from '@/stores/wishlists'
 
 const props = defineProps<{
   wishlist: Wishlist
   updateStatus?: WishlistUpdateStatus
 }>()
-
-const wishlistsStore = useWishlistsStore()
 
 defineEmits<{
   (e: 'refresh', wishlist: Wishlist): void
@@ -163,11 +154,6 @@ const hasUpdate = computed(
 
 // Check if wishlist is too large for in-app editing
 const isTooLarge = computed(() => isWishlistTooLarge(props.wishlist))
-
-// Check if there are unsaved local changes
-const hasLocalChanges = computed(() => {
-  return wishlistsStore.hasLocalChanges(props.wishlist.id)
-})
 
 function formatDate(isoString?: string): string {
   if (!isoString) return 'Unknown'

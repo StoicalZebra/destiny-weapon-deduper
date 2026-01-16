@@ -28,33 +28,22 @@
     </div>
 
     <template v-else>
-      <!-- Admin: Unsaved Changes Banner -->
-      <div
-        v-if="isEditable && hasUnsavedChanges"
-        class="mb-4 rounded-lg bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700/50 p-4 flex items-center justify-between"
-      >
-        <div class="flex items-center gap-3">
-          <svg class="h-5 w-5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-          <span class="text-sm text-amber-800 dark:text-amber-200">
-            You have local changes. Export to update GitHub.
-          </span>
-        </div>
-        <button
-          @click="handleExportAndMarkSaved"
-          class="inline-flex items-center gap-2 text-sm bg-amber-600 hover:bg-amber-500 text-white px-3 py-1.5 rounded-lg"
-        >
-          Export to File
-        </button>
-      </div>
-
       <!-- Header -->
       <div class="rounded-xl border border-border bg-surface-elevated p-6 mb-6">
         <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-          <div>
-            <div class="flex items-center gap-3">
-              <h1 class="text-2xl font-bold">{{ wishlist.name }}</h1>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-3 flex-wrap">
+              <!-- Editable name for user wishlists -->
+              <input
+                v-if="wishlist.sourceType === 'user'"
+                v-model="editableName"
+                @blur="saveName"
+                @keydown.enter="($event.target as HTMLInputElement).blur()"
+                class="text-2xl font-bold bg-transparent border-b-2 border-transparent hover:border-border focus:border-accent-primary focus:outline-none transition-colors max-w-md"
+                :class="{ 'text-text': editableName, 'text-text-muted': !editableName }"
+                placeholder="Wishlist Name"
+              />
+              <h1 v-else class="text-2xl font-bold">{{ wishlist.name }}</h1>
               <span
                 :class="[
                   'text-xs px-2 py-0.5 rounded-full',
@@ -66,7 +55,16 @@
                 {{ wishlist.sourceType === 'preset' ? 'Premade' : 'Custom' }}
               </span>
             </div>
-            <p v-if="wishlist.description" class="mt-2 text-text-muted">
+            <!-- Editable description for user wishlists -->
+            <textarea
+              v-if="wishlist.sourceType === 'user'"
+              v-model="editableDescription"
+              @blur="saveDescription"
+              rows="2"
+              class="mt-2 w-full text-text-muted bg-transparent border-b-2 border-transparent hover:border-border focus:border-accent-primary focus:outline-none transition-colors resize-none"
+              placeholder="Add a description..."
+            />
+            <p v-else-if="wishlist.description" class="mt-2 text-text-muted">
               {{ wishlist.description }}
             </p>
             <p v-if="wishlist.author" class="mt-1 text-sm text-text-subtle">
@@ -74,7 +72,18 @@
             </p>
           </div>
 
-          <div class="flex gap-2">
+          <div class="flex gap-2 flex-shrink-0">
+            <!-- Fork button for preset wishlists -->
+            <button
+              v-if="wishlist.sourceType === 'preset'"
+              @click="showForkModal = true"
+              class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-purple-100 dark:bg-purple-600/30 text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-600/40 transition-colors text-sm"
+            >
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              Fork to Custom
+            </button>
             <button
               @click="handleExport"
               class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-overlay text-text hover:bg-surface-elevated transition-colors text-sm"
@@ -219,6 +228,58 @@
         <p class="text-text-muted">This wishlist is empty.</p>
       </div>
     </template>
+
+    <!-- Fork Modal -->
+    <div
+      v-if="showForkModal"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+      @click.self="showForkModal = false"
+    >
+      <div class="w-full max-w-md rounded-xl bg-surface-elevated border border-border p-6">
+        <h2 class="text-xl font-semibold text-text mb-2">Fork to Custom Wishlist</h2>
+        <p class="text-sm text-text-muted mb-4">
+          Create your own copy that you can edit freely. The original premade wishlist will remain unchanged.
+        </p>
+
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-text-muted mb-1">Name</label>
+            <input
+              v-model="forkName"
+              type="text"
+              :placeholder="`My ${wishlist?.name || 'Custom'} Rolls`"
+              class="w-full px-3 py-2 rounded-lg bg-surface-overlay border border-border text-text placeholder-text-subtle focus:outline-none focus:border-blue-500"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-text-muted mb-1">Description (optional)</label>
+            <textarea
+              v-model="forkDescription"
+              rows="2"
+              :placeholder="`Based on ${wishlist?.name || 'premade wishlist'}`"
+              class="w-full px-3 py-2 rounded-lg bg-surface-overlay border border-border text-text placeholder-text-subtle focus:outline-none focus:border-blue-500 resize-none"
+            />
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 mt-6">
+          <button
+            @click="showForkModal = false"
+            class="px-4 py-2 rounded-lg bg-surface-overlay text-text-muted hover:bg-surface-elevated transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            @click="handleFork"
+            :disabled="!forkName.trim() || forking"
+            class="px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-500 disabled:opacity-50 transition-colors"
+          >
+            {{ forking ? 'Creating...' : 'Create Copy' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -231,7 +292,6 @@ import { weaponParser } from '@/services/weapon-parser'
 import { getWishlistStats } from '@/services/dim-wishlist-parser'
 import WishlistPerkMatrix from '@/components/wishlists/WishlistPerkMatrix.vue'
 import type { WishlistItem, WishlistTag } from '@/models/wishlist'
-import { isWishlistEditable } from '@/utils/admin'
 
 const route = useRoute()
 const router = useRouter()
@@ -240,6 +300,16 @@ const wishlistsStore = useWishlistsStore()
 const loading = ref(true)
 const searchQuery = ref('')
 const displayLimit = ref(50) // Start with 50 weapons, load more on scroll
+
+// Editable fields for user wishlists
+const editableName = ref('')
+const editableDescription = ref('')
+
+// Fork modal state
+const showForkModal = ref(false)
+const forkName = ref('')
+const forkDescription = ref('')
+const forking = ref(false)
 
 // Get wishlist
 const wishlist = computed(() => {
@@ -253,16 +323,12 @@ const stats = computed(() => {
   return getWishlistStats(wishlist.value.items)
 })
 
-// Admin mode - check if this wishlist is editable
+// Check if this wishlist is editable (user wishlists)
 const isEditable = computed(() => {
   if (!wishlist.value) return false
-  return isWishlistEditable(wishlist.value)
-})
-
-// Check if there are unsaved local changes (for admin-edited presets)
-const hasUnsavedChanges = computed(() => {
-  if (!wishlist.value) return false
-  return wishlistsStore.hasLocalChanges(wishlist.value.id)
+  // Only user wishlists are directly editable
+  // Premade wishlists require forking first
+  return wishlist.value.sourceType === 'user'
 })
 
 // Group items by weapon
@@ -323,6 +389,20 @@ onMounted(async () => {
     await wishlistsStore.initialize()
   }
   loading.value = false
+
+  // Initialize editable fields for user wishlists
+  if (wishlist.value?.sourceType === 'user') {
+    editableName.value = wishlist.value.name
+    editableDescription.value = wishlist.value.description || ''
+  }
+})
+
+// Watch for wishlist changes to update editable fields
+watch(wishlist, (newWishlist) => {
+  if (newWishlist?.sourceType === 'user') {
+    editableName.value = newWishlist.name
+    editableDescription.value = newWishlist.description || ''
+  }
 })
 
 // Helpers
@@ -369,6 +449,50 @@ function getTagClasses(tag: WishlistTag): string {
   }
 }
 
+// Name/description save handlers
+function saveName() {
+  if (!wishlist.value || wishlist.value.sourceType !== 'user') return
+  const trimmed = editableName.value.trim()
+  if (trimmed && trimmed !== wishlist.value.name) {
+    wishlistsStore.updateUserWishlist(wishlist.value.id, { name: trimmed })
+  } else {
+    // Reset to original if empty
+    editableName.value = wishlist.value.name
+  }
+}
+
+function saveDescription() {
+  if (!wishlist.value || wishlist.value.sourceType !== 'user') return
+  const trimmed = editableDescription.value.trim()
+  if (trimmed !== (wishlist.value.description || '')) {
+    wishlistsStore.updateUserWishlist(wishlist.value.id, { description: trimmed || undefined })
+  }
+}
+
+// Fork handler
+async function handleFork() {
+  if (!wishlist.value || !forkName.value.trim()) return
+
+  forking.value = true
+  try {
+    const forked = await wishlistsStore.forkPreset(
+      wishlist.value.id,
+      forkName.value.trim(),
+      forkDescription.value.trim() || undefined
+    )
+
+    if (forked) {
+      // Close modal and navigate to the new forked wishlist
+      showForkModal.value = false
+      forkName.value = ''
+      forkDescription.value = ''
+      router.replace({ params: { id: forked.id } })
+    }
+  } finally {
+    forking.value = false
+  }
+}
+
 // Actions
 function handleExport() {
   if (!wishlist.value) return
@@ -388,35 +512,8 @@ function handleExport() {
 }
 
 function handleDeleteItem(itemId: string) {
-  if (!wishlist.value) return
-
-  if (wishlist.value.sourceType === 'user') {
-    wishlistsStore.removeItemFromWishlist(wishlist.value.id, itemId)
-  } else if (wishlist.value.sourceType === 'preset') {
-    // Admin mode - remove from preset
-    wishlistsStore.removeItemFromPreset(wishlist.value.id, itemId)
-  }
-}
-
-function handleExportAndMarkSaved() {
-  if (!wishlist.value) return
-
-  const content = wishlistsStore.exportToDimFormat(wishlist.value.id)
-  if (!content) return
-
-  // Download file
-  const blob = new Blob([content], { type: 'text/plain' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `${wishlist.value.name.replace(/[^a-z0-9]/gi, '_')}.txt`
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(url)
-
-  // Mark changes as saved
-  wishlistsStore.markChangesSaved(wishlist.value.id)
+  if (!wishlist.value || wishlist.value.sourceType !== 'user') return
+  wishlistsStore.removeItemFromWishlist(wishlist.value.id, itemId)
 }
 
 function handleEditItem(item: WishlistItem, weaponHash: number) {
