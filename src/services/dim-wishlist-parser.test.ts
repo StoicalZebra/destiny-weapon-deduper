@@ -136,17 +136,17 @@ dimwishlist:item=789&perks=101112`
     })
 
     it('parses multiple tags', () => {
-      const content = 'dimwishlist:item=123&perks=456|tags:pvp,godroll,mkb'
+      const content = 'dimwishlist:item=123&perks=456|tags:pvp,alt,mkb'
       const result = parseDimWishlist(content)
 
-      expect(result.items[0].tags).toEqual(['pvp', 'godroll', 'mkb'])
+      expect(result.items[0].tags).toEqual(['pvp', 'alt', 'mkb'])
     })
 
     it('filters invalid tags', () => {
-      const content = 'dimwishlist:item=123&perks=456|tags:pvp,invalid,godroll'
+      const content = 'dimwishlist:item=123&perks=456|tags:pvp,invalid,alt'
       const result = parseDimWishlist(content)
 
-      expect(result.items[0].tags).toEqual(['pvp', 'godroll'])
+      expect(result.items[0].tags).toEqual(['pvp', 'alt'])
     })
 
     it('handles tags with notes', () => {
@@ -262,12 +262,12 @@ describe('serializeToDimFormat', () => {
         id: 'test-1',
         weaponHash: 123,
         perkHashes: [456],
-        tags: ['pvp', 'godroll']
+        tags: ['pvp', 'alt']
       }
     ]
     const result = serializeToDimFormat(items)
 
-    expect(result).toBe('dimwishlist:item=123&perks=456|tags:pvp,godroll')
+    expect(result).toBe('dimwishlist:item=123&perks=456|tags:pvp,alt')
   })
 
   it('serializes trash item with negative hash', () => {
@@ -418,7 +418,7 @@ describe('round-trip parsing and serialization', () => {
   it('preserves data through parse -> serialize -> parse', () => {
     const original = `title:Test Wishlist
 description:Round-trip test
-dimwishlist:item=123&perks=456,789#notes:Great roll|tags:pvp,godroll
+dimwishlist:item=123&perks=456,789#notes:Great roll|tags:pvp,alt
 dimwishlist:item=456&perks=111,222`
 
     const parsed1 = parseDimWishlist(original)

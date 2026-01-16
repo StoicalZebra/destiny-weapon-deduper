@@ -131,16 +131,48 @@
             </div>
           </div>
 
+          <!-- Tags (if any) -->
+          <div v-if="profile.item.tags?.length" class="flex flex-wrap gap-1 mb-2">
+            <span
+              v-for="tag in profile.item.tags"
+              :key="tag"
+              :class="getTagDisplayClasses(tag)"
+              class="text-[10px] font-bold px-1.5 py-0.5 rounded uppercase"
+            >
+              {{ tag }}
+            </span>
+          </div>
+
           <!-- DIM-style perk matrix -->
           <WishlistPerkMatrix
             :weapon-hash="weapon.weaponHash"
             :perk-hashes="profile.item.perkHashes"
           />
 
-          <!-- Notes (if any) -->
-          <p v-if="profile.item.notes" class="text-xs text-text-muted mt-2 line-clamp-2">
+          <!-- Notes (if any) - with full text on hover -->
+          <p
+            v-if="profile.item.notes"
+            class="text-xs text-text-muted mt-2 line-clamp-2 cursor-help"
+            :title="profile.item.notes"
+          >
             {{ profile.item.notes }}
           </p>
+
+          <!-- YouTube Reference (if any) -->
+          <div v-if="profile.item.youtubeLink || profile.item.youtubeAuthor" class="mt-2 text-xs text-text-subtle">
+            <span v-if="profile.item.youtubeAuthor" class="mr-1">{{ profile.item.youtubeAuthor }}</span>
+            <a
+              v-if="profile.item.youtubeLink"
+              :href="profile.item.youtubeLink"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-blue-400 hover:text-blue-300 hover:underline"
+              @click.stop
+            >
+              YouTube<template v-if="profile.item.youtubeTimestamp"> @{{ profile.item.youtubeTimestamp }}</template>
+            </a>
+            <span v-else-if="profile.item.youtubeTimestamp">@{{ profile.item.youtubeTimestamp }}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -301,6 +333,26 @@
       <!-- Inline Save Form (when perks selected) -->
       <div v-if="hasSelection" class="bg-surface-elevated/80 rounded-lg border border-border p-4 animate-in fade-in slide-in-from-top-2 duration-200">
         <div class="space-y-3">
+          <!-- Tags Selection -->
+          <div>
+            <label class="block text-xs font-bold text-text-muted uppercase tracking-wider mb-1">
+              Tags (Optional)
+            </label>
+            <div class="flex flex-wrap gap-2">
+              <button
+                v-for="tag in AVAILABLE_TAGS"
+                :key="tag"
+                @click="toggleTag(tag)"
+                :title="getTagTooltip(tag)"
+                class="text-xs font-bold px-2 py-1 rounded uppercase transition-all"
+                :class="getTagButtonClasses(tag)"
+              >
+                {{ tag }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Notes -->
           <div>
             <label class="block text-xs font-bold text-text-muted uppercase tracking-wider mb-1">
               Notes (Optional)
@@ -309,17 +361,45 @@
               v-model="profileNotesInput"
               placeholder="Add notes about this roll (e.g., PvP Roll, Best for add clear)..."
               rows="2"
-              class="w-full bg-surface border border-border rounded px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-text-subtle resize-none"
+              class="w-full bg-surface border border-border rounded px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-text-subtle resize-y min-h-[3rem]"
             />
-            <p class="text-xs text-text-subtle mt-1">
-              {{ saveTargetText }}
-            </p>
           </div>
 
-          <div class="flex justify-end items-center gap-3">
-            <p v-if="saveMessage" :class="['text-xs', saveMessage.type === 'error' ? 'text-red-600 dark:text-red-400' : 'text-text-muted']">{{ saveMessage.text }}</p>
-            <button
-              @click="clearSelection"
+          <!-- YouTube Reference -->
+          <div>
+            <label class="block text-xs font-bold text-text-muted uppercase tracking-wider mb-1">
+              YouTube Reference (Optional)
+            </label>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <input
+                v-model="youtubeLink"
+                type="url"
+                placeholder="YouTube link..."
+                class="bg-surface border border-border rounded px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-text-subtle"
+              />
+              <input
+                v-model="youtubeAuthor"
+                type="text"
+                placeholder="Creator name..."
+                class="bg-surface border border-border rounded px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-text-subtle"
+              />
+              <input
+                v-model="youtubeTimestamp"
+                type="text"
+                placeholder="Timestamp (e.g., 2:34)..."
+                class="bg-surface border border-border rounded px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-text-subtle"
+              />
+            </div>
+          </div>
+
+          <div class="flex justify-between items-center gap-3">
+            <p class="text-xs text-text-subtle">
+              {{ saveTargetText }}
+            </p>
+            <div class="flex items-center gap-3">
+              <p v-if="saveMessage" :class="['text-xs', saveMessage.type === 'error' ? 'text-red-600 dark:text-red-400' : 'text-text-muted']">{{ saveMessage.text }}</p>
+              <button
+                @click="clearSelection"
               class="px-4 py-2 rounded text-sm font-medium transition-colors bg-surface-overlay hover:bg-surface-elevated text-text border border-border"
             >
               Clear Selection
@@ -331,6 +411,7 @@
             >
               {{ buttonLabel }}
             </button>
+            </div>
           </div>
         </div>
       </div>
@@ -631,7 +712,7 @@ import { ref, computed, onMounted, watch, watchEffect, triggerRef, onBeforeUnmou
 import type { DedupedWeapon, PerkColumn } from '@/models/deduped-weapon'
 import type { WeaponInstance } from '@/models/weapon-instance'
 import type { Perk } from '@/models/perk'
-import type { WishlistItem, Wishlist } from '@/models/wishlist'
+import type { WishlistItem, Wishlist, WishlistTag } from '@/models/wishlist'
 import { useWishlistsStore } from '@/stores/wishlists'
 import type { PerkColumnInfo } from '@/services/dim-wishlist-parser'
 import { getWishlistPerkAnnotations, selectionToWishlistItem } from '@/services/dim-wishlist-parser'
@@ -649,6 +730,9 @@ import {
   INSTANCE_PALETTE,
   MASTERWORK_ICON_STYLES,
   DROPDOWN_STYLES,
+  TAG_DISPLAY_STYLES,
+  TAG_BUTTON_STYLES,
+  TAG_TOOLTIPS,
 } from '@/styles/ui-states'
 import { getWishlistBadgeTooltip, formatWishlistTooltipSuffix } from '@/utils/tooltip-helpers'
 import {
@@ -756,6 +840,14 @@ const justCopied = ref(false)
 const selection = ref<Set<number>>(new Set())
 const profileNotesInput = ref('')
 const saveMessage = ref<{ text: string; type: 'error' | 'info' } | null>(null)
+
+// Tags and YouTube fields
+// No "godroll" tag - saved rolls are god rolls by default. "alt" marks alternatives.
+const AVAILABLE_TAGS: WishlistTag[] = ['pve', 'pvp', 'alt', 'controller', 'mkb']
+const selectedTags = ref<Set<WishlistTag>>(new Set())
+const youtubeLink = ref('')
+const youtubeAuthor = ref('')
+const youtubeTimestamp = ref('')
 
 // Profile management
 interface DisplayProfile {
@@ -974,6 +1066,42 @@ const clearSelection = () => {
   sourceWishlistId.value = null
   profileNotesInput.value = ''
   saveMessage.value = null
+  selectedTags.value = new Set()
+  youtubeLink.value = ''
+  youtubeAuthor.value = ''
+  youtubeTimestamp.value = ''
+}
+
+// ============ TAG HELPERS ============
+function toggleTag(tag: WishlistTag) {
+  if (selectedTags.value.has(tag)) {
+    selectedTags.value.delete(tag)
+  } else {
+    selectedTags.value.add(tag)
+  }
+  selectedTags.value = new Set(selectedTags.value) // Trigger reactivity
+}
+
+function getTagButtonClasses(tag: WishlistTag): string {
+  const isSelected = selectedTags.value.has(tag)
+  const baseClasses = 'border transition-opacity'
+
+  // Color mapping: PVE=blue, PVP=red, Others=gray
+  const styles = tag === 'pve' ? TAG_BUTTON_STYLES.pve
+    : tag === 'pvp' ? TAG_BUTTON_STYLES.pvp
+    : TAG_BUTTON_STYLES.default
+
+  return `${baseClasses} ${isSelected ? styles.selected : styles.unselected}`
+}
+
+function getTagDisplayClasses(tag: WishlistTag): string {
+  if (tag === 'pve') return TAG_DISPLAY_STYLES.pve
+  if (tag === 'pvp') return TAG_DISPLAY_STYLES.pvp
+  return TAG_DISPLAY_STYLES.default
+}
+
+function getTagTooltip(tag: WishlistTag): string {
+  return TAG_TOOLTIPS[tag] || tag
 }
 
 // ============ MASTERWORK SELECTION ============
@@ -1309,6 +1437,10 @@ const loadProfile = (profile: DisplayProfile) => {
   )
   currentProfileId.value = profile.id
   profileNotesInput.value = profile.item.notes || ''
+  selectedTags.value = new Set(profile.item.tags || [])
+  youtubeLink.value = profile.item.youtubeLink || ''
+  youtubeAuthor.value = profile.item.youtubeAuthor || ''
+  youtubeTimestamp.value = profile.item.youtubeTimestamp || ''
 }
 
 const deleteProfile = (id: string) => {
@@ -1331,6 +1463,10 @@ const isProfileActive = (profile: DisplayProfile): boolean => {
 // ============ SAVE LOGIC ============
 const handleSave = async () => {
   const trimmedNotes = profileNotesInput.value.trim()
+  const tags = selectedTags.value.size > 0 ? Array.from(selectedTags.value) : undefined
+  const ytLink = youtubeLink.value.trim() || undefined
+  const ytAuthor = youtubeAuthor.value.trim() || undefined
+  const ytTimestamp = youtubeTimestamp.value.trim() || undefined
 
   if (!hasSelection.value) {
     saveMessage.value = { text: 'Select at least one perk before saving', type: 'error' }
@@ -1355,8 +1491,12 @@ const handleSave = async () => {
       const perksMatch = existingPerks.size === newPerks.size &&
         [...existingPerks].every(h => newPerks.has(h))
       const notesMatch = (existingProfile.item.notes || '') === trimmedNotes
+      const tagsMatch = JSON.stringify((existingProfile.item.tags || []).sort()) === JSON.stringify((tags || []).sort())
+      const ytMatch = (existingProfile.item.youtubeLink || '') === (ytLink || '') &&
+                      (existingProfile.item.youtubeAuthor || '') === (ytAuthor || '') &&
+                      (existingProfile.item.youtubeTimestamp || '') === (ytTimestamp || '')
 
-      if (perksMatch && notesMatch) {
+      if (perksMatch && notesMatch && tagsMatch && ytMatch) {
         saveMessage.value = { text: 'No changes detected', type: 'info' }
         return
       }
@@ -1374,7 +1514,11 @@ const handleSave = async () => {
         currentProfileId.value,
         {
           perkHashes,
-          notes: trimmedNotes || undefined
+          notes: trimmedNotes || undefined,
+          tags,
+          youtubeLink: ytLink,
+          youtubeAuthor: ytAuthor,
+          youtubeTimestamp: ytTimestamp
         }
       )
     } else {
@@ -1383,7 +1527,11 @@ const handleSave = async () => {
         currentProfileId.value,
         {
           perkHashes,
-          notes: trimmedNotes || undefined
+          notes: trimmedNotes || undefined,
+          tags,
+          youtubeLink: ytLink,
+          youtubeAuthor: ytAuthor,
+          youtubeTimestamp: ytTimestamp
         }
       )
     }
@@ -1392,7 +1540,11 @@ const handleSave = async () => {
       id: currentProfileId.value,
       weaponHash: props.weapon.weaponHash,
       perkHashes,
-      notes: trimmedNotes || undefined
+      notes: trimmedNotes || undefined,
+      tags,
+      youtubeLink: ytLink,
+      youtubeAuthor: ytAuthor,
+      youtubeTimestamp: ytTimestamp
     }
 
     const idx = displayProfiles.value.findIndex(p => p.id === currentProfileId.value)
@@ -1406,6 +1558,10 @@ const handleSave = async () => {
       perkColumnsForStore.value,
       {
         notes: trimmedNotes || undefined,
+        tags,
+        youtubeLink: ytLink,
+        youtubeAuthor: ytAuthor,
+        youtubeTimestamp: ytTimestamp,
         existingItemId: currentProfileId.value || undefined
       }
     )
@@ -1436,7 +1592,7 @@ const handleSave = async () => {
 
 const buttonLabel = computed(() => {
   if (!currentProfileId.value) return 'Save to Wishlist'
-  return 'Update Roll'
+  return 'Update Wishlist Roll'
 })
 
 const saveTargetText = computed(() => {

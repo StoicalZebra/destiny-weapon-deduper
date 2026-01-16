@@ -112,5 +112,40 @@ export const DROPDOWN_STYLES = {
   noneIconText: 'text-text-muted/50 text-[10px]',
 } as const
 
+// Wishlist tag display styles (used in saved rolls display)
+// Color scheme: PVE=blue, PVP=red, Others=gray
+// Note: No "godroll" tag - saved rolls are god rolls by default. "alt" marks alternatives.
+export const TAG_DISPLAY_STYLES = {
+  pvp: 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-700/50',
+  pve: 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-700/50',
+  default: 'bg-gray-100 dark:bg-gray-800/50 text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600/50',
+} as const
+
+// Wishlist tag button styles (used in editor multi-select)
+export const TAG_BUTTON_STYLES = {
+  pvp: {
+    selected: 'bg-red-600 border-red-500 text-white',
+    unselected: 'bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-700/50 text-red-700 dark:text-red-300 opacity-60 hover:opacity-100',
+  },
+  pve: {
+    selected: 'bg-blue-600 border-blue-500 text-white',
+    unselected: 'bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700/50 text-blue-700 dark:text-blue-300 opacity-60 hover:opacity-100',
+  },
+  default: {
+    selected: 'bg-gray-600 border-gray-500 text-white',
+    unselected: 'bg-gray-100 dark:bg-gray-800/30 border-gray-300 dark:border-gray-600/50 text-gray-600 dark:text-gray-400 opacity-60 hover:opacity-100',
+  },
+} as const
+
+// Tag tooltips (hover text for tag buttons/badges)
+export const TAG_TOOLTIPS: Record<string, string> = {
+  pvp: 'PVP Roll',
+  pve: 'PVE Roll',
+  mkb: 'Best on Mouse & Keyboard',
+  controller: 'Best on Controller',
+  alt: 'Alternate Roll - good but not great',
+  trash: 'Undesirable roll',
+} as const
+
 // Type export for consumers (PerkRingStyle is used by PerkIcon.vue)
 export type PerkRingStyle = keyof typeof PERK_RING_STYLES

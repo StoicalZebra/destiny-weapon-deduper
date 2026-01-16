@@ -651,6 +651,9 @@ export const useWishlistsStore = defineStore('wishlists', () => {
     options?: {
       notes?: string
       tags?: WishlistTag[]
+      youtubeLink?: string
+      youtubeAuthor?: string
+      youtubeTimestamp?: string
       existingItemId?: string // If updating existing item
     }
   ): WishlistItem {
@@ -659,6 +662,9 @@ export const useWishlistsStore = defineStore('wishlists', () => {
     const item = selectionToWishlistItem(selection, weaponHash, perkColumns, {
       notes: options?.notes,
       tags: options?.tags,
+      youtubeLink: options?.youtubeLink,
+      youtubeAuthor: options?.youtubeAuthor,
+      youtubeTimestamp: options?.youtubeTimestamp,
       existingId: options?.existingItemId
     })
 
@@ -667,7 +673,10 @@ export const useWishlistsStore = defineStore('wishlists', () => {
       updateItemInWishlist(wishlist.id, options.existingItemId, {
         perkHashes: item.perkHashes,
         notes: item.notes,
-        tags: item.tags
+        tags: item.tags,
+        youtubeLink: item.youtubeLink,
+        youtubeAuthor: item.youtubeAuthor,
+        youtubeTimestamp: item.youtubeTimestamp
       })
     } else {
       // Add new item

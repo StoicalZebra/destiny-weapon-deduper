@@ -10,10 +10,14 @@
 export type WishlistSourceType = 'preset' | 'user'
 
 /**
- * Tags for categorizing rolls (DIM-compatible)
- * See: https://github.com/DestinyItemManager/DIM/wiki/Wish-Lists
+ * Tags for categorizing rolls
+ * Note: DIM ignores |tags: but we use them for our UI. See README for details.
+ * - pvp/pve: Activity context
+ * - mkb/controller: Input method
+ * - alt: Alternative/budget roll (not the "god roll" but still good)
+ * - trash: Mark as undesirable (uses negative hash in DIM export)
  */
-export type WishlistTag = 'godroll' | 'pvp' | 'pve' | 'mkb' | 'controller' | 'trash'
+export type WishlistTag = 'pvp' | 'pve' | 'mkb' | 'controller' | 'alt' | 'trash'
 
 /**
  * Individual wishlist roll entry
@@ -25,6 +29,10 @@ export interface WishlistItem {
   perkHashes: number[] // Required perk hashes (comma-separated in DIM format)
   notes?: string // #notes: value from DIM format
   tags?: WishlistTag[] // |tags: value from DIM format (parsed)
+  // YouTube reference fields (embedded in notes on DIM export)
+  youtubeLink?: string // Full YouTube URL
+  youtubeAuthor?: string // Creator/channel name
+  youtubeTimestamp?: string // Timestamp in video (e.g., "2:34")
 }
 
 /**

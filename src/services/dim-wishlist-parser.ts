@@ -21,8 +21,8 @@ const COMMENT_PATTERN = /^\/\//
 const DIMWISHLIST_PATTERN =
   /^dimwishlist:item=(-?\d+)(?:&perks=([0-9,|]+))?(?:#notes:([^|]+))?(?:\|tags:(.+))?$/i
 
-// Valid DIM tags
-const VALID_TAGS: WishlistTag[] = ['godroll', 'pvp', 'pve', 'mkb', 'controller', 'trash']
+// Valid tags (matches WishlistTag type in models/wishlist.ts)
+const VALID_TAGS: WishlistTag[] = ['pvp', 'pve', 'mkb', 'controller', 'alt', 'trash']
 
 // Special item IDs
 export const WILDCARD_ITEM_ID = -69420
@@ -202,9 +202,23 @@ function serializeItem(item: WishlistItem, weaponHash?: number): string {
     line += `&perks=${item.perkHashes.join(',')}`
   }
 
-  // Add notes if present
-  if (item.notes) {
-    line += `#notes:${item.notes}`
+  // Build notes with YouTube data embedded
+  let fullNotes = item.notes || ''
+
+  // Append YouTube info if present: [YT: Author link @timestamp]
+  const ytParts: string[] = []
+  if (item.youtubeAuthor) ytParts.push(item.youtubeAuthor)
+  if (item.youtubeLink) ytParts.push(item.youtubeLink)
+  if (item.youtubeTimestamp) ytParts.push(`@${item.youtubeTimestamp}`)
+
+  if (ytParts.length > 0) {
+    const ytInfo = `[YT: ${ytParts.join(' ')}]`
+    fullNotes = fullNotes ? `${fullNotes} ${ytInfo}` : ytInfo
+  }
+
+  // Add notes if present (now includes embedded YouTube data)
+  if (fullNotes) {
+    line += `#notes:${fullNotes}`
   }
 
   // Add tags if present (excluding 'trash' since that's encoded in negative hash)
@@ -295,6 +309,9 @@ export function selectionToWishlistItem(
     notes?: string
     tags?: WishlistTag[]
     existingId?: string
+    youtubeLink?: string
+    youtubeAuthor?: string
+    youtubeTimestamp?: string
   }
 ): WishlistItem {
   // Build set of valid perk hashes for this weapon
@@ -313,7 +330,10 @@ export function selectionToWishlistItem(
     weaponHash,
     perkHashes,
     notes: options?.notes,
-    tags: options?.tags
+    tags: options?.tags,
+    youtubeLink: options?.youtubeLink,
+    youtubeAuthor: options?.youtubeAuthor,
+    youtubeTimestamp: options?.youtubeTimestamp
   }
 }
 

@@ -170,6 +170,7 @@
                   v-for="tag in item.tags || []"
                   :key="tag"
                   :class="getTagClasses(tag)"
+                  :title="getTagTooltip(tag)"
                   class="text-xs font-bold px-1.5 py-0.5 rounded uppercase"
                 >
                   {{ tag }}
@@ -183,10 +184,30 @@
                 class="mb-2"
               />
 
-              <!-- Notes -->
-              <p v-if="item.notes" class="text-xs text-text-subtle line-clamp-3">
+              <!-- Notes - with full text on hover -->
+              <p
+                v-if="item.notes"
+                class="text-xs text-text-subtle line-clamp-3 cursor-help"
+                :title="item.notes"
+              >
                 {{ item.notes }}
               </p>
+
+              <!-- YouTube Reference (if any) -->
+              <div v-if="item.youtubeLink || item.youtubeAuthor" class="mt-1 text-xs text-text-subtle">
+                <span v-if="item.youtubeAuthor" class="mr-1">{{ item.youtubeAuthor }}</span>
+                <a
+                  v-if="item.youtubeLink"
+                  :href="item.youtubeLink"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-blue-400 hover:text-blue-300 hover:underline"
+                  @click.stop
+                >
+                  YouTube<template v-if="item.youtubeTimestamp"> @{{ item.youtubeTimestamp }}</template>
+                </a>
+                <span v-else-if="item.youtubeTimestamp">@{{ item.youtubeTimestamp }}</span>
+              </div>
 
               <!-- Action buttons for editable wishlists (user OR admin-editable presets) -->
               <div v-if="isEditable" class="mt-2 flex gap-3">
@@ -313,6 +334,7 @@ import { getWishlistStats } from '@/services/dim-wishlist-parser'
 import WishlistPerkMatrix from '@/components/wishlists/WishlistPerkMatrix.vue'
 import type { WishlistItem, WishlistTag } from '@/models/wishlist'
 import { formatHashSuffix } from '@/utils/formatting'
+import { TAG_DISPLAY_STYLES, TAG_TOOLTIPS } from '@/styles/ui-states'
 
 const route = useRoute()
 const router = useRouter()
@@ -464,22 +486,13 @@ function formatDate(isoString?: string): string {
 }
 
 function getTagClasses(tag: WishlistTag): string {
-  switch (tag) {
-    case 'pvp':
-      return 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-700/50'
-    case 'pve':
-      return 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 border border-green-300 dark:border-green-700/50'
-    case 'godroll':
-      return 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-700/50'
-    case 'mkb':
-      return 'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-700/50'
-    case 'controller':
-      return 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-700/50'
-    case 'trash':
-      return 'bg-gray-100 dark:bg-gray-900/50 text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-700/50'
-    default:
-      return 'bg-gray-100 dark:bg-gray-900/50 text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-700/50'
-  }
+  if (tag === 'pve') return TAG_DISPLAY_STYLES.pve
+  if (tag === 'pvp') return TAG_DISPLAY_STYLES.pvp
+  return TAG_DISPLAY_STYLES.default
+}
+
+function getTagTooltip(tag: WishlistTag): string {
+  return TAG_TOOLTIPS[tag] || tag
 }
 
 // Name/description save handlers

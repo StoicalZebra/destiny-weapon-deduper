@@ -418,6 +418,62 @@ dimwishlist:item=2819552809&perks=2860123632,2126519017,1926441324,2541826827
 
 The only scenario where JSON pays off is building a standalone wishlist editor where DIM compatibility is secondary. Since our primary use case is DIM integration, storing in DIM format avoids conversion overhead on both import and export.
 
+### Our Extended Format vs DIM Support
+
+We extend the DIM format with additional fields that **DIM ignores but our app preserves**:
+
+**Our full format:**
+```
+dimwishlist:item=123&perks=456,789#notes:Great roll [YT: Aztecross https://youtube.com/watch?v=abc @2:34]|tags:pve,mkb
+```
+
+| Field | Our App | DIM Import | Notes |
+|-------|---------|------------|-------|
+| `item=` | ✅ Parsed | ✅ Parsed | Weapon hash (negative = trash) |
+| `&perks=` | ✅ Parsed | ✅ Parsed | Comma-separated perk hashes |
+| `#notes:` | ✅ Parsed | ✅ Parsed | Shows in DIM item popup |
+| `\|tags:` | ✅ Parsed | ❌ Ignored | DIM's parser doesn't read this |
+| `[YT: ...]` | ✅ Extracted | ✅ In notes | Embedded in notes, visible in DIM |
+
+**Why `|tags:` doesn't work in DIM:**
+- DIM's [wishlist-file.ts](https://github.com/DestinyItemManager/DIM/blob/master/src/app/wishlists/wishlist-file.ts) only parses `item`, `perks`, and `notes`
+- Community wishlists use `|tags:` as a convention for human readability, but DIM ignores it
+- The [DIM Wiki](https://github.com/DestinyItemManager/DIM/wiki/Creating-Wish-Lists) only documents `#notes:` syntax
+
+**Workaround for DIM tag searching:**
+If you want tags searchable in DIM, include them as hashtags in your notes:
+```
+#notes:Great roll #pvp #controller
+```
+Then search `wishlistnotes:pvp` in DIM.
+
+**Our approach:**
+We keep `|tags:` for our internal use (displays in our UI, preserved on re-import) while also embedding YouTube data in notes so it's visible when viewing the wishlist in DIM.
+
+### Wishlist Tags
+
+Tags categorize rolls for filtering and organization. Saved rolls are **god rolls by default** - no tag needed.
+
+| Tag | Purpose | Color |
+|-----|---------|-------|
+| `pvp` | PvP activity | Red |
+| `pve` | PvE activity | Blue |
+| `mkb` | Mouse & keyboard optimized | Gray |
+| `controller` | Controller optimized | Gray |
+| `alt` | Alternative/budget roll (good but not best) | Gray |
+
+**Design rationale:**
+- No `godroll` tag - if you're saving a roll to your wishlist, it's implied to be a god roll
+- `alt` marks the exceptions: "this roll is solid if you don't have the god roll"
+- Activity tags (`pvp`/`pve`) and input tags (`mkb`/`controller`) can be combined
+
+**Example usage:**
+```
+|tags:pvp,mkb       # PvP roll optimized for mouse & keyboard
+|tags:pve           # PvE god roll
+|tags:pve,alt       # Good PvE alternative, not the best
+```
+
 ### Little Light Import/Export
 
 **Important:** Little Light only supports **JSON import** and **TXT export**. It cannot import DIM `.txt` files directly.
@@ -640,3 +696,13 @@ Then take screenshot with descriptive filename:
 
 - [ ] **Wishlist toggle performance**: Toggle response is ~200-300ms. Goal is instant (<50ms). All obvious optimizations applied; further profiling needed to identify remaining bottleneck.
 - [ ] **DIM API Integration**: Implement direct Keep/Junk tagging via DIM's API
+
+
+- [x] Wishlist Editor upgrades (completed 2026-01-16)
+  - [x] Tags field: pvp, pve, mkb, controller, alt (PVE=blue, PVP=red, others=gray)
+  - [x] YouTube data fields (link, author, timestamp) + embedding in DIM notes
+  - [x] Notes field expandable (vertical resize)
+  - [x] Button renamed to "Update Wishlist Roll"
+  - [x] Saved rolls show tags, YouTube info, full text on hover
+
+- [ ] "Wishlist page: "Updates available for some preset wishlists" should only show when Github URLs have updated content (determined by update date or some other method) - NOT if they are just in the "unloaded" state. The warning is always showing up if I have "large" wishlists that are unloaded.
