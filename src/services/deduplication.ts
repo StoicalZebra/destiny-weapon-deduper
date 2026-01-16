@@ -362,32 +362,6 @@ function buildPerkColumn(
   }
 }
 
-function buildOwnedPerksList(
-  socketIndex: number,
-  instances: WeaponInstance[],
-  filter?: (hash: number) => boolean,
-  ignoreReusable: boolean = false
-): Perk[] {
-  const ownedHashes = getOwnedPlugHashes(instances, socketIndex, ignoreReusable)
-  const ownedPerks: Perk[] = []
-
-  for (const hash of ownedHashes) {
-    if (filter && !filter(hash)) continue
-    const perkDef = manifestService.getInventoryItem(hash)
-    if (!perkDef) continue
-    ownedPerks.push({
-      hash,
-      name: perkDef.displayProperties?.name || `Unknown Perk (${hash})`,
-      description: perkDef.displayProperties?.description || '',
-      icon: perkDef.displayProperties?.icon || '',
-      isOwned: true
-    })
-  }
-
-  ownedPerks.sort((a, b) => a.name.localeCompare(b.name))
-  return ownedPerks
-}
-
 function buildPerkMatrix(
   weaponHash: number,
   instances: WeaponInstance[]
