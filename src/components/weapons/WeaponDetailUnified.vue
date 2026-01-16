@@ -89,16 +89,19 @@
           :class="{ 'ring-2 ring-blue-500/50 border-blue-500/50 bg-blue-900/10': isProfileActive(profile) }"
           @click="loadProfile(profile)"
         >
-          <!-- Header row with actions -->
+          <!-- Header row with wishlist name and actions -->
           <div class="flex justify-between items-start mb-2">
-            <div class="flex items-center gap-1.5">
+            <div class="flex flex-col gap-0.5">
+              <span class="text-xs font-medium text-text-muted truncate max-w-[120px]" :title="profile.wishlistName">
+                {{ profile.wishlistName }}
+              </span>
               <span class="text-xs text-text-subtle">
                 {{ profile.item.perkHashes.length }} perks
               </span>
             </div>
 
-            <!-- Actions -->
-            <div class="flex items-center gap-2" @click.stop>
+            <!-- Actions - only show delete for user wishlists -->
+            <div v-if="profile.isUserWishlist" class="flex items-center gap-2" @click.stop>
               <template v-if="profile.showDeleteConfirm">
                 <span class="text-xs text-red-600 dark:text-red-400 font-bold">Sure?</span>
                 <button
@@ -796,6 +799,13 @@ import {
   DROPDOWN_STYLES,
 } from '@/styles/ui-states'
 import { TOOLTIP_STRINGS, getWishlistBadgeTooltip, formatWishlistTooltipSuffix } from '@/utils/tooltip-helpers'
+import {
+  isPerkInHashSet,
+  findPerkHashInSet,
+  filterPerksWithSelectedVariant,
+  instanceHasPerkVariant,
+  expandHashSetWithVariants
+} from '@/utils/perk-variants'
 
 const props = defineProps<{
   weapon: DedupedWeapon
@@ -820,6 +830,15 @@ onMounted(async () => {
   loadProfilesFromStore()
   document.addEventListener('click', handleClickOutside)
 })
+
+// Watch for changes in wishlist enabled states to reload profiles
+watch(
+  () => wishlistsStore.enabledStates,
+  () => {
+    loadProfilesFromStore()
+  },
+  { deep: true }
+)
 
 // ============ MODE STATE ============
 const viewMode = ref<'wishlist' | 'coverage'>('wishlist')
@@ -890,6 +909,9 @@ const saveMessage = ref<{ text: string; type: 'error' | 'info' } | null>(null)
 interface DisplayProfile {
   id: string
   item: WishlistItem
+  wishlistId: string
+  wishlistName: string
+  isUserWishlist: boolean
   showDeleteConfirm?: boolean
 }
 const displayProfiles = ref<DisplayProfile[]>([])
@@ -1017,19 +1039,21 @@ const instanceMatchCache = computed(() => {
   for (const instance of props.weapon.instances) {
     let matches = true
 
-    // Check perk columns
+    // Check perk columns - use utility functions for consistent variant matching
     for (const col of matrixColumns.value) {
-      const colPerks = col.availablePerks.map(p => p.hash)
-      const selectedInCol = colPerks.filter(h => selection.value.has(h))
-      if (selectedInCol.length === 0) continue
+      // Find perks in this column where ANY variant hash is selected
+      const selectedPerksInCol = filterPerksWithSelectedVariant(col.availablePerks, selection.value)
+      if (selectedPerksInCol.length === 0) continue
 
-      for (const h of selectedInCol) {
-        if (instance.sockets.sockets[col.columnIndex]?.plugHash !== h) {
-          const reusables = instance.socketPlugsByIndex?.[col.columnIndex]
-          if (!reusables || !reusables.includes(h)) {
-            matches = false
-            break
-          }
+      // Check if instance has any variant of each selected perk
+      for (const perk of selectedPerksInCol) {
+        const plugHash = instance.sockets.sockets[col.columnIndex]?.plugHash
+        const reusables = instance.socketPlugsByIndex?.[col.columnIndex] || []
+
+        // Use utility to check if equipped or reusable matches any variant
+        if (!instanceHasPerkVariant(plugHash, reusables, perk)) {
+          matches = false
+          break
         }
       }
       if (!matches) break
@@ -1100,14 +1124,9 @@ function enterEditMode() {
 }
 
 // ============ SELECTION LOGIC ============
+// Use utility functions from @/utils/perk-variants for consistent variant matching
 const isPerkSelected = (perk: Perk): boolean => {
-  if (selection.value.has(perk.hash)) return true
-  if (perk.variantHashes) {
-    for (const variantHash of perk.variantHashes) {
-      if (selection.value.has(variantHash)) return true
-    }
-  }
-  return false
+  return isPerkInHashSet(perk, selection.value)
 }
 
 const toggleSelection = (perk: Perk, _column: PerkColumn) => {
@@ -1119,7 +1138,8 @@ const toggleSelection = (perk: Perk, _column: PerkColumn) => {
   const isSelected = isPerkSelected(perk)
 
   if (isSelected) {
-    const currentHash = perk.variantHashes?.find(h => selection.value.has(h)) ?? perk.hash
+    // Use utility to find which variant hash is actually in the selection
+    const currentHash = findPerkHashInSet(perk, selection.value) ?? perk.hash
     selection.value.delete(currentHash)
   } else {
     selection.value.add(perkHash)
@@ -1281,10 +1301,12 @@ const instanceHasPerk = (instId: string, perkHash: number): boolean => {
 }
 
 // Get highlighted perks for wishlist mode instance perk grid
+// Expands selection to include all perk variants (base, enhanced, etc.)
 const getHighlightedPerksForInstance = (): Set<number> | undefined => {
-  // In wishlist mode, highlight selected perks
+  // In wishlist mode, highlight selected perks (expanded to include variants)
   if (hasSelection.value) {
-    return selection.value
+    // Use utility to expand selection to all variants for matching
+    return expandHashSetWithVariants(selection.value, perkVariantsMap.value)
   }
   return undefined
 }
@@ -1466,12 +1488,24 @@ const loadProfilesFromStore = async () => {
     await wishlistsStore.initialize(false)
   }
 
-  const items = wishlistsStore.getUserItemsForWeapon(props.weapon.weaponHash)
-  displayProfiles.value = items.map(item => ({
-    id: item.id,
-    item,
-    showDeleteConfirm: false
-  }))
+  // Get items from all ENABLED wishlists (respects the toggle in "Wishlists that include this weapon")
+  const wishlistResults = wishlistsStore.getItemsForWeaponHash(props.weapon.weaponHash)
+  const profiles: DisplayProfile[] = []
+
+  for (const { wishlist, items } of wishlistResults) {
+    for (const item of items) {
+      profiles.push({
+        id: item.id,
+        item,
+        wishlistId: wishlist.id,
+        wishlistName: wishlist.name,
+        isUserWishlist: wishlist.sourceType === 'user',
+        showDeleteConfirm: false
+      })
+    }
+  }
+
+  displayProfiles.value = profiles
 
   // Auto-expand if profiles exist
   savedRollsExpanded.value = displayProfiles.value.length > 0
@@ -1601,9 +1635,14 @@ const handleSave = async () => {
         displayProfiles.value[idx].item = savedItem
       }
     } else {
+      // Get the default wishlist to get its name
+      const defaultWishlist = wishlistsStore.getOrCreateDefaultWishlist()
       displayProfiles.value.push({
         id: savedItem.id,
         item: savedItem,
+        wishlistId: defaultWishlist.id,
+        wishlistName: defaultWishlist.name,
+        isUserWishlist: true,
         showDeleteConfirm: false
       })
       currentProfileId.value = savedItem.id
@@ -1683,6 +1722,9 @@ const editWishlistItem = (item: WishlistItem, wishlist: Wishlist) => {
     displayProfiles.value.push({
       id: item.id,
       item,
+      wishlistId: wishlist.id,
+      wishlistName: wishlist.name,
+      isUserWishlist: wishlist.sourceType === 'user',
       showDeleteConfirm: false
     })
   }
