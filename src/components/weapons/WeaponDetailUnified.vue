@@ -90,6 +90,7 @@
           :wishlist-name="profile.wishlistName"
           :is-active="isProfileActive(profile)"
           :show-actions="profile.isUserWishlist"
+          :show-view-only="!profile.isUserWishlist"
           @view="handleView(profile)"
           @edit="handleEdit(profile)"
           @remove="deletingProfile = profile"

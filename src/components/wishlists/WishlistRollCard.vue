@@ -82,8 +82,17 @@
         {{ formattedUpdatedAt }}
       </span>
 
-      <!-- Right: Action links (for editable wishlists) - flex-1 to balance left side -->
+      <!-- Right: Action links - flex-1 to balance left side -->
       <div class="flex-1 flex justify-end gap-3" @click.stop>
+        <!-- View-only for premade wishlists -->
+        <button
+          v-if="showViewOnly && !showActions"
+          @click="emit('view')"
+          class="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300"
+        >
+          View
+        </button>
+        <!-- Full actions for user wishlists -->
         <template v-if="showActions">
           <button
             @click="emit('view')"
@@ -128,12 +137,15 @@ const props = withDefaults(defineProps<{
   clickable?: boolean
   /** Whether this card is currently active/selected */
   isActive?: boolean
-  /** Show View/Edit/Remove action links */
+  /** Show View/Edit/Remove action links (for user wishlists) */
   showActions?: boolean
+  /** Show only View action link (for premade wishlists) */
+  showViewOnly?: boolean
 }>(), {
   clickable: false,
   isActive: false,
-  showActions: false
+  showActions: false,
+  showViewOnly: false
 })
 
 const emit = defineEmits<{
@@ -171,7 +183,8 @@ const hasBottomRowContent = computed(() =>
   props.item.youtubeLink ||
   props.item.youtubeAuthor ||
   props.item.updatedAt ||
-  props.showActions
+  props.showActions ||
+  props.showViewOnly
 )
 
 // Handlers
