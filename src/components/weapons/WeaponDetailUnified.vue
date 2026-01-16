@@ -385,41 +385,13 @@
 
       <!-- Instances List (Wishlist Mode) -->
     <div class="space-y-4">
-      <div class="flex items-center justify-between flex-wrap gap-2">
-        <h4 class="font-bold text-lg">In Your Inventory ({{ filteredAndSortedInstances.length }})</h4>
-        <div class="flex items-center gap-2">
-          <!-- Sort toggle -->
-          <button
-            @click="cycleSortOrder"
-            class="px-2 py-1 text-xs font-medium rounded transition-colors"
-            :class="sortOrder !== 'none' ? 'bg-surface-overlay text-text' : 'bg-surface-elevated text-text-muted hover:bg-surface-overlay'"
-            title="Sort by tier"
-          >
-            {{ sortOrder === 'desc' ? '↓' : sortOrder === 'asc' ? '↑' : '−' }} Tier
-          </button>
-          <!-- Tier filter buttons -->
-          <div class="flex gap-0.5 bg-surface-elevated rounded p-0.5">
-            <button
-              v-for="tier in [5, 4, 3, 2, 1]"
-              :key="tier"
-              @click="toggleTier(tier)"
-              class="w-6 h-6 text-xs font-medium rounded transition-colors"
-              :class="enabledTiers.has(tier) ? 'bg-surface-overlay text-text' : 'bg-surface-elevated text-text-subtle hover:text-text-muted'"
-              :title="`Toggle Tier ${tier}`"
-            >
-              {{ tier }}
-            </button>
-            <button
-              @click="toggleTier(null)"
-              class="w-6 h-6 text-xs font-medium rounded transition-colors"
-              :class="enabledTiers.has(null) ? 'bg-surface-overlay text-text' : 'bg-surface-elevated text-text-subtle hover:text-text-muted'"
-              title="Toggle No Tier"
-            >
-              0
-            </button>
-          </div>
-        </div>
-      </div>
+      <InstanceFilterBar
+        :instance-count="filteredAndSortedInstances.length"
+        :sort-order="sortOrder"
+        :enabled-tiers="enabledTiers"
+        @cycle-sort-order="cycleSortOrder"
+        @toggle-tier="toggleTier"
+      />
 
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
         <div
@@ -637,41 +609,13 @@
 
       <!-- Instances List (Coverage Mode) -->
       <div class="space-y-4">
-        <div class="flex items-center justify-between flex-wrap gap-2">
-          <h4 class="font-bold text-lg">In Your Inventory ({{ filteredAndSortedInstances.length }})</h4>
-          <div class="flex items-center gap-2">
-            <!-- Sort toggle -->
-            <button
-              @click="cycleSortOrder"
-              class="px-2 py-1 text-xs font-medium rounded transition-colors"
-              :class="sortOrder !== 'none' ? 'bg-surface-overlay text-text' : 'bg-surface-elevated text-text-muted hover:bg-surface-overlay'"
-              title="Sort by tier"
-            >
-              {{ sortOrder === 'desc' ? '↓' : sortOrder === 'asc' ? '↑' : '−' }} Tier
-            </button>
-            <!-- Tier filter buttons -->
-            <div class="flex gap-0.5 bg-surface-elevated rounded p-0.5">
-              <button
-                v-for="tier in [5, 4, 3, 2, 1]"
-                :key="tier"
-                @click="toggleTier(tier)"
-                class="w-6 h-6 text-xs font-medium rounded transition-colors"
-                :class="enabledTiers.has(tier) ? 'bg-surface-overlay text-text' : 'bg-surface-elevated text-text-subtle hover:text-text-muted'"
-                :title="`Toggle Tier ${tier}`"
-              >
-                {{ tier }}
-              </button>
-              <button
-                @click="toggleTier(null)"
-                class="w-6 h-6 text-xs font-medium rounded transition-colors"
-                :class="enabledTiers.has(null) ? 'bg-surface-overlay text-text' : 'bg-surface-elevated text-text-subtle hover:text-text-muted'"
-                title="Toggle No Tier"
-              >
-                0
-              </button>
-            </div>
-          </div>
-        </div>
+        <InstanceFilterBar
+          :instance-count="filteredAndSortedInstances.length"
+          :sort-order="sortOrder"
+          :enabled-tiers="enabledTiers"
+          @cycle-sort-order="cycleSortOrder"
+          @toggle-tier="toggleTier"
+        />
 
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
           <div
@@ -785,6 +729,7 @@ import { useWishlistsStore } from '@/stores/wishlists'
 import type { PerkColumnInfo } from '@/services/dim-wishlist-parser'
 import { getWishlistPerkAnnotations, selectionToWishlistItem } from '@/services/dim-wishlist-parser'
 import InstancePerkGrid from './InstancePerkGrid.vue'
+import InstanceFilterBar from './InstanceFilterBar.vue'
 import WishlistPerkMatrix from '@/components/wishlists/WishlistPerkMatrix.vue'
 import WishlistsApplied from './WishlistsApplied.vue'
 import {
