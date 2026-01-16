@@ -90,7 +90,7 @@
             'inline-flex items-center rounded-lg px-3 py-1.5 text-sm font-medium transition-colors',
             wishlist.sourceType === 'preset'
               ? 'bg-purple-100 dark:bg-purple-600/30 text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-600/40'
-              : 'bg-surface-overlay text-text hover:bg-surface-elevated'
+              : 'bg-blue-100 dark:bg-blue-600/30 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-600/40'
           ]"
         >
           {{ wishlist.sourceType === 'preset' ? 'View / Fork' : 'View / Edit' }}
