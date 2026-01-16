@@ -197,9 +197,9 @@
             >
               Edit This Roll
             </button>
-            <!-- Create Wishlist Roll button (when perks selected but not in edit mode) -->
+            <!-- Create Wishlist Roll button (only when perks selected and NOT viewing/editing existing roll) -->
             <button
-              v-if="hasSelection && editorMode !== 'edit'"
+              v-if="hasSelection && !editorMode"
               @click="startCreateRoll"
               :class="['px-3 py-1.5 rounded-lg text-sm font-medium transition-colors', BUTTON_STYLES.success]"
             >
