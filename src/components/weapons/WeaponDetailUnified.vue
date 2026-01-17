@@ -152,7 +152,7 @@
               <input
                 v-model="youtubeLink"
                 type="url"
-                placeholder="YouTube link..."
+                placeholder="YouTube or website URL..."
                 class="bg-surface border border-border rounded px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-text-subtle"
               />
               <input
