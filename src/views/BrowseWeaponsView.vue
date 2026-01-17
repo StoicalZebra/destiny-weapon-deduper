@@ -213,7 +213,7 @@ async function loadWeapons() {
 onMounted(async () => {
   // Wait for manifest to load if not already loaded
   if (!manifestStore.isLoaded) {
-    await manifestStore.loadManifest()
+    await manifestStore.downloadManifest()
   }
   loadWeapons()
 })

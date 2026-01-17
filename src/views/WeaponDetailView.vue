@@ -147,7 +147,7 @@ const loadWeapons = async () => {
 const loadManifestForBrowse = async () => {
   if (!manifestStore.isLoaded) {
     manifestLoading.value = true
-    await manifestStore.loadManifest()
+    await manifestStore.downloadManifest()
     manifestLoading.value = false
   }
 }
