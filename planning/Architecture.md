@@ -511,6 +511,253 @@ interface WeaponInstance {
 
 ---
 
+## Multi-Variant Wishlist Matching
+
+Weapons with multiple hashes (e.g., holofoil + normal variants) present a challenge for wishlist matching. A roll saved under one hash must still match inventory items with the other hash.
+
+### The Problem Visualized
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         DESTINY 2 MANIFEST                                  │
+│                                                                             │
+│   "All Or Nothing" exists as TWO separate items:                            │
+│                                                                             │
+│   ┌──────────────────────┐    ┌──────────────────────┐                      │
+│   │ Hash: 1954466322     │    │ Hash: 2348522233     │                      │
+│   │ Name: All Or Nothing │    │ Name: All Or Nothing │                      │
+│   │ Season: 26           │    │ Season: 26           │                      │
+│   │ Type: Normal         │    │ Type: Holofoil       │                      │
+│   └──────────────────────┘    └──────────────────────┘                      │
+│                                                                             │
+│   Same weapon, same perks, different visual variant = different hash        │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+When a user saves a wishlist roll, it stores ONE hash:
+
+```
+┌─────────────────────────────────────────┐
+│ WishlistItem stored in IndexedDB:       │
+│                                         │
+│   weaponHash: 1954466322  <-- Only ONE  │
+│   perkHashes: [456, 789, 123]           │
+│   notes: "My PvP roll"                  │
+└─────────────────────────────────────────┘
+```
+
+### Without Multi-Variant Solution (Broken)
+
+```
+┌─────────────────────┐    ┌─────────────────────┐
+│ Instance A          │    │ Instance B          │
+│ Hash: 1954466322    │    │ Hash: 2348522233    │
+│ (Normal)            │    │ (Holofoil)          │
+└─────────────────────┘    └─────────────────────┘
+         │                          │
+         ▼                          ▼
+┌─────────────────────┐    ┌─────────────────────┐
+│ Lookup: 1954466322  │    │ Lookup: 2348522233  │
+│ Result: MATCH       │    │ Result: NO MATCH    │
+│ (shows wishlist)    │    │ (wishlist missing!) │
+└─────────────────────┘    └─────────────────────┘
+
+The holofoil version doesn't show the wishlist roll!
+```
+
+### Solution: Variant-Aware Lookup
+
+We solve this at **lookup time**, not storage time. This preserves DIM format compatibility while ensuring rolls match all variants.
+
+#### Step 1: Build Variant Map (happens once at manifest load)
+
+```
+manifestService scans all weapons, groups by name + season:
+
+variantGroups Map:
+┌─────────────────────────────────────────────────────────────┐
+│  1954466322 --> [1954466322, 2348522233]  (All Or Nothing)  │
+│  2348522233 --> [1954466322, 2348522233]  (All Or Nothing)  │
+│  3146657388 --> [3146657388, 1234567890]  (Modified B-7)    │
+│  1234567890 --> [3146657388, 1234567890]  (Modified B-7)    │
+│  9999999999 --> [9999999999]              (Solo weapon)     │
+└─────────────────────────────────────────────────────────────┘
+
+O(1) lookup: any hash --> all related hashes
+```
+
+#### Step 2: Variant-Aware Lookup
+
+```
+┌─────────────────────┐
+│ Instance B          │
+│ Hash: 2348522233    │
+│ (Holofoil)          │
+└─────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────────┐
+│ getWeaponVariantHashes(2348522233)      │
+│ Returns: [1954466322, 2348522233]       │
+└─────────────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────────┐
+│ Check wishlist index for EACH hash:     │
+│                                         │
+│   index.get(1954466322) --> FOUND!      │
+│   index.get(2348522233) --> (empty)     │
+│                                         │
+│ Result: Match found via variant hash    │
+└─────────────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────────┐
+│ Holofoil shows wishlist roll!           │
+└─────────────────────────────────────────┘
+```
+
+### DIM Export with Multi-Variant Support
+
+```
+Stored WishlistItem:
+┌─────────────────────────────────────────┐
+│ weaponHash: 1954466322                  │
+│ perkHashes: [456, 789]                  │
+│ notes: "PvP roll"                       │
+└─────────────────────────────────────────┘
+                    │
+                    ▼
+┌─────────────────────────────────────────┐
+│ getWeaponVariantHashes(1954466322)      │
+│ Returns: [1954466322, 2348522233]       │
+└─────────────────────────────────────────┘
+                    │
+                    ▼
+┌─────────────────────────────────────────┐
+│ OUTPUT (one line per variant):          │
+│                                         │
+│ dimwishlist:item=1954466322&perks=...   │  <-- Normal
+│ dimwishlist:item=2348522233&perks=...   │  <-- Holofoil
+│                                         │
+│ DIM will now match BOTH variants!       │
+└─────────────────────────────────────────┘
+```
+
+### Implementation
+
+#### 1. Pre-computed Variant Groups (`manifest-service.ts`)
+
+```typescript
+// Built once during manifest load
+private variantGroups: Map<number, number[]> = new Map()
+
+private buildVariantGroups(table: Record<string, DestinyInventoryItemDefinition>): void {
+  const groupsByKey = new Map<string, number[]>()
+
+  for (const def of Object.values(table)) {
+    if (def.itemType !== 3) continue  // Only weapons
+
+    const name = def.displayProperties?.name
+    const groupKey = def.seasonHash
+      ? `${name}|season:${def.seasonHash}`
+      : `${name}|watermark:${def.iconWatermark}`
+
+    groupsByKey.get(groupKey)?.push(def.hash) ?? groupsByKey.set(groupKey, [def.hash])
+  }
+
+  // Map each hash to its full variant array
+  for (const hashes of groupsByKey.values()) {
+    for (const hash of hashes) {
+      this.variantGroups.set(hash, hashes)
+    }
+  }
+}
+
+getWeaponVariantHashes(hash: number): number[] {
+  return this.variantGroups.get(hash) ?? [hash]
+}
+```
+
+#### 2. Variant-Aware Wishlist Lookup (`wishlists.ts`)
+
+```typescript
+function getItemsForWeaponVariants(
+  variantHashes: number[]
+): Array<{ wishlist: Wishlist; items: WishlistItem[] }> {
+  const results = []
+  const seenItems = new Set<string>()
+
+  for (const wishlist of enabledWishlists) {
+    const matchingItems: WishlistItem[] = []
+
+    // Check ALL variant hashes
+    for (const hash of variantHashes) {
+      const items = weaponIndex.get(hash) || []
+      for (const item of items) {
+        if (!seenItems.has(item.id)) {
+          seenItems.add(item.id)
+          matchingItems.push(item)
+        }
+      }
+    }
+
+    if (matchingItems.length > 0) {
+      results.push({ wishlist, items: matchingItems })
+    }
+  }
+
+  return results
+}
+```
+
+#### 3. Multi-Hash DIM Export (`dim-wishlist-parser.ts`)
+
+```typescript
+// Export outputs one line per variant hash
+for (const item of weaponItems) {
+  const variantHashes = options?.getVariantHashes?.(item.weaponHash) ?? [item.weaponHash]
+
+  for (const hash of variantHashes) {
+    lines.push(serializeItem(item, hash))
+  }
+}
+```
+
+### Where Variant-Aware Lookup is Used
+
+| Location | Method | Purpose |
+|----------|--------|---------|
+| `WeaponDetailUnified.vue` | `getItemsForWeaponVariants()` | Perk annotations & saved rolls list |
+| `WishlistsApplied.vue` | Loops through `variantHashes` prop | Sidebar wishlist counts |
+| `wishlists.ts` export | `getVariantHashes` callback | DIM format export |
+
+### Key Insight
+
+```
+We DON'T change how data is stored:
+
+┌───────────────────────┐
+│ WishlistItem          │
+│   weaponHash: NUMBER  │  <-- Still stores ONE hash
+│   perkHashes: [...]   │
+└───────────────────────┘
+
+We change how data is QUERIED:
+
+Before: index.get(weaponHash)          <-- Single hash lookup
+After:  for each hash in variants:     <-- Check ALL variant hashes
+          index.get(hash)
+
+Benefits:
+- No migration needed for existing data
+- Premade wishlists work automatically
+- DIM format compatibility preserved
+- O(1) variant lookup (pre-computed map)
+```
+
+---
+
 ## Local Development with Mock Data
 
 Due to Bungie OAuth limitations (single redirect URI per app), local development uses mock inventory data instead of live API calls.
