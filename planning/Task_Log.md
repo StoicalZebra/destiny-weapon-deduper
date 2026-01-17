@@ -300,6 +300,24 @@ Update: triggered by user clicking "Edit" on Saved Wishlist card. Same workflow 
 
 Delete: triggered by user clicking "Delete" on Saved Wishlist card. deletes saved roll (with warning beforehand)
 
+## 2026-01-17
+
+### Saved Wishlist Rolls changes needed
+- Currently each line in large permade wishlists gets turned into an individual card, visually overwhelming, 40+ nearly duplicate cards for 1 weapons (each card only a slight perk change between the other)
+
+- Option 1) Text-only cards for large pre-made lists (Voltron, Choosy Voltron and Just Another Team)
+  - For large premade wishlists, have a single card showing
+    - left column: text explanation to users for large premade wishlists workflow
+      - use green thumbs up in Perk Matrix to see chosen perks
+      - Reason: de-clutter wishlist cards UI (wishlists would often have 40+ separate roll combinations)
+    - right column: keep current text "note" view of wishlist entry 
+
+- Option 2) have Claude figure out a way to recombine the factorial (?) / "spread-out" / single-line-per-combination DIM wishlists into a single cohesive perk matrix that covers all listed combinations into one card.
+  - Basically- have all the "green thumbs up" perks shown in Perk Matrix also be represented in the Saved Wishlist Rolls card 
+
+- Re-enable Choosy Voltron
+  - Implement thumbs down mechanic like DIM
+
 
 
 

@@ -15,8 +15,11 @@
 
       <!-- Right: Updated date + all badges -->
       <div class="flex flex-col items-end gap-1.5 flex-shrink-0">
-        <!-- Updated date -->
-        <div v-if="wishlist.lastFetched || wishlist.lastUpdated" class="text-xs text-text-subtle whitespace-nowrap">
+        <!-- GitHub commit date for preset wishlists, local update date for custom -->
+        <div v-if="wishlist.githubCommitDate && wishlist.sourceType === 'preset'" class="text-xs text-text-subtle whitespace-nowrap">
+          Last commit: {{ formatDateShort(wishlist.githubCommitDate) }}
+        </div>
+        <div v-else-if="wishlist.lastFetched || wishlist.lastUpdated" class="text-xs text-text-subtle whitespace-nowrap">
           Updated: {{ formatDateShort(wishlist.lastUpdated || wishlist.lastFetched) }}
         </div>
 
@@ -65,13 +68,20 @@
 
     <!-- Actions - always at bottom -->
     <div class="mt-4 pt-3 border-t border-border/50">
-      <!-- Large wishlists: show message explaining why edit is disabled -->
+      <!-- Large wishlists: show View button + GitHub link -->
       <div v-if="isTooLarge" class="text-sm text-text-muted space-y-3">
         <p>
           <span class="text-text font-medium">{{ stats.itemCount.toLocaleString() }} rolls</span>
           — too large for in-app editing (limit: {{ MAX_EDITABLE_ROLLS }})
         </p>
-        <div class="flex flex-wrap items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2 justify-end">
+          <!-- View button to browse the wishlist -->
+          <router-link
+            :to="{ name: 'wishlist-detail', params: { id: wishlist.id } }"
+            class="inline-flex items-center rounded-lg bg-purple-100 dark:bg-purple-600/30 px-3 py-1.5 text-sm font-medium text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-600/40 transition-colors"
+          >
+            View
+          </router-link>
           <a
             v-if="wishlist.sourceUrl"
             :href="wishlist.sourceUrl"
@@ -79,7 +89,7 @@
             rel="noopener noreferrer"
             class="inline-flex items-center gap-1.5 text-blue-600 dark:text-blue-400 hover:underline"
           >
-            View or fork on GitHub
+            Fork on GitHub
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
             </svg>

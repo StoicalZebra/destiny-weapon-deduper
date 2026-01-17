@@ -515,6 +515,32 @@ Reference: [LittleLight Wishlists GitHub](https://github.com/LittleLightForDesti
 
 ---
 
+## Consolidated Wishlist Cards
+
+Large community wishlists like Voltron contain dozens of near-identical entries per weapon (one line per exact perk combination). Instead of showing 40+ individual cards for a single weapon, the app **consolidates** these into a single unified card.
+
+### How It Works
+
+| Wishlist Type | Display | Reason |
+|--------------|---------|--------|
+| **Large presets** (Voltron, JAT-MnK, Choosy Voltron) | Consolidated card | Merges all perk combinations into one perk matrix |
+| **Small presets** (StoicalZebra) | Individual cards | Curated rolls, each deserves its own card |
+| **Custom wishlists** | Individual cards | User-created, full CRUD actions |
+
+### Consolidated Card Features
+
+- **Unified perk matrix**: Shows ALL recommended perks from all entries combined
+- **Combined notes**: De-duplicates and summarizes notes from multiple entries (shows "Summarized from X notes" indicator)
+- **Tag union**: Shows all unique tags across consolidated entries
+- **YouTube info**: Shows primary YouTube link with "+N more" indicator
+- **View action**: Click to see all perks highlighted in the weapon detail matrix
+
+### Variant Grouping
+
+Consolidated cards group items by **weapon name only**, so all variants (holofoil, seasonal re-releases, etc.) appear in a single card. This differs from inventory deduplication which groups by season/watermark.
+
+---
+
 ## Wishlist Types & Permissions
 
 Wishlists are editable based on their **size** (roll count):

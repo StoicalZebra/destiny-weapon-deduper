@@ -65,7 +65,7 @@
     <!-- ==================== WISHLIST MODE ==================== -->
     <template v-if="viewMode === 'wishlist'">
       <!-- Saved Wishlist Rolls (collapsible) -->
-      <div v-if="displayProfiles.length > 0" class="space-y-3">
+      <div v-if="totalSavedRollsCount > 0" class="space-y-3">
       <button
         @click="savedRollsExpanded = !savedRollsExpanded"
         class="flex items-center gap-2 w-full text-left"
@@ -81,13 +81,23 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
         </svg>
         <h4 class="font-bold text-sm text-text-muted uppercase tracking-wider">
-          Saved Wishlist Rolls ({{ displayProfiles.length }})
+          Saved Wishlist Rolls ({{ totalSavedRollsCount }})
         </h4>
       </button>
 
       <div v-show="savedRollsExpanded" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <!-- Consolidated cards for large presets (Voltron, JAT-MnK, Choosy Voltron) -->
+        <ConsolidatedRollCard
+          v-for="group in consolidatedWishlistGroups"
+          :key="group.wishlistId"
+          :consolidated="group.consolidated"
+          :weapon-hash="weapon.weaponHash"
+          :wishlist-name="group.wishlistName"
+          @action="handleViewConsolidated(group)"
+        />
+        <!-- Individual cards for other wishlists (StoicalZebra, user wishlists) -->
         <WishlistRollCard
-          v-for="profile in displayProfiles"
+          v-for="profile in nonConsolidatedProfiles"
           :key="profile.id"
           :item="profile.item"
           :weapon-hash="weapon.weaponHash"
@@ -701,7 +711,12 @@ import InstancePerkGrid from './InstancePerkGrid.vue'
 import InstanceFilterBar from './InstanceFilterBar.vue'
 import PerkIconWithBadges from './PerkIconWithBadges.vue'
 import WishlistRollCard from '@/components/wishlists/WishlistRollCard.vue'
+import ConsolidatedRollCard from '@/components/wishlists/ConsolidatedRollCard.vue'
 import WishlistsApplied from './WishlistsApplied.vue'
+import {
+  shouldConsolidateWishlist,
+  consolidateWishlistItems
+} from '@/utils/wishlist-consolidation'
 import {
   INSTANCE_CARD_STYLES,
   PERK_RING_STYLES,
@@ -845,6 +860,59 @@ interface DisplayProfile {
 const displayProfiles = ref<DisplayProfile[]>([])
 const currentProfileId = ref<string | null>(null)
 const sourceWishlistId = ref<string | null>(null)
+
+// Consolidation: group profiles by wishlist and determine which should show consolidated cards
+interface ConsolidatedProfileGroup {
+  wishlistId: string
+  wishlistName: string
+  consolidated: ReturnType<typeof consolidateWishlistItems>
+}
+
+const profilesByWishlist = computed(() => {
+  const groups = new Map<string, DisplayProfile[]>()
+  for (const profile of displayProfiles.value) {
+    const existing = groups.get(profile.wishlistId) || []
+    existing.push(profile)
+    groups.set(profile.wishlistId, existing)
+  }
+  return groups
+})
+
+// Wishlists that should show consolidated cards (large presets like Voltron)
+const consolidatedWishlistGroups = computed(() => {
+  const wishlistsStore = useWishlistsStore()
+  const groups: ConsolidatedProfileGroup[] = []
+
+  for (const [wishlistId, profiles] of profilesByWishlist.value) {
+    const wishlist = wishlistsStore.getWishlistById(wishlistId)
+    if (wishlist && shouldConsolidateWishlist(wishlist)) {
+      const items = profiles.map(p => p.item)
+      groups.push({
+        wishlistId,
+        wishlistName: profiles[0].wishlistName,
+        consolidated: consolidateWishlistItems(items)
+      })
+    }
+  }
+  return groups
+})
+
+// Profiles from wishlists that should NOT be consolidated (StoicalZebra, user wishlists)
+const nonConsolidatedProfiles = computed(() => {
+  const wishlistsStore = useWishlistsStore()
+  const profiles: DisplayProfile[] = []
+
+  for (const [wishlistId, wishlistProfiles] of profilesByWishlist.value) {
+    const wishlist = wishlistsStore.getWishlistById(wishlistId)
+    if (!wishlist || !shouldConsolidateWishlist(wishlist)) {
+      profiles.push(...wishlistProfiles)
+    }
+  }
+  return profiles
+})
+
+// Total count for header display
+const totalSavedRollsCount = computed(() => displayProfiles.value.length)
 
 // CRUD mode tracking
 const editorMode = ref<'view' | 'edit' | null>(null)
@@ -1472,6 +1540,25 @@ const handleView = (profile: DisplayProfile) => {
   )
   // DON'T set currentProfileId (that's for edit mode)
   // DON'T populate form fields
+}
+
+// View consolidated: load all perks from the consolidated item into selection
+const handleViewConsolidated = (group: ConsolidatedProfileGroup) => {
+  editorMode.value = 'view'
+  viewingProfileId.value = null // No single profile active
+  viewMode.value = 'wishlist'
+  // Create a synthetic WishlistItem from the consolidated data to load perks
+  const syntheticItem: WishlistItem = {
+    id: `consolidated-${group.wishlistId}`,
+    weaponHash: props.weapon.weaponHash,
+    perkHashes: group.consolidated.perkHashes,
+    notes: group.consolidated.notes,
+    tags: group.consolidated.tags
+  }
+  selection.value = wishlistsStore.loadWishlistItemAsSelection(
+    syntheticItem,
+    perkColumnsForStore.value
+  )
 }
 
 // Edit: load perks AND open form

@@ -41,6 +41,18 @@
       </div>
     </div>
 
+    <!-- External wishlist sources note -->
+    <p class="mt-3 text-xs text-text-subtle">
+      You can find other wishlists
+      <a
+        href="https://github.com/48klocs/dim-wish-list-sources"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-blue-400 hover:text-blue-300 hover:underline"
+      >here</a>
+      — caution: many have not been updated in years.
+    </p>
+
     <!-- Error message -->
     <div v-if="error" class="mt-4 rounded-lg bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700/50 p-3 text-sm text-red-700 dark:text-red-300">
       {{ error }}

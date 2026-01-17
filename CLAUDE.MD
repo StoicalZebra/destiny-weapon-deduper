@@ -179,6 +179,32 @@ npm run test:watch # Run tests in watch mode
 - Add unnecessary dependencies
 - Commit and push without running `npm test` first and ensuring all tests pass
 
+## Gotchas / Common Pitfalls
+
+### Weapon Variant Grouping
+
+The codebase has two different approaches for grouping weapon variants:
+
+**1. `manifestService.getWeaponVariantHashes()` - Season/Watermark Based**
+- Groups weapons by **name + season/watermark**
+- Used for: Inventory deduplication (same weapon from same season)
+- Limitation: **Does NOT catch all variants** - event weapons (e.g., Dawning holofoils) have different watermarks than their normal versions, so they won't be grouped together
+
+**2. `groupItemsByWeaponName()` in `wishlist-consolidation.ts` - Name Based**
+- Groups weapons by **name only** (regardless of season or watermark)
+- Used for: UI consolidation where you want ALL versions of "Permafrost" grouped together
+- Benefit: Catches all variants including event holofoils, seasonal re-releases, etc.
+
+**When to use which:**
+| Use Case | Function | Why |
+|----------|----------|-----|
+| Inventory ownership (what do I have?) | `getWeaponVariantHashes()` | Distinguishes seasonal versions |
+| UI display consolidation (show one card) | `groupItemsByWeaponName()` | Groups ALL versions of a weapon |
+
+### DIM Wishlist Tags
+
+DIM ignores `|tags:` in wishlist files but we parse and display them in our UI. When exporting, tags are embedded in the notes field for round-trip compatibility.
+
 ## Future Enhancements (Stretch Goals)
 
 From `idea.md`:

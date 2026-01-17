@@ -51,7 +51,7 @@
       <!-- Right: notes (if any) - full height column -->
       <div
         v-if="item.notes"
-        class="text-xs text-text-muted flex-1 min-w-0 overflow-y-auto max-h-32 cursor-help"
+        class="text-xs text-text-muted flex-1 min-w-0 overflow-y-auto max-h-32"
         :title="item.notes"
       >
         {{ item.notes }}
@@ -123,8 +123,8 @@ import { computed } from 'vue'
 import WishlistPerkMatrix from '@/components/wishlists/WishlistPerkMatrix.vue'
 import { sortTagsForDisplay } from '@/utils/wishlist-sorting'
 import { getTimestampedUrl, extractYouTubeVideoId } from '@/utils/youtube'
-import { TAG_DISPLAY_STYLES, TAG_TOOLTIPS } from '@/styles/ui-states'
-import type { WishlistItem, WishlistTag } from '@/models/wishlist'
+import { getTagDisplayClasses, getTagTooltip } from '@/utils/wishlist-tags'
+import type { WishlistItem } from '@/models/wishlist'
 
 const props = withDefaults(defineProps<{
   /** The wishlist item data */
@@ -199,14 +199,4 @@ function handleClick() {
   }
 }
 
-// Tag styling helpers
-function getTagDisplayClasses(tag: WishlistTag): string {
-  if (tag === 'pve') return TAG_DISPLAY_STYLES.pve
-  if (tag === 'pvp') return TAG_DISPLAY_STYLES.pvp
-  return TAG_DISPLAY_STYLES.default
-}
-
-function getTagTooltip(tag: WishlistTag): string {
-  return TAG_TOOLTIPS[tag] || tag
-}
 </script>

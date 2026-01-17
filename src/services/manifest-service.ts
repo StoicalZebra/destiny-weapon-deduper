@@ -269,6 +269,14 @@ class ManifestService {
    * Find all variant hashes for a weapon (same name + season, different hashes)
    * Uses pre-computed variant groups built during manifest load for O(1) lookup
    * Returns array of hashes including the input hash
+   *
+   * IMPORTANT: This groups by name + season/watermark, so it does NOT catch all
+   * variants of a weapon. Event weapons (e.g., Dawning holofoils) have different
+   * watermarks than their normal versions and won't be grouped together.
+   *
+   * For UI consolidation where you want ALL versions of a weapon grouped together
+   * regardless of season/event, use `groupItemsByWeaponName()` from
+   * `src/utils/wishlist-consolidation.ts` instead.
    */
   getWeaponVariantHashes(hash: number): number[] {
     // Use pre-computed map for O(1) lookup

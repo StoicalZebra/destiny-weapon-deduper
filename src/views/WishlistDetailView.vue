@@ -167,18 +167,36 @@
           </div>
 
           <!-- Items for this weapon -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-            <WishlistRollCard
-              v-for="item in items"
-              :key="item.id"
-              :item="item"
-              :weapon-hash="weaponHash"
-              :wishlist-name="wishlist?.name || 'Unknown'"
-              :show-actions="isEditable"
-              @view="handleViewItem(item, weaponHash)"
-              @edit="handleEditItem(item, weaponHash)"
-              @remove="handleDeleteItem(item.id)"
-            />
+          <div :class="[
+            'grid gap-2',
+            useConsolidation
+              ? 'grid-cols-1 lg:grid-cols-2'
+              : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+          ]">
+            <!-- Consolidated view for large preset wishlists (Voltron, JAT-MnK) -->
+            <template v-if="useConsolidation">
+              <ConsolidatedRollCard
+                :consolidated="consolidatedGroups.get(weaponHash)!"
+                :weapon-hash="weaponHash"
+                :wishlist-name="wishlist?.name || 'Unknown'"
+                action-label="View"
+                @action="handleViewWeapon(weaponHash)"
+              />
+            </template>
+            <!-- Individual cards for other wishlists (StoicalZebra, user wishlists) -->
+            <template v-else>
+              <WishlistRollCard
+                v-for="item in items"
+                :key="item.id"
+                :item="item"
+                :weapon-hash="weaponHash"
+                :wishlist-name="wishlist?.name || 'Unknown'"
+                :show-actions="isEditable"
+                @view="handleViewItem(item, weaponHash)"
+                @edit="handleEditItem(item, weaponHash)"
+                @remove="handleDeleteItem(item.id)"
+              />
+            </template>
           </div>
         </div>
       </div>
@@ -286,9 +304,15 @@ import { manifestService } from '@/services/manifest-service'
 import { weaponParser } from '@/services/weapon-parser'
 import { getWishlistStats } from '@/services/dim-wishlist-parser'
 import WishlistRollCard from '@/components/wishlists/WishlistRollCard.vue'
-import type { WishlistItem } from '@/models/wishlist'
+import ConsolidatedRollCard from '@/components/wishlists/ConsolidatedRollCard.vue'
+import type { WishlistItem, ConsolidatedWishlistItem } from '@/models/wishlist'
 import { formatHashSuffix } from '@/utils/formatting'
 import { sortItemsByTagPriority } from '@/utils/wishlist-sorting'
+import {
+  shouldConsolidateWishlist,
+  consolidateWishlistItems,
+  groupItemsByWeaponName
+} from '@/utils/wishlist-consolidation'
 
 const route = useRoute()
 const router = useRouter()
@@ -328,22 +352,48 @@ const isEditable = computed(() => {
   return wishlist.value.sourceType === 'user'
 })
 
+// Consolidation: merge multiple items per weapon into single view for large preset wishlists
+const useConsolidation = computed(() => {
+  return wishlist.value ? shouldConsolidateWishlist(wishlist.value) : false
+})
+
 // Group items by weapon, sorted by tag priority within each group
+// When consolidation is enabled, group by canonical hash (merges weapon variants)
 const groupedByWeapon = computed(() => {
   if (!wishlist.value) return new Map<number, WishlistItem[]>()
 
-  const groups = new Map<number, WishlistItem[]>()
-  for (const item of wishlist.value.items) {
-    const existing = groups.get(item.weaponHash) || []
-    existing.push(item)
-    groups.set(item.weaponHash, existing)
-  }
+  // Use name-based grouping when consolidating (merges all variants + seasonal re-releases)
+  // Otherwise use direct hash grouping (preserves individual variant entries)
+  const groups = useConsolidation.value
+    ? groupItemsByWeaponName(wishlist.value.items)
+    : (() => {
+        const map = new Map<number, WishlistItem[]>()
+        for (const item of wishlist.value!.items) {
+          const existing = map.get(item.weaponHash) || []
+          existing.push(item)
+          map.set(item.weaponHash, existing)
+        }
+        return map
+      })()
 
   // Sort items within each group by tag priority
   for (const [hash, items] of groups) {
     groups.set(hash, sortItemsByTagPriority(items))
   }
 
+  return groups
+})
+
+// Pre-compute consolidated items for each weapon (only when consolidation is enabled)
+const consolidatedGroups = computed(() => {
+  if (!wishlist.value || !useConsolidation.value) {
+    return new Map<number, ConsolidatedWishlistItem>()
+  }
+
+  const groups = new Map<number, ConsolidatedWishlistItem>()
+  for (const [weaponHash, items] of groupedByWeapon.value) {
+    groups.set(weaponHash, consolidateWishlistItems(items))
+  }
   return groups
 })
 
@@ -525,6 +575,14 @@ function handleDeleteItem(itemId: string) {
 
 function handleViewItem(_item: WishlistItem, weaponHash: number) {
   // Navigate to weapon detail page (view mode)
+  router.push({
+    name: 'weapon-detail',
+    params: { weaponHash: weaponHash.toString() }
+  })
+}
+
+function handleViewWeapon(weaponHash: number) {
+  // Navigate to weapon detail page (for consolidated cards)
   router.push({
     name: 'weapon-detail',
     params: { weaponHash: weaponHash.toString() }

@@ -14,7 +14,8 @@ import { wishlistStorageService } from '@/services/wishlist-storage-service'
 import { useAuthStore } from '@/stores/auth'
 import {
   presetWishlistService,
-  PRESET_WISHLISTS
+  PRESET_WISHLISTS,
+  fetchGithubCommitDate
 } from '@/services/preset-wishlist-service'
 import {
   parseDimWishlist,
@@ -95,6 +96,9 @@ export const useWishlistsStore = defineStore('wishlists', () => {
       if (checkUpdates) {
         checkForUpdates().catch(() => {})
       }
+
+      // Background refresh: update commit dates for preset wishlists
+      refreshPresetMetadata().catch(() => {})
 
       initialized.value = true
     } catch (err) {
@@ -289,6 +293,31 @@ export const useWishlistsStore = defineStore('wishlists', () => {
     } finally {
       loading.value = false
     }
+  }
+
+  /**
+   * Background refresh: update commit dates for all loaded preset wishlists
+   * This runs silently without blocking the UI or showing loading states
+   */
+  async function refreshPresetMetadata(): Promise<void> {
+    // Update commit dates in parallel for all loaded presets
+    const updatePromises = presetWishlists.value.map(async (wishlist) => {
+      if (wishlist.sourceType !== 'preset' || !wishlist.sourceUrl) return
+
+      try {
+        const commitDate = await fetchGithubCommitDate(wishlist.sourceUrl)
+        if (commitDate && commitDate !== wishlist.githubCommitDate) {
+          // Update in-memory state
+          wishlist.githubCommitDate = commitDate
+          // Persist to storage
+          await wishlistStorageService.savePreset(wishlist)
+        }
+      } catch {
+        // Silent failure - metadata refresh is non-critical
+      }
+    })
+
+    await Promise.all(updatePromises)
   }
 
   /**

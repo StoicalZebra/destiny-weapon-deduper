@@ -55,6 +55,7 @@ export interface Wishlist {
   version?: string // Content hash for update detection
   lastFetched?: string // ISO timestamp of last fetch
   lastUpdated?: string // ISO timestamp of content update
+  githubCommitDate?: string // ISO timestamp of last GitHub commit (for presets)
   items: WishlistItem[] // All rolls in this wishlist
   // Note: enabled state is stored separately in localStorage via wishlistStorageService
   // for performance reasons. See README "Wishlist Performance Architecture" section.
@@ -105,4 +106,32 @@ export interface ParsedWishlist {
   title?: string
   description?: string
   items: WishlistItem[]
+}
+
+/**
+ * Consolidated view of multiple WishlistItems for the same weapon.
+ * Used for display in large preset wishlists where many rolls exist per weapon.
+ * This is a view-layer construct - original data is never mutated.
+ */
+export interface ConsolidatedWishlistItem {
+  /** Union of all perk hashes from consolidated items */
+  perkHashes: number[]
+  /** Concatenated unique notes from all items */
+  notes: string | undefined
+  /** Union of all unique tags */
+  tags: WishlistTag[]
+  /** Count of original items consolidated */
+  originalCount: number
+  /** Count of original notes before deduplication (for "summarized from N" display) */
+  originalNotesCount: number
+  /** YouTube info from first item with a link (if any) */
+  primaryYoutube?: {
+    link: string
+    author?: string
+    timestamp?: string
+  }
+  /** Count of items with different YouTube links (for "and N more" display) */
+  additionalYoutubeCount: number
+  /** The original items (kept for reference) */
+  sourceItems: WishlistItem[]
 }

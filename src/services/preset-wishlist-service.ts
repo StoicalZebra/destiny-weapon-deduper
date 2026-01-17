@@ -42,6 +42,16 @@ export const PRESET_WISHLISTS: PresetWishlistConfig[] = [
       'https://raw.githubusercontent.com/dsf000z/JAT-wishlists-bundler/refs/heads/main/bundles/DIM/just-another-team-mnk.txt',
     author: 'Just Another Team',
     large: true // Large community wishlist
+  },
+  {
+    id: 'choosy-voltron',
+    name: 'Choosy Voltron',
+    description:
+      'A curated subset of Voltron focusing on the most impactful perks for each weapon',
+    githubUrl:
+      'https://raw.githubusercontent.com/48klocs/dim-wish-list-sources/master/choosy_voltron.txt',
+    author: '48klocs',
+    large: true
   }
 ]
 
@@ -54,6 +64,49 @@ const UPDATE_CHECK_CACHE_MS = 5 * 60 * 1000
  * In-memory cache for update status
  */
 const updateStatusCache = new Map<string, { status: WishlistUpdateStatus; timestamp: number }>()
+
+/**
+ * Parse GitHub raw URL to extract owner, repo, and file path for API calls.
+ * Supports both main URL formats:
+ * - https://raw.githubusercontent.com/owner/repo/branch/path/file.txt
+ * - https://raw.githubusercontent.com/owner/repo/refs/heads/branch/path/file.txt
+ */
+function parseGithubRawUrl(
+  rawUrl: string
+): { owner: string; repo: string; path: string } | null {
+  // Match: raw.githubusercontent.com/owner/repo/...
+  const match = rawUrl.match(
+    /raw\.githubusercontent\.com\/([^/]+)\/([^/]+)\/(?:refs\/heads\/)?[^/]+\/(.+)/
+  )
+  if (!match) return null
+  return { owner: match[1], repo: match[2], path: match[3] }
+}
+
+/**
+ * Fetch the latest commit date for a file from the GitHub API.
+ * Returns null if the API call fails (non-critical).
+ * Exported for use in background refresh.
+ */
+export async function fetchGithubCommitDate(rawUrl: string): Promise<string | null> {
+  const parsed = parseGithubRawUrl(rawUrl)
+  if (!parsed) return null
+
+  try {
+    const apiUrl = `https://api.github.com/repos/${parsed.owner}/${parsed.repo}/commits?path=${encodeURIComponent(parsed.path)}&per_page=1`
+    const response = await fetch(apiUrl)
+
+    if (!response.ok) return null
+
+    const data = await response.json()
+    if (Array.isArray(data) && data.length > 0 && data[0].commit?.author?.date) {
+      return data[0].commit.author.date
+    }
+  } catch {
+    // Non-critical - just skip commit date
+  }
+
+  return null
+}
 
 class PresetWishlistService {
   /**
@@ -88,7 +141,11 @@ class PresetWishlistService {
    * Fetch a wishlist from GitHub and parse it
    */
   async fetchWishlist(config: PresetWishlistConfig): Promise<Wishlist> {
-    const response = await fetch(config.githubUrl)
+    // Fetch content and commit date in parallel
+    const [response, commitDate] = await Promise.all([
+      fetch(config.githubUrl),
+      fetchGithubCommitDate(config.githubUrl)
+    ])
 
     if (!response.ok) {
       throw new Error(`Failed to fetch wishlist ${config.name}: ${response.status}`)
@@ -108,6 +165,7 @@ class PresetWishlistService {
       version,
       lastFetched: new Date().toISOString(),
       lastUpdated: new Date().toISOString(),
+      githubCommitDate: commitDate || undefined,
       items: parsed.items
     }
 
