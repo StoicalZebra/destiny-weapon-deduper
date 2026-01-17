@@ -5,29 +5,6 @@
       <p class="text-text-subtle">{{ filteredWeapons.length }} weapons</p>
     </div>
 
-    <!-- URL Import -->
-    <div class="mb-6 p-4 bg-surface-elevated border border-border rounded-lg">
-      <label class="block text-sm font-medium text-text-muted mb-2">
-        Import from light.gg URL
-      </label>
-      <div class="flex gap-2">
-        <input
-          v-model="urlInput"
-          type="text"
-          placeholder="https://www.light.gg/db/items/2873508409/high-tyrant/"
-          class="flex-1 px-4 py-2 bg-surface border border-border rounded-lg focus:outline-none focus:border-accent-primary text-text"
-          @keydown.enter="handleUrlImport"
-        />
-        <button
-          @click="handleUrlImport"
-          class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg transition-colors"
-        >
-          Go
-        </button>
-      </div>
-      <p v-if="urlError" class="mt-2 text-sm text-red-500">{{ urlError }}</p>
-    </div>
-
     <!-- Search and Filters -->
     <div class="flex flex-col md:flex-row gap-4 mb-6">
       <!-- Search -->
@@ -99,18 +76,11 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import { manifestService, type DestinyInventoryItemDefinition } from '@/services/manifest-service'
 import { useManifestStore } from '@/stores/manifest'
-import { parseLightGgUrl } from '@/utils/url-parser'
 import BrowseWeaponCard from '@/components/weapons/BrowseWeaponCard.vue'
 
-const router = useRouter()
 const manifestStore = useManifestStore()
-
-// URL import state
-const urlInput = ref('')
-const urlError = ref('')
 
 // Search and filter state
 const searchQuery = ref('')
@@ -175,32 +145,6 @@ function loadMore() {
 // Reset pagination when filters change
 function resetPagination() {
   currentPage.value = 1
-}
-
-// URL import handler
-function handleUrlImport() {
-  urlError.value = ''
-
-  if (!urlInput.value.trim()) {
-    urlError.value = 'Please enter a URL'
-    return
-  }
-
-  const hash = parseLightGgUrl(urlInput.value)
-  if (!hash) {
-    urlError.value = 'Invalid light.gg URL. Expected format: https://www.light.gg/db/items/123456/weapon-name/'
-    return
-  }
-
-  // Validate weapon exists in manifest
-  const weaponDef = manifestService.getInventoryItem(hash)
-  if (!weaponDef) {
-    urlError.value = `Weapon with hash ${hash} not found in manifest`
-    return
-  }
-
-  // Navigate to browse detail
-  router.push(`/browse/${hash}`)
 }
 
 // Load weapons when manifest is ready
