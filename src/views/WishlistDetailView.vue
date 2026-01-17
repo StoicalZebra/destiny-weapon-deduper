@@ -148,10 +148,19 @@
                   <h3 class="font-semibold text-text truncate">{{ getWeaponName(weaponHash) }}</h3>
                   <p class="text-xs text-text-subtle">{{ items.length }} {{ items.length === 1 ? 'roll' : 'rolls' }}</p>
                 </div>
-                <!-- Right column: Season + Hash (left-aligned, bottom-aligned) -->
+                <!-- Right column: Season + Hashes (left-aligned, bottom-aligned) -->
                 <div class="flex flex-col justify-end">
                   <p v-if="getWeaponSeasonName(weaponHash)" class="text-xs text-text-subtle">{{ getWeaponSeasonName(weaponHash) }}</p>
-                  <p class="text-xs text-text-subtle font-mono">Hash ...{{ formatHashSuffix(weaponHash) }}</p>
+                  <!-- Show all variant hashes if multiple exist -->
+                  <div v-if="getWeaponVariants(weaponHash).length > 1" class="text-xs text-text-subtle">
+                    <div v-for="variant in getWeaponVariants(weaponHash)" :key="variant.hash" class="flex items-center gap-1">
+                      <span v-if="variant.isHolofoil" class="text-purple-400">Holofoil</span>
+                      <span v-else>Normal</span>
+                      <span class="font-mono">...{{ formatHashSuffix(variant.hash) }}</span>
+                    </div>
+                  </div>
+                  <!-- Single hash display for weapons without variants -->
+                  <p v-else class="text-xs text-text-subtle font-mono">Hash ...{{ formatHashSuffix(weaponHash) }}</p>
                 </div>
               </div>
             </div>
@@ -424,6 +433,15 @@ function getWeaponIcon(hash: number): string | null {
 
 function getWeaponSeasonName(hash: number): string | undefined {
   return weaponParser.getWeaponSeasonName(hash)
+}
+
+// Get all variant hashes for a weapon (e.g., holofoil + normal)
+function getWeaponVariants(hash: number): Array<{ hash: number; isHolofoil: boolean }> {
+  const variantHashes = manifestService.getWeaponVariantHashes(hash)
+  return variantHashes.map(h => ({
+    hash: h,
+    isHolofoil: manifestService.isHolofoilWeapon(h)
+  }))
 }
 
 function formatDate(isoString?: string): string {
