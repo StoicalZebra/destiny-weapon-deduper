@@ -1,7 +1,7 @@
 <template>
-  <div class="container mx-auto px-4 py-8">
+  <div>
     <div class="flex items-center justify-between mb-6">
-      <h1 class="text-3xl font-bold">Browse All D2 Weapons</h1>
+      <h1 class="text-3xl font-bold">All Weapons</h1>
       <p class="text-text-subtle">{{ filteredWeapons.length }} weapons</p>
     </div>
 
