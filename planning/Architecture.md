@@ -509,6 +509,45 @@ interface WeaponInstance {
 - **Mixed ownership**: Could own only holofoil OR only normal (both tracked)
 - **Only one variant owned**: Card displays single hash without labels
 
+### Why Some Multi-Hash Weapons Show "Normal" + "Normal"
+
+**Observed behavior**: Some weapons display two hashes but both labeled "Normal" instead of "Normal" + "Holofoil".
+
+**Root cause**: Our holofoil detection reads `isHolofoil` directly from Bungie's manifest - we don't infer or guess. If Bungie's manifest has `isHolofoil: false` for both hashes, we display both as "Normal".
+
+**Verified via browser console** (January 2026):
+```
+Fimbulwinter Stitch:
+  Hash 3685829362: isHolofoil = false  → "Normal"
+  Hash 2645567209: isHolofoil = true   → "Holofoil" ✓
+
+All or Nothing:
+  Hash 3984776322: isHolofoil = false  → "Normal"
+  Hash 2023002233: isHolofoil = false  → "Normal"
+  (Both show as Normal because Bungie's manifest says so)
+```
+
+**Why weapons have multiple hashes without holofoil distinction**:
+1. Different acquisition sources (vendor vs drop vs quest)
+2. Re-issued in different events
+3. Definition updates requiring new hash
+4. Bungie data oversight (may be corrected in future manifest updates)
+
+**Our approach is correct**: DIM uses the exact same detection (`itemDef.isHolofoil`). We display what Bungie's source of truth tells us. If Bungie updates their manifest to flag a hash as holofoil, our UI will automatically reflect that on next manifest refresh.
+
+**To verify holofoil status for any weapon**:
+```javascript
+// In browser DevTools console
+const db = indexedDB.open('d3deduper', 3);
+db.onsuccess = (e) => {
+  const tx = e.target.result.transaction('manifest', 'readonly');
+  tx.objectStore('manifest').get('DestinyInventoryItemDefinition').onsuccess = (r) => {
+    const hash = 3984776322; // Replace with hash to check
+    console.log(r.target.result[hash]?.isHolofoil);
+  };
+};
+```
+
 ---
 
 ## Multi-Variant Wishlist Matching
