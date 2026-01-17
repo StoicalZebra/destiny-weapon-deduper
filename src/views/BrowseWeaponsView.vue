@@ -33,7 +33,7 @@
         v-model="selectedTier"
         class="px-4 py-2 bg-surface-elevated border border-border rounded-lg focus:outline-none focus:border-accent-primary text-text"
       >
-        <option value="">All Tiers</option>
+        <option value="">All Rarities</option>
         <option value="6">Exotic</option>
         <option value="5">Legendary</option>
       </select>
