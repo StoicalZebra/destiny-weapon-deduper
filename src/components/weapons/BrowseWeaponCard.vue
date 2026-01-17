@@ -12,7 +12,7 @@
       />
       <div class="min-w-0 flex-1">
         <h3 class="text-lg font-semibold truncate">{{ weapon.displayProperties.name }}</h3>
-        <p v-if="seasonName" class="text-xs text-text-subtle">{{ seasonName }}</p>
+        <p class="text-sm text-text-muted">{{ weapon.itemTypeDisplayName }}</p>
         <div class="flex items-center gap-2 mt-1">
           <span
             class="text-xs px-1.5 py-0.5 rounded"
@@ -20,7 +20,7 @@
           >
             {{ tierLabel }}
           </span>
-          <span class="text-xs text-text-subtle">{{ weapon.itemTypeDisplayName }}</span>
+          <span v-if="seasonName" class="text-xs text-text-subtle">{{ seasonName }}</span>
         </div>
       </div>
     </div>

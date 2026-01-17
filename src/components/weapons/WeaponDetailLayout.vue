@@ -12,6 +12,7 @@
           />
           <div>
             <h1 class="text-2xl font-bold">{{ weapon.weaponName }}</h1>
+            <p class="text-sm text-text-muted">{{ weapon.weaponType }}</p>
             <!-- Instance count (hide in browse mode) -->
             <p v-if="!isBrowseMode" class="text-xs text-text-subtle">
               {{ weapon.instances.length }} {{ weapon.instances.length === 1 ? 'Copy' : 'Copies' }}<span v-if="subtitle"> {{ subtitle }}</span>

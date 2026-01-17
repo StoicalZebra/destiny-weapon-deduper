@@ -13,6 +13,7 @@
         />
         <div class="min-w-0">
           <h3 class="text-lg font-semibold truncate">{{ weapon.weaponName }}</h3>
+          <p class="text-sm text-text-muted">{{ weapon.weaponType }}</p>
           <p v-if="weapon.seasonName" class="text-xs text-text-subtle">{{ weapon.seasonName }}</p>
           <p class="text-xs text-text-subtle">{{ tierLabel }}</p>
         </div>
