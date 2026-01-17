@@ -100,9 +100,14 @@ const selectedWeapon = computed(() => {
 })
 
 // Check if user owns this weapon (for browse mode redirect)
+// Must check all variant hashes since the user might own a different variant (e.g., holofoil)
 const ownedWeapon = computed(() => {
   if (!Number.isFinite(weaponHash.value)) return null
-  return weaponsStore.weapons.find(weapon => weapon.weaponHash === weaponHash.value) || null
+  // Get all variant hashes for this weapon (includes holofoil + normal)
+  const variantHashes = manifestService.getWeaponVariantHashes(weaponHash.value)
+  const variantSet = new Set(variantHashes)
+  // Check if user owns any variant of this weapon
+  return weaponsStore.weapons.find(weapon => variantSet.has(weapon.weaponHash)) || null
 })
 
 // Build DedupedWeapon from manifest for browse mode (no ownership data)
@@ -155,8 +160,9 @@ const loadManifestForBrowse = async () => {
 // In browse mode, redirect to inventory view if user owns the weapon
 watch(ownedWeapon, (weapon) => {
   if (isBrowseMode.value && weapon) {
-    // User owns this weapon, redirect to inventory detail view
-    router.replace(`/weapons/${weaponHash.value}`)
+    // User owns this weapon (possibly a different variant), redirect to inventory detail view
+    // Use the owned weapon's hash, not the URL hash (they may differ for variants)
+    router.replace(`/weapons/${weapon.weaponHash}`)
   }
 }, { immediate: true })
 
