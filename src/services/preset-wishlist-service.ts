@@ -35,16 +35,6 @@ export const PRESET_WISHLISTS: PresetWishlistConfig[] = [
     large: true // ~1200+ rolls, load on demand
   },
   {
-    id: 'choosy-voltron',
-    name: 'Choosy Voltron',
-    description:
-      'A more opinionated version of Voltron that will thumbs-down some of your items. Use this if you want stricter roll recommendations.',
-    githubUrl:
-      'https://raw.githubusercontent.com/48klocs/dim-wish-list-sources/master/choosy_voltron.txt',
-    author: '48klocs',
-    large: true // Similar size to Voltron
-  },
-  {
     id: 'jat-mnk',
     name: 'Just Another Team (MnK)',
     description: 'Mouse & Keyboard focused wishlist by Just Another Team',

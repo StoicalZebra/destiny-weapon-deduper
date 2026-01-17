@@ -72,7 +72,7 @@
             rel="noopener noreferrer"
             class="text-blue-400 hover:text-blue-300 hover:underline"
             @click.stop
-          >YouTube<template v-if="item.youtubeTimestamp"> @ {{ item.youtubeTimestamp }}</template></a>
+          ><template v-if="isYoutubeLink">YouTube<template v-if="item.youtubeTimestamp"> @ {{ item.youtubeTimestamp }}</template></template><template v-else>Link</template></a>
           <span v-else-if="item.youtubeTimestamp">@ {{ item.youtubeTimestamp }}</span>
         </span>
       </div>
@@ -122,7 +122,7 @@
 import { computed } from 'vue'
 import WishlistPerkMatrix from '@/components/wishlists/WishlistPerkMatrix.vue'
 import { sortTagsForDisplay } from '@/utils/wishlist-sorting'
-import { getTimestampedUrl } from '@/utils/youtube'
+import { getTimestampedUrl, extractYouTubeVideoId } from '@/utils/youtube'
 import { TAG_DISPLAY_STYLES, TAG_TOOLTIPS } from '@/styles/ui-states'
 import type { WishlistItem, WishlistTag } from '@/models/wishlist'
 
@@ -157,6 +157,11 @@ const emit = defineEmits<{
 
 // Computed values
 const sortedTags = computed(() => sortTagsForDisplay(props.item.tags))
+
+const isYoutubeLink = computed(() => {
+  if (!props.item.youtubeLink) return false
+  return extractYouTubeVideoId(props.item.youtubeLink) !== null
+})
 
 const timestampedYoutubeUrl = computed(() => {
   if (props.item.youtubeLink && props.item.youtubeTimestamp) {
