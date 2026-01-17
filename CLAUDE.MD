@@ -1,27 +1,14 @@
 # Destiny Weapon Deduper - Claude Code Context
 
+> **This file is for AI/developer context when working in the codebase.**
+> - For setup instructions and feature docs, see [README.md](README.md)
+> - For deep technical internals, see [planning/Architecture.md](planning/Architecture.md)
+
 ## Project Overview
 
-**Destiny Weapon Deduper** is a Vue 3 + TypeScript application that simplifies duplicate weapon management in Destiny 2 inventory.
+**Destiny Weapon Deduper** - Vue 3 + TypeScript app for managing duplicate Destiny 2 weapons. Shows a "merged" view of all perk combinations across weapon copies, helping users identify god rolls and safely dismantle duplicates.
 
-### Problem Statement
-Players accumulate multiple copies of the same weapon with different perk combinations (rolls), leading to inventory management fatigue and uncertainty about which weapons to keep or dismantle.
-
-### Solution
-Provides a "merged" or "deduped" view showing all collected perk combinations for each weapon as if they were one unified weapon instance, making it easy to:
-- Visually identify progress toward god rolls
-- See which perk combinations you've earned
-- Safely identify which duplicate weapons can be deleted
-
-## Tech Stack
-
-- **Framework**: Vue 3.5 with Composition API
-- **Language**: TypeScript 5.7
-- **State Management**: Pinia
-- **Routing**: Vue Router
-- **Styling**: Tailwind CSS
-- **Build Tool**: Vite 6
-- **API**: Bungie Destiny 2 API
+**Tech Stack**: Vue 3.5, TypeScript 5.7, Pinia, Tailwind CSS, Vite 6, Bungie API
 
 ## Project Structure
 
@@ -98,38 +85,14 @@ src/
 - Recent searches dropdown with localStorage persistence
 - Sort toggle (Most Duplicates / A-Z) on weapons list
 
-## Data Models
+## Architecture Overview
 
-### Weapon Instance
-Represents a single weapon copy with specific perks equipped:
-- Barrel
-- Magazine
-- Left column traits
-- Right column traits
-- Origin traits
-- Masterwork
+For detailed data models, data flow diagrams, and storage architecture, see [planning/Architecture.md](planning/Architecture.md).
 
-### Deduped Weapon
-Consolidated view showing all earned perk combinations across all instances of the same weapon.
-
-## Architecture Patterns
-
-### State Management
-- **Pinia stores** for global state (auth, weapons, manifest)
-- Stores handle API calls and data transformation
-- Components consume reactive state from stores
-
-### Service Layer
-- Separation between API calls (`api/`) and business logic (`services/`)
-- `weapon-parser.ts` - Transforms raw API data into domain models
-- `deduplication.ts` - Merges weapon instances into consolidated views
-- `manifest-service.ts` - Processes Destiny manifest definitions
-
-### Component Organization
-- Route-level views in `views/`
-- Feature-specific components in `components/weapons/`
-- Shared components in `components/common/`
-- Layout components in `components/layout/`
+**Key patterns:**
+- **Pinia stores** for global state (auth, weapons, manifest, wishlists)
+- **Service layer** separates API calls (`api/`) from business logic (`services/`)
+- **Component organization**: views in `views/`, features in `components/weapons/`, shared in `components/common/`
 
 ## Routes
 
@@ -141,21 +104,11 @@ Consolidated view showing all earned perk combinations across all instances of t
 
 Unauthenticated users are redirected to `/about`.
 
-## Development Commands
-
-```bash
-npm run dev        # Start development server
-npm run build      # Build for production (runs vue-tsc + vite build)
-npm run preview    # Preview production build
-npm test           # Run test suite (vitest)
-npm run test:watch # Run tests in watch mode
-```
-
 ## Testing
 
 - **Framework**: Vitest
 - **Test files**: `src/services/*.test.ts`
-- **Coverage**: 124 tests across 4 service files (manifest-service, weapon-parser, deduplication, dim-wishlist-parser)
+- **Run**: `npm test` or `npm run test:watch`
 
 ## Important Notes for Claude
 
@@ -205,9 +158,9 @@ The codebase has two different approaches for grouping weapon variants:
 
 DIM ignores `|tags:` in wishlist files but we parse and display them in our UI. When exporting, tags are embedded in the notes field for round-trip compatibility.
 
-## Future Enhancements (Stretch Goals)
+## Related Documentation
 
-From `idea.md`:
-- Notifications when new perks are earned that weren't previously collected
-- More granular god roll tracking (3 of 6, 4 of 6 completions)
-- Enhanced wishlist features
+- [README.md](README.md) - Setup, commands, feature docs, wishlist format specs
+- [planning/Architecture.md](planning/Architecture.md) - Bungie API internals, data flow, storage schemas
+- [planning/Spec.md](planning/Spec.md) - Product roadmap and future enhancements
+- [planning/UI-Styling.md](planning/UI-Styling.md) - UI color scheme and styling constants
