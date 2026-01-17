@@ -28,6 +28,18 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/browse',
+      name: 'browse-weapons',
+      component: () => import('@/views/BrowseWeaponsView.vue')
+      // No auth required - manifest data is public
+    },
+    {
+      path: '/browse/:weaponHash',
+      name: 'browse-weapon-detail',
+      component: WeaponDetailView
+      // No auth required - uses manifest data only
+    },
+    {
       path: '/callback',
       name: 'callback',
       component: CallbackView

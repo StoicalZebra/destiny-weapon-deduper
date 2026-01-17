@@ -12,7 +12,14 @@
           to="/"
           class="text-text-muted hover:text-text transition"
         >
-          Weapons
+          Inventory
+        </RouterLink>
+
+        <RouterLink
+          to="/browse"
+          class="text-text-muted hover:text-text transition"
+        >
+          All Weapons
         </RouterLink>
 
         <RouterLink
@@ -107,7 +114,15 @@
           class="text-text-muted hover:text-text transition py-2"
           @click="mobileMenuOpen = false"
         >
-          Weapons
+          Inventory
+        </RouterLink>
+
+        <RouterLink
+          to="/browse"
+          class="text-text-muted hover:text-text transition py-2"
+          @click="mobileMenuOpen = false"
+        >
+          All Weapons
         </RouterLink>
 
         <RouterLink

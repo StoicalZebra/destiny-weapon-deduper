@@ -3,8 +3,9 @@
     <!-- Mode Toggle + Wishlists Applied Row -->
     <div class="flex items-center justify-between gap-4">
       <!-- Left: Mode Toggle (centered vertically and horizontally in its column) -->
+      <!-- Hide Coverage Analysis in browse mode (no instances to analyze) -->
       <div class="flex-1 flex items-center justify-center self-stretch">
-        <div class="flex items-center gap-1 bg-surface-overlay rounded-lg p-1">
+        <div v-if="!isBrowseMode" class="flex items-center gap-1 bg-surface-overlay rounded-lg p-1">
         <button
           @click="viewMode = 'wishlist'"
           class="px-4 py-2 text-sm font-medium rounded-md transition-colors"
@@ -23,6 +24,9 @@
         >
           Coverage Analysis
         </button>
+        </div>
+        <div v-else class="text-sm text-text-muted">
+          Wishlist Editor
         </div>
       </div>
 
@@ -722,9 +726,12 @@ import {
 import { formatMasterworkStatName, formatHashSuffix } from '@/utils/formatting'
 import { getItemTagPriority } from '@/utils/wishlist-sorting'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   weapon: DedupedWeapon
-}>()
+  isBrowseMode?: boolean
+}>(), {
+  isBrowseMode: false
+})
 
 // Initialize wishlists store
 const wishlistsStore = useWishlistsStore()

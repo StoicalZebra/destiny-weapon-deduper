@@ -12,7 +12,8 @@
           />
           <div>
             <h1 class="text-2xl font-bold">{{ weapon.weaponName }}</h1>
-            <p class="text-xs text-text-subtle">
+            <!-- Instance count (hide in browse mode) -->
+            <p v-if="!isBrowseMode" class="text-xs text-text-subtle">
               {{ weapon.instances.length }} {{ weapon.instances.length === 1 ? 'Copy' : 'Copies' }}<span v-if="subtitle"> {{ subtitle }}</span>
             </p>
             <p v-if="weapon.seasonName" class="text-xs text-text-subtle">{{ weapon.seasonName }}</p>
@@ -25,13 +26,13 @@
               </div>
             </div>
           </div>
-          <!-- Stats -->
+          <!-- Stats (hide owned count in browse mode) -->
           <div class="hidden sm:flex items-center gap-6 ml-6 pl-6 border-l border-border">
             <div class="text-center">
               <p class="text-lg font-semibold text-text-muted">{{ weapon.totalPerksPossible }}</p>
               <p class="text-xs text-text-subtle uppercase tracking-wide">Perks Possible</p>
             </div>
-            <div class="text-center">
+            <div v-if="!isBrowseMode" class="text-center">
               <p class="text-lg font-semibold text-green-600 dark:text-green-300">{{ weapon.totalPerksOwned }}</p>
               <p class="text-xs text-text-subtle uppercase tracking-wide">Perks Owned</p>
             </div>
@@ -46,6 +47,13 @@
       >
         &larr; {{ backLabel }}
       </button>
+    </div>
+
+    <!-- Browse Mode Banner -->
+    <div v-if="isBrowseMode && weapon" class="mb-6 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+      <p class="text-sm text-blue-400">
+        This weapon is not in your inventory. Select perks below to create a wishlist entry for future reference.
+      </p>
     </div>
 
     <!-- Loading State -->
@@ -72,6 +80,7 @@
       <WeaponDetailUnified
         ref="unifiedRef"
         :weapon="weapon"
+        :is-browse-mode="isBrowseMode"
       />
     </div>
   </div>
@@ -99,16 +108,18 @@ interface Props {
   notFoundMessage?: string
   editItemId?: string
   editWishlistId?: string
+  isBrowseMode?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   loading: false,
   error: null,
-  backLabel: 'Back to all weapons',
+  backLabel: 'Back to inventory',
   subtitle: '',
   fallbackTitle: 'Weapon Details',
   loadingMessage: 'Loading...',
-  notFoundMessage: 'Weapon not found. Try returning to the list.'
+  notFoundMessage: 'Weapon not found. Try returning to the list.',
+  isBrowseMode: false
 })
 
 defineEmits<{

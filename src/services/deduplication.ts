@@ -647,6 +647,7 @@ export function buildDedupedWeapon(
   return {
     weaponHash: primaryHash,
     weaponName: weaponParser.getWeaponName(primaryHash),
+    weaponType: weaponParser.getWeaponType(primaryHash),
     weaponIcon: weaponParser.getWeaponIcon(primaryHash),
     iconWatermark: weaponParser.getWeaponIconWatermark(primaryHash),
     seasonName: weaponParser.getWeaponSeasonName(primaryHash),
@@ -689,5 +690,67 @@ export function getInstanceMasterwork(
     hash,
     name: perkDef.displayProperties?.name || 'Unknown',
     icon: perkDef.displayProperties?.icon || ''
+  }
+}
+
+/**
+ * Build a DedupedWeapon from manifest data only (no owned instances).
+ * Used for browsing/wishlisting weapons the user doesn't own.
+ * All perks will be marked as unowned.
+ *
+ * @param weaponHash - The weapon definition hash from the manifest
+ * @returns DedupedWeapon with empty instances, or null if weapon not found/invalid
+ */
+export function buildDedupedWeaponFromManifest(weaponHash: number): DedupedWeapon | null {
+  const weaponDef = manifestService.getInventoryItem(weaponHash)
+  if (!weaponDef) return null
+
+  // Only allow legendary (5) or exotic (6) weapons
+  const tierType = weaponDef.inventory?.tierType
+  if (tierType !== 5 && tierType !== 6) return null
+
+  // Must be an actual weapon (itemType 3)
+  if (weaponDef.itemType !== 3) return null
+
+  // Build perk matrix with no instances (all perks will be unowned)
+  const { matrix, intrinsicPerks, masterworkPerks, masterworkSocketIndex } = buildPerkMatrix(weaponHash, [])
+
+  // Get variant hashes from manifest service
+  const variantHashList = manifestService.getWeaponVariantHashes(weaponHash)
+  const variantHashes: WeaponVariantInfo[] = variantHashList.map(h => ({
+    hash: h,
+    isHolofoil: manifestService.isHolofoilWeapon(h)
+  }))
+
+  // Sort so non-holofoil comes first
+  variantHashes.sort((a, b) => {
+    if (a.isHolofoil !== b.isHolofoil) {
+      return a.isHolofoil ? 1 : -1
+    }
+    return 0
+  })
+
+  const totalPerksPossible = countPossiblePerks(matrix)
+
+  return {
+    weaponHash,
+    weaponName: weaponParser.getWeaponName(weaponHash),
+    weaponType: weaponParser.getWeaponType(weaponHash),
+    weaponIcon: weaponParser.getWeaponIcon(weaponHash),
+    iconWatermark: weaponParser.getWeaponIconWatermark(weaponHash),
+    seasonName: weaponParser.getWeaponSeasonName(weaponHash),
+    variantHashes,
+    hasHolofoil: variantHashes.some(v => v.isHolofoil),
+    perkMatrix: matrix,
+    intrinsicPerks,
+    masterworkPerks,
+    instances: [],
+    totalPerksOwned: 0,
+    totalPerksPossible,
+    completionPercentage: 0,
+    tierType: weaponParser.getWeaponTierType(weaponHash),
+    minGearTier: null,
+    maxGearTier: null,
+    masterworkSocketIndex
   }
 }

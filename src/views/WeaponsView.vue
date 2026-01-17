@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1 class="text-3xl font-bold mb-6">Your Weapons</h1>
+    <h1 class="text-3xl font-bold mb-6">Your Inventory</h1>
 
     <div v-if="weaponsStore.loading" class="text-center py-12">
       <LoadingSpinner />

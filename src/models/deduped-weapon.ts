@@ -12,6 +12,7 @@ export interface WeaponVariantInfo {
 export interface DedupedWeapon {
   weaponHash: number // Primary hash (prefers non-holofoil)
   weaponName: string
+  weaponType: string // e.g., "Hand Cannon", "Auto Rifle"
   weaponIcon: string
   // Season/version watermark overlay (small badge in upper-left corner)
   iconWatermark?: string

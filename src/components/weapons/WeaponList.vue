@@ -47,6 +47,17 @@
         </div>
       </div>
 
+      <!-- Weapon Type Filter -->
+      <select
+        v-model="selectedType"
+        class="px-4 py-2 bg-surface-elevated border border-border rounded-lg focus:outline-none focus:border-accent-primary text-text"
+      >
+        <option value="">All Types</option>
+        <option v-for="type in weaponTypes" :key="type" :value="type">
+          {{ type }}
+        </option>
+      </select>
+
       <!-- Duplicates only toggle -->
       <label class="flex items-center gap-2 text-sm text-text-muted cursor-pointer select-none">
         <div class="relative">
@@ -95,7 +106,7 @@
 
     <!-- Empty state -->
     <div v-if="sortedWeapons.length === 0" class="text-center py-12 text-text-subtle">
-      <p v-if="searchQuery">No weapons found matching "{{ searchQuery }}"</p>
+      <p v-if="searchQuery || selectedType">No weapons found matching your filters</p>
       <p v-else-if="showDuplicatesOnly && props.weapons.length > 0">
         No weapons with duplicates. Toggle off to see all {{ props.weapons.length }} weapons.
       </p>
@@ -115,9 +126,21 @@ const props = defineProps<{
 
 const searchInput = ref<HTMLInputElement | null>(null)
 const searchQuery = ref('')
+const selectedType = ref('')
 const sortBy = ref<'name' | 'copies'>('copies')
 const showRecentSearches = ref(false)
 const showDuplicatesOnly = ref(true)
+
+// Extract unique weapon types for filter dropdown
+const weaponTypes = computed(() => {
+  const types = new Set<string>()
+  for (const weapon of props.weapons) {
+    if (weapon.weaponType) {
+      types.add(weapon.weaponType)
+    }
+  }
+  return Array.from(types).sort()
+})
 
 // --- Recent Searches ---
 const RECENT_SEARCHES_KEY = 'd3_recent_searches'
@@ -196,6 +219,11 @@ const sortedWeapons = computed(() => {
   let weapons = showDuplicatesOnly.value
     ? props.weapons.filter(w => w.instances.length >= 2)
     : props.weapons
+
+  // Filter: weapon type
+  if (selectedType.value) {
+    weapons = weapons.filter(w => w.weaponType === selectedType.value)
+  }
 
   // Filter: search query
   if (searchQuery.value) {

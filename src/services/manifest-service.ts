@@ -283,6 +283,52 @@ class ManifestService {
   }
 
   /**
+   * Get all legendary and exotic weapons from the manifest.
+   * Used for browsing all weapons regardless of ownership.
+   * Returns an array of weapon definitions sorted by name.
+   */
+  getAllWeapons(): DestinyInventoryItemDefinition[] {
+    const table = this.cache.get('DestinyInventoryItemDefinition')
+    if (!table) return []
+
+    const weapons: DestinyInventoryItemDefinition[] = []
+    const seenNames = new Set<string>()
+
+    for (const key in table) {
+      const def = table[key] as DestinyInventoryItemDefinition
+      if (!def?.displayProperties?.name) continue
+
+      // Must be a weapon (itemType 3)
+      if (def.itemType !== 3) continue
+
+      // Only legendary (5) or exotic (6) tiers
+      const tierType = def.inventory?.tierType
+      if (tierType !== 5 && tierType !== 6) continue
+
+      // Skip redacted items
+      if (def.redacted) continue
+
+      // Skip holofoil variants (just keep the base version to avoid duplicates)
+      if (def.isHolofoil) continue
+
+      // De-duplicate by name + season to avoid showing multiple hashes of the same weapon
+      const watermark = def.iconWatermark || def.quality?.displayVersionWatermarkIcons?.[0]
+      const dedupeKey = `${def.displayProperties.name}|${def.seasonHash || watermark || 'none'}`
+      if (seenNames.has(dedupeKey)) continue
+      seenNames.add(dedupeKey)
+
+      weapons.push(def)
+    }
+
+    // Sort by name for consistent display
+    weapons.sort((a, b) =>
+      a.displayProperties.name.localeCompare(b.displayProperties.name)
+    )
+
+    return weapons
+  }
+
+  /**
    * Clear memory cache
    */
   clearCache(): void {
