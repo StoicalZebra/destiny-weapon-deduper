@@ -144,12 +144,18 @@ export function parseDimWishlist(content: string): ParsedWishlist {
 
 /**
  * Serialize a wishlist to DIM format string
+ *
+ * @param items - Wishlist items to serialize
+ * @param options - Optional title, description, and variant hash lookup
+ * @param options.getVariantHashes - Function to get all variant hashes for a weapon (for multi-hash export)
  */
 export function serializeToDimFormat(
   items: WishlistItem[],
   options?: {
     title?: string
     description?: string
+    /** Optional function to get all variant hashes for a weapon hash (e.g., holofoil + normal) */
+    getVariantHashes?: (hash: number) => number[]
   }
 ): string {
   const lines: string[] = []
@@ -168,17 +174,52 @@ export function serializeToDimFormat(
   }
 
   // Group items by weapon for better organization
-  const itemsByWeapon = new Map<number, WishlistItem[]>()
+  // Use a "canonical" hash (first variant) as the group key to merge variants
+  const itemsByWeaponGroup = new Map<number, WishlistItem[]>()
+  const canonicalHashMap = new Map<number, number>() // maps any hash -> canonical (first) hash
+
   for (const item of items) {
-    const existing = itemsByWeapon.get(item.weaponHash) || []
+    let groupKey = item.weaponHash
+
+    // If we have variant lookup, use the first variant hash as the canonical key
+    if (options?.getVariantHashes) {
+      const variants = options.getVariantHashes(item.weaponHash)
+      if (variants.length > 0) {
+        // Use cached canonical hash or compute it
+        if (!canonicalHashMap.has(item.weaponHash)) {
+          const canonical = Math.min(...variants) // Use smallest hash as canonical
+          for (const v of variants) {
+            canonicalHashMap.set(v, canonical)
+          }
+        }
+        groupKey = canonicalHashMap.get(item.weaponHash) ?? item.weaponHash
+      }
+    }
+
+    const existing = itemsByWeaponGroup.get(groupKey) || []
     existing.push(item)
-    itemsByWeapon.set(item.weaponHash, existing)
+    itemsByWeaponGroup.set(groupKey, existing)
   }
 
-  // Serialize each weapon's items
-  for (const [weaponHash, weaponItems] of itemsByWeapon) {
+  // Serialize each weapon's items with blank lines between weapon groups
+  let isFirstWeapon = true
+  for (const [_groupKey, weaponItems] of itemsByWeaponGroup) {
+    // Add blank line before each weapon group (except the first)
+    if (!isFirstWeapon) {
+      lines.push('')
+    }
+    isFirstWeapon = false
+
     for (const item of weaponItems) {
-      lines.push(serializeItem(item, weaponHash))
+      // Get all variant hashes for this weapon (or just the original hash)
+      const variantHashes = options?.getVariantHashes
+        ? options.getVariantHashes(item.weaponHash)
+        : [item.weaponHash]
+
+      // Output one line per variant hash (for multi-hash weapons like holofoil + normal)
+      for (const hash of variantHashes) {
+        lines.push(serializeItem(item, hash))
+      }
     }
   }
 

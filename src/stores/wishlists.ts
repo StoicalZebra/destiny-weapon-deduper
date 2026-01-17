@@ -640,6 +640,7 @@ export const useWishlistsStore = defineStore('wishlists', () => {
 
   /**
    * Export a wishlist to DIM format string
+   * Outputs one line per variant hash for multi-hash weapons (e.g., holofoil + normal)
    */
   function exportToDimFormat(wishlistId: string): string | null {
     const wishlist = allWishlists.value.find((w) => w.id === wishlistId)
@@ -647,7 +648,9 @@ export const useWishlistsStore = defineStore('wishlists', () => {
 
     return serializeToDimFormat(wishlist.items, {
       title: wishlist.name,
-      description: wishlist.description
+      description: wishlist.description,
+      // Pass variant lookup so multi-hash weapons export all variant hashes
+      getVariantHashes: (hash: number) => manifestService.getWeaponVariantHashes(hash)
     })
   }
 

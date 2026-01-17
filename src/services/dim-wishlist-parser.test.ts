@@ -315,6 +315,65 @@ describe('serializeToDimFormat', () => {
 
     expect(result).toBe('dimwishlist:item=123')
   })
+
+  it('outputs multiple lines for multi-hash weapons when getVariantHashes provided', () => {
+    const items: WishlistItem[] = [
+      {
+        id: 'test-1',
+        weaponHash: 1111,
+        perkHashes: [456, 789],
+        tags: ['pvp']
+      }
+    ]
+    // Mock variant lookup returning 2 hashes
+    const getVariantHashes = (hash: number) => (hash === 1111 ? [1111, 2222] : [hash])
+
+    const result = serializeToDimFormat(items, { getVariantHashes })
+
+    // Should output 2 lines - one for each variant hash
+    const lines = result.split('\n').filter((l) => l.startsWith('dimwishlist:'))
+    expect(lines).toHaveLength(2)
+    expect(lines[0]).toBe('dimwishlist:item=1111&perks=456,789|tags:pvp')
+    expect(lines[1]).toBe('dimwishlist:item=2222&perks=456,789|tags:pvp')
+  })
+
+  it('adds blank lines between weapon groups', () => {
+    const items: WishlistItem[] = [
+      { id: 'test-1', weaponHash: 111, perkHashes: [1] },
+      { id: 'test-2', weaponHash: 111, perkHashes: [2] },
+      { id: 'test-3', weaponHash: 222, perkHashes: [3] }
+    ]
+    const result = serializeToDimFormat(items)
+
+    // Should have blank line between weapon 111 and 222
+    const lines = result.split('\n')
+    expect(lines).toEqual([
+      'dimwishlist:item=111&perks=1',
+      'dimwishlist:item=111&perks=2',
+      '', // blank line between weapons
+      'dimwishlist:item=222&perks=3'
+    ])
+  })
+
+  it('groups items by canonical hash when variants exist', () => {
+    // Items stored under different variant hashes should group together
+    const items: WishlistItem[] = [
+      { id: 'test-1', weaponHash: 1111, perkHashes: [1] }, // normal variant
+      { id: 'test-2', weaponHash: 2222, perkHashes: [2] } // holofoil variant (same weapon)
+    ]
+    // Variant lookup returns same variants for both hashes
+    const getVariantHashes = (hash: number) =>
+      hash === 1111 || hash === 2222 ? [1111, 2222] : [hash]
+
+    const result = serializeToDimFormat(items, { getVariantHashes })
+
+    const lines = result.split('\n').filter((l) => l.length > 0)
+    // Both items should be in same group (no blank line between them)
+    // Each item outputs 2 lines (one per variant)
+    expect(lines).toHaveLength(4)
+    // All 4 lines should be consecutive (grouped together)
+    expect(result).not.toContain('\n\n')
+  })
 })
 
 describe('isDimWishlistFormat', () => {
