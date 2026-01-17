@@ -8,7 +8,7 @@
         <p v-if="wishlist.author" class="text-sm text-text-muted">
           by {{ wishlist.author }}
         </p>
-        <p v-if="wishlist.description" class="mt-1 text-sm text-text-muted line-clamp-2">
+        <p v-if="wishlist.description" class="mt-1 text-sm text-text-muted min-h-[4lh] max-h-[6lh] overflow-y-auto">
           {{ wishlist.description }}
         </p>
       </div>
