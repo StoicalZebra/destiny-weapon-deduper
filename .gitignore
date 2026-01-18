@@ -41,3 +41,6 @@ __pycache__/
 # Playwright test artifacts
 playwright-report/
 test-results/
+
+# Test coverage reports
+coverage/
