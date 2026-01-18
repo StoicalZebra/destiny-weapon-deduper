@@ -431,21 +431,11 @@ What we intentionally removed:
 
 If you want to see what's in a large preset like Voltron, click "View on GitHub" to see the raw file. If you want your own wishlist, create a custom one from scratch or import a DIM-format file.
 
-### Editing Premade Wishlists (StoicalZebra, etc.)
+### Updating the StoicalZebra Canonical Wishlist
 
-Premade wishlists under 500 rolls can be edited directly in the app with a manual sync workflow.
+The canonical wishlist lives at `data/wishlists/StoicalZebra-wishlist.txt` and is served via GitHub raw URL. Use the local dev app to edit and save changes.
 
-### Storage Locations
-
-| Location | Purpose |
-|----------|---------|
-| `data/wishlists/StoicalZebra-wishlist.txt` | **Source of truth** - the file in Git that others link to |
-| Browser localStorage | **Working copy** - where in-app edits are saved temporarily |
-| GitHub raw URL | **Public share link** - what DIM users import |
-
-### Update Workflow
-
-**Dev Mode (Recommended):**
+**Workflow:**
 
 ```
 ┌─────────────────┐     ┌─────────────────────────┐     ┌─────────────────┐
@@ -454,41 +444,23 @@ Premade wishlists under 500 rolls can be edited directly in the app with a manua
 └─────────────────┘     └─────────────────────────┘     └─────────────────┘
 ```
 
-The "Save as Canonical" button (amber, appears only in dev mode for StoicalZebra):
-- Writes directly to `data/wishlists/StoicalZebra-wishlist.txt`
-- Auto-archives previous version to `data/wishlists/archive/`
-- You just need to commit and push
+**Steps:**
 
-**Production Mode (Manual):**
+1. `npm run dev` → Start local dev server
+2. Navigate to **Wishlists** → Click on **StoicalZebra**
+3. Edit rolls, add notes, update tags as needed
+4. Click the amber **"Save as Canonical"** button
+   - Writes directly to `data/wishlists/StoicalZebra-wishlist.txt`
+   - Auto-archives previous version to `data/wishlists/archive/`
+5. `git add . && git commit -m "chore: update wishlist" && git push`
 
-```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│  Edit in App    │ ──► │  Click Export   │ ──► │ Download .txt   │
-│  (production)   │     │                 │     │ (to Downloads)  │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
-                                                        │
-                                                        ▼
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│  Push to GitHub │ ◄── │ Copy/move file  │ ◄── │ Replace old     │
-│                 │     │ to data/        │     │ .txt in repo    │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
-```
+**Storage:**
 
-### Steps to Update (Dev Mode)
-
-1. Run `npm run dev` to start local dev server
-2. **Edit in app** → Navigate to Wishlists, edit the StoicalZebra preset
-3. **Save** → Click "Save as Canonical" button (amber button, dev mode only)
-4. **Commit & push** → Updates the GitHub raw URL for everyone
-
-### Steps to Update (Production)
-
-1. **Edit in app** → Navigate to Wishlists, click "Edit" on StoicalZebra preset
-2. **Export** → Click "Export" button, downloads `StoicalZebra.txt` to `~/Downloads/`
-3. **Replace file** → Copy downloaded file to `data/wishlists/StoicalZebra-wishlist.txt`
-4. **Commit & push** → Updates the GitHub raw URL for everyone
-
-**Note:** Production mode requires manual file copying because browsers cannot write directly to the filesystem.
+| Location | Purpose |
+|----------|---------|
+| `data/wishlists/StoicalZebra-wishlist.txt` | Source of truth (in Git) |
+| `data/wishlists/archive/` | Timestamped backups of previous versions |
+| GitHub raw URL | Public link for DIM users to import |
 
 ---
 
