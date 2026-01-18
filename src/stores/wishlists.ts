@@ -82,30 +82,49 @@ export const useWishlistsStore = defineStore('wishlists', () => {
       // Load user wishlists from localStorage and IndexedDB
       await loadUserWishlists()
 
-      // Load premade wishlists from IndexedDB cache
-      const cachedPresets = await wishlistStorageService.getAllPresets()
+      // Load premade wishlists
+      // In dev mode, use getPreset() which fetches fresh from local files
+      // In production, use cached data from IndexedDB
+      const isDev = import.meta.env.DEV
+      const smallPresetConfigs = presetWishlistService.getSmallPresetConfigs()
 
-      // If cache is empty or missing small presets, fetch them
-      const smallPresetIds = presetWishlistService.getSmallPresetConfigs().map((c) => c.id)
-      const cachedIds = new Set(cachedPresets.map((p) => p.id))
-      const missingSmallPresets = smallPresetIds.filter((id) => !cachedIds.has(id))
-
-      if (missingSmallPresets.length > 0) {
-        // Fetch missing small presets
+      if (isDev) {
+        // Dev mode: fetch all small presets through service (handles local file refresh)
         const fetchedPresets = await Promise.all(
-          missingSmallPresets.map(async (id) => {
+          smallPresetConfigs.map(async (config) => {
             try {
-              return await presetWishlistService.getPreset(id)
+              return await presetWishlistService.getPreset(config.id)
             } catch (err) {
-              console.warn(`Failed to fetch preset ${id}:`, err)
+              console.warn(`Failed to fetch preset ${config.id}:`, err)
               return null
             }
           })
         )
-        const validFetched = fetchedPresets.filter((p): p is Wishlist => p !== null)
-        presetWishlists.value = [...cachedPresets, ...validFetched]
+        presetWishlists.value = fetchedPresets.filter((p): p is Wishlist => p !== null)
       } else {
-        presetWishlists.value = cachedPresets
+        // Production: use cached data, only fetch missing
+        const cachedPresets = await wishlistStorageService.getAllPresets()
+        const smallPresetIds = smallPresetConfigs.map((c) => c.id)
+        const cachedIds = new Set(cachedPresets.map((p) => p.id))
+        const missingSmallPresets = smallPresetIds.filter((id) => !cachedIds.has(id))
+
+        if (missingSmallPresets.length > 0) {
+          // Fetch missing small presets
+          const fetchedPresets = await Promise.all(
+            missingSmallPresets.map(async (id) => {
+              try {
+                return await presetWishlistService.getPreset(id)
+              } catch (err) {
+                console.warn(`Failed to fetch preset ${id}:`, err)
+                return null
+              }
+            })
+          )
+          const validFetched = fetchedPresets.filter((p): p is Wishlist => p !== null)
+          presetWishlists.value = [...cachedPresets, ...validFetched]
+        } else {
+          presetWishlists.value = cachedPresets
+        }
       }
 
       // Build weapon indexes for O(1) lookups (do this BEFORE applying enabled states)
