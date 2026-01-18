@@ -305,10 +305,18 @@ export function serializeToDimFormat(
         lines.push(`// ${contributor}`)
       }
 
-      // Sort items so identical rolls (same perks + notes) are adjacent
-      // This groups variant hashes together when the roll content is the same
-      const sortedItems = [...contributorItems].sort((a, b) => {
-        // Create a signature from perks and notes for grouping
+      // Deduplicate items by roll signature (perks + notes + tags)
+      // This prevents duplicate lines when the same roll exists for multiple variant hashes
+      const uniqueRolls = new Map<string, WishlistItem>()
+      for (const item of contributorItems) {
+        const signature = `${item.perkHashes.join(',')}-${item.notes || ''}-${item.tags?.join(',') || ''}`
+        if (!uniqueRolls.has(signature)) {
+          uniqueRolls.set(signature, item)
+        }
+      }
+
+      // Sort unique rolls for consistent output
+      const sortedItems = Array.from(uniqueRolls.values()).sort((a, b) => {
         const sigA = `${a.perkHashes.join(',')}-${a.notes || ''}-${a.tags?.join(',') || ''}`
         const sigB = `${b.perkHashes.join(',')}-${b.notes || ''}-${b.tags?.join(',') || ''}`
         return sigA.localeCompare(sigB)

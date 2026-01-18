@@ -519,6 +519,39 @@ describe('serializeToDimFormat', () => {
     expect(headerLines[1]).toContain('BELOVED')
     expect(headerLines[2]).toContain('RIPTIDE') // Alphabetically last
   })
+
+  it('deduplicates identical rolls within a contributor', () => {
+    // Simulate source data that has duplicate entries (same perks/notes) for different hashes
+    const items: WishlistItem[] = [
+      { id: 'test-1', weaponHash: 111, perkHashes: [1, 2], notes: 'Same roll', youtubeAuthor: 'Maven' },
+      { id: 'test-2', weaponHash: 222, perkHashes: [1, 2], notes: 'Same roll', youtubeAuthor: 'Maven' }, // Duplicate roll (different hash)
+      { id: 'test-3', weaponHash: 111, perkHashes: [1, 2], notes: 'Same roll', youtubeAuthor: 'Maven' }, // Exact duplicate
+      { id: 'test-4', weaponHash: 111, perkHashes: [3, 4], notes: 'Different roll', youtubeAuthor: 'Maven' }
+    ]
+    // Both 111 and 222 are variants of the same weapon
+    const getVariantHashes = () => [111, 222]
+
+    const result = serializeToDimFormat(items, {
+      getVariantHashes,
+      getWeaponName: () => 'TestWeapon'
+    })
+
+    const dimLines = result.split('\n').filter((l) => l.startsWith('dimwishlist:'))
+
+    // Should have 4 lines total: 2 unique rolls × 2 variant hashes
+    // NOT 8 lines (4 items × 2 variants)
+    expect(dimLines).toHaveLength(4)
+
+    // First roll should appear twice (once per variant hash)
+    const sameRollLines = dimLines.filter((l) => l.includes('perks=1,2'))
+    expect(sameRollLines).toHaveLength(2)
+    expect(sameRollLines[0]).toContain('item=111')
+    expect(sameRollLines[1]).toContain('item=222')
+
+    // Second roll should appear twice (once per variant hash)
+    const diffRollLines = dimLines.filter((l) => l.includes('perks=3,4'))
+    expect(diffRollLines).toHaveLength(2)
+  })
 })
 
 describe('isDimWishlistFormat', () => {
