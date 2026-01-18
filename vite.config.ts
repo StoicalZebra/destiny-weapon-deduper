@@ -10,6 +10,12 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src')
     }
   },
+  server: {
+    // Serve data/ folder at /data/ for local wishlist files
+    fs: {
+      allow: ['.']
+    }
+  },
   build: {
     target: 'esnext',
     minify: 'esbuild',

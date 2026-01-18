@@ -84,6 +84,7 @@ export interface PresetWishlistConfig {
   name: string
   description: string
   githubUrl: string // Raw GitHub URL to .txt file
+  localUrl?: string // Local file path for dev mode (avoids CDN cache)
   author?: string
   large?: boolean // Large wishlists (>500 rolls) are not auto-loaded
 }

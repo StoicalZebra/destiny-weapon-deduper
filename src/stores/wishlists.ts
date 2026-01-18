@@ -84,7 +84,29 @@ export const useWishlistsStore = defineStore('wishlists', () => {
 
       // Load premade wishlists from IndexedDB cache
       const cachedPresets = await wishlistStorageService.getAllPresets()
-      presetWishlists.value = cachedPresets
+
+      // If cache is empty or missing small presets, fetch them
+      const smallPresetIds = presetWishlistService.getSmallPresetConfigs().map((c) => c.id)
+      const cachedIds = new Set(cachedPresets.map((p) => p.id))
+      const missingSmallPresets = smallPresetIds.filter((id) => !cachedIds.has(id))
+
+      if (missingSmallPresets.length > 0) {
+        // Fetch missing small presets
+        const fetchedPresets = await Promise.all(
+          missingSmallPresets.map(async (id) => {
+            try {
+              return await presetWishlistService.getPreset(id)
+            } catch (err) {
+              console.warn(`Failed to fetch preset ${id}:`, err)
+              return null
+            }
+          })
+        )
+        const validFetched = fetchedPresets.filter((p): p is Wishlist => p !== null)
+        presetWishlists.value = [...cachedPresets, ...validFetched]
+      } else {
+        presetWishlists.value = cachedPresets
+      }
 
       // Build weapon indexes for O(1) lookups (do this BEFORE applying enabled states)
       buildAllWeaponIndexes()

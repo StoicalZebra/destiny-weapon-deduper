@@ -112,8 +112,8 @@
         <!-- Stats -->
         <div class="mt-4 flex gap-6 text-sm">
           <div>
-            <span class="text-text-subtle">Items:</span>
-            <span class="ml-1 font-medium text-text">{{ stats.itemCount.toLocaleString() }}</span>
+            <span class="text-text-subtle">Rolls:</span>
+            <span class="ml-1 font-medium text-text">{{ stats.rollCount.toLocaleString() }}</span>
           </div>
           <div>
             <span class="text-text-subtle">Weapons:</span>
@@ -315,7 +315,6 @@ import { useRoute, useRouter } from 'vue-router'
 import { useWishlistsStore } from '@/stores/wishlists'
 import { manifestService } from '@/services/manifest-service'
 import { weaponParser } from '@/services/weapon-parser'
-import { getWishlistStats } from '@/services/dim-wishlist-parser'
 import WishlistRollCard from '@/components/wishlists/WishlistRollCard.vue'
 import ConsolidatedRollCard from '@/components/wishlists/ConsolidatedRollCard.vue'
 import type { WishlistItem, ConsolidatedWishlistItem } from '@/models/wishlist'
@@ -356,10 +355,18 @@ const wishlist = computed(() => {
   return wishlistsStore.getWishlistById(id)
 })
 
-// Stats
+// Stats - count based on what's actually displayed in the UI (after deduplication)
 const stats = computed(() => {
-  if (!wishlist.value) return { itemCount: 0, weaponCount: 0 }
-  return getWishlistStats(wishlist.value.items)
+  if (!wishlist.value) return { rollCount: 0, weaponCount: 0 }
+  // Sum up deduplicated rolls across all weapon groups
+  let rollCount = 0
+  for (const items of groupedByWeapon.value.values()) {
+    rollCount += items.length
+  }
+  return {
+    rollCount,
+    weaponCount: groupedByWeapon.value.size
+  }
 })
 
 // Check if this wishlist is editable (user wishlists)

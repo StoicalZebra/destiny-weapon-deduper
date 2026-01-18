@@ -22,6 +22,8 @@ export const PRESET_WISHLISTS: PresetWishlistConfig[] = [
       'Personal god rolls curated from YouTube reviews. Compiled from Legoleflash, IFrostBolt, Maven, and other community creators.',
     githubUrl:
       'https://raw.githubusercontent.com/StoicalZebra/destiny-weapon-deduper/main/data/wishlists/StoicalZebra-wishlist.txt',
+    // In dev mode, use local file instead of GitHub (avoids CDN cache issues)
+    localUrl: '/data/wishlists/StoicalZebra-wishlist.txt',
     author: 'StoicalZebra'
   },
   {
@@ -138,13 +140,23 @@ class PresetWishlistService {
   }
 
   /**
-   * Fetch a wishlist from GitHub and parse it
+   * Fetch a wishlist from GitHub (or local file in dev mode) and parse it
    */
   async fetchWishlist(config: PresetWishlistConfig): Promise<Wishlist> {
+    // In dev mode, use local file if available (avoids GitHub CDN cache issues)
+    const isDev = import.meta.env.DEV
+    const useLocalFile = isDev && config.localUrl
+    const fetchUrl = useLocalFile ? config.localUrl! : config.githubUrl
+
+    if (isDev) {
+      console.log(`[preset-wishlist] Fetching ${config.id} from: ${fetchUrl}`)
+    }
+
     // Fetch content and commit date in parallel
+    // Skip commit date fetch for local files
     const [response, commitDate] = await Promise.all([
-      fetch(config.githubUrl),
-      fetchGithubCommitDate(config.githubUrl)
+      fetch(fetchUrl),
+      useLocalFile ? Promise.resolve(null) : fetchGithubCommitDate(config.githubUrl)
     ])
 
     if (!response.ok) {
@@ -175,8 +187,25 @@ class PresetWishlistService {
   /**
    * Check if a preset has updates available
    * Uses cached result if recent enough
+   *
+   * Note: In dev mode, wishlists with localUrl skip update checks entirely
+   * since the local file IS the source of truth.
    */
   async checkForUpdate(config: PresetWishlistConfig): Promise<WishlistUpdateStatus> {
+    const isDev = import.meta.env.DEV
+
+    // In dev mode, skip update checks for wishlists with local files
+    // The local file is the source of truth, no need to check GitHub
+    if (isDev && config.localUrl) {
+      const localInfo = wishlistStorageService.getPresetVersionInfo(config.id)
+      return {
+        wishlistId: config.id,
+        hasUpdate: false,
+        currentVersion: localInfo?.version,
+        lastChecked: new Date().toISOString()
+      }
+    }
+
     // Check cache first
     const cached = updateStatusCache.get(config.id)
     if (cached && Date.now() - cached.timestamp < UPDATE_CHECK_CACHE_MS) {
