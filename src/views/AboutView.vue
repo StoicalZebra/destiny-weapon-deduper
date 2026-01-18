@@ -38,7 +38,7 @@
         <div class="mt-4 space-y-6">
           <!-- Workflow Summary -->
           <div class="p-4 bg-surface rounded-lg border border-border/50">
-            <h4 class="font-medium text-text mb-3">Updating Canonical Wishlist</h4>
+            <h4 class="font-medium text-text mb-3">Updating Canonical Wishlist (Use local dev environment, not production app)</h4>
             <ol class="space-y-2 text-xs">
               <li><span class="text-text-subtle">1.</span> Run <code class="px-1 py-0.5 bg-surface-overlay rounded">npm run dev</code> locally</li>
               <li><span class="text-text-subtle">2.</span> Wishlists &rarr; StoicalZebra &rarr; <span class="text-purple-400">Fork to Custom</span></li>
@@ -46,12 +46,14 @@
               <li><span class="text-text-subtle">4.</span> Click <span class="text-amber-500 font-medium">Save as Canonical</span> button</li>
               <li><span class="text-text-subtle">5.</span> Commit and push to GitHub</li>
             </ol>
-            <p class="mt-3 text-xs text-text-subtle">Previous versions auto-archived to <code class="px-1 py-0.5 bg-surface-overlay rounded">data/wishlists/archive/</code></p>
+            <p class="mt-3 text-xs text-text-subtle">Current wishlist served from <code class="px-1 py-0.5 bg-surface-overlay rounded">public/wishlists/</code></p>
+            <p class="mt-1 text-xs text-text-subtle">Previous versions auto-archived to <code class="px-1 py-0.5 bg-surface-overlay rounded">data/wishlists/archive/</code></p>
           </div>
 
           <!-- Export Button -->
           <div>
             <p class="mb-2">Export inventory for local development (mock mode):</p>
+            <p class="mb-3 text-xs text-text-subtle">Export from Production app → replace file in local repo. This will update the local dev environment to match what's currently in my inventory at time of export from Production app.</p>
             <button
               @click="exportInventory"
               :disabled="exporting"
