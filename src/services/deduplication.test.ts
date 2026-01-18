@@ -5,12 +5,15 @@ import {
   isTrackerColumn,
   countOwnedPerks,
   countPossiblePerks,
-  getInstanceMasterwork
+  getInstanceMasterwork,
+  buildDedupedWeapon,
+  buildDedupedWeaponFromManifest
 } from './deduplication'
 import type { PerkColumn } from '@/models/deduped-weapon'
 import type { Perk } from '@/models/perk'
 import type { WeaponInstance } from '@/models/weapon-instance'
 import { manifestService } from '@/services/manifest-service'
+import { weaponParser } from '@/services/weapon-parser'
 
 describe('normalizePerkName', () => {
   it('removes "Enhanced" prefix (legacy data) and lowercases', () => {
@@ -357,5 +360,416 @@ describe('getInstanceMasterwork', () => {
 
     const instance = createInstance([{ plugHash: 999, isEnabled: true }])
     expect(getInstanceMasterwork(instance, 0)).toBeNull()
+  })
+})
+
+describe('buildDedupedWeapon', () => {
+  const createInstance = (
+    itemHash: number,
+    instanceId: string,
+    sockets: Array<{ plugHash: number; isEnabled: boolean }>,
+    socketPlugsByIndex?: Record<number, number[]>,
+    gearTier?: number
+  ): WeaponInstance => ({
+    itemInstanceId: instanceId,
+    itemHash,
+    sockets: { sockets },
+    socketPlugsByIndex,
+    gearTier
+  })
+
+  beforeEach(() => {
+    vi.spyOn(manifestService, 'getInventoryItem')
+    vi.spyOn(manifestService, 'getDefinition')
+    vi.spyOn(manifestService, 'getPlugSet')
+    vi.spyOn(manifestService, 'getWeaponVariantHashes')
+    vi.spyOn(manifestService, 'isHolofoilWeapon')
+    vi.spyOn(weaponParser, 'getWeaponName')
+    vi.spyOn(weaponParser, 'getWeaponType')
+    vi.spyOn(weaponParser, 'getWeaponIcon')
+    vi.spyOn(weaponParser, 'getWeaponIconWatermark')
+    vi.spyOn(weaponParser, 'getWeaponSeasonName')
+    vi.spyOn(weaponParser, 'getWeaponTierType')
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  function setupMinimalMocks() {
+    // Weapon definition with no socket data
+    vi.mocked(manifestService.getInventoryItem).mockReturnValue({
+      displayProperties: { name: 'Test Weapon', description: '', icon: '/icon.png' },
+      itemTypeDisplayName: 'Hand Cannon',
+      itemType: 3,
+      inventory: { tierType: 5 }
+    } as any)
+
+    vi.mocked(manifestService.isHolofoilWeapon).mockReturnValue(false)
+    vi.mocked(weaponParser.getWeaponName).mockReturnValue('Test Weapon')
+    vi.mocked(weaponParser.getWeaponType).mockReturnValue('Hand Cannon')
+    vi.mocked(weaponParser.getWeaponIcon).mockReturnValue('/icon.png')
+    vi.mocked(weaponParser.getWeaponIconWatermark).mockReturnValue('/watermark.png')
+    vi.mocked(weaponParser.getWeaponSeasonName).mockReturnValue('Season 28')
+    vi.mocked(weaponParser.getWeaponTierType).mockReturnValue(5)
+  }
+
+  it('builds deduped weapon with basic metadata', () => {
+    setupMinimalMocks()
+
+    const instances = [
+      createInstance(12345, 'inst-1', [{ plugHash: 1, isEnabled: true }])
+    ]
+
+    const result = buildDedupedWeapon(instances)
+
+    expect(result.weaponHash).toBe(12345)
+    expect(result.weaponName).toBe('Test Weapon')
+    expect(result.weaponType).toBe('Hand Cannon')
+    expect(result.weaponIcon).toBe('/icon.png')
+    expect(result.iconWatermark).toBe('/watermark.png')
+    expect(result.seasonName).toBe('Season 28')
+    expect(result.tierType).toBe(5)
+    expect(result.instances).toHaveLength(1)
+  })
+
+  it('collects variant hashes from multiple instances', () => {
+    setupMinimalMocks()
+
+    // Normal weapon
+    vi.mocked(manifestService.isHolofoilWeapon)
+      .mockReturnValueOnce(false) // First instance
+      .mockReturnValueOnce(true)  // Second instance (holofoil)
+      .mockReturnValueOnce(false) // First hash in variant check
+      .mockReturnValueOnce(true)  // Second hash in variant check
+
+    const instances = [
+      createInstance(12345, 'inst-1', [{ plugHash: 1, isEnabled: true }]),
+      createInstance(12346, 'inst-2', [{ plugHash: 2, isEnabled: true }]) // Holofoil variant
+    ]
+
+    const result = buildDedupedWeapon(instances)
+
+    expect(result.variantHashes).toHaveLength(2)
+    expect(result.hasHolofoil).toBe(true)
+    // Non-holofoil should be first (primary)
+    expect(result.variantHashes[0].isHolofoil).toBe(false)
+    expect(result.variantHashes[1].isHolofoil).toBe(true)
+  })
+
+  it('calculates gear tier range across instances', () => {
+    setupMinimalMocks()
+
+    const instances = [
+      createInstance(12345, 'inst-1', [{ plugHash: 1, isEnabled: true }], undefined, 2),
+      createInstance(12345, 'inst-2', [{ plugHash: 1, isEnabled: true }], undefined, 5),
+      createInstance(12345, 'inst-3', [{ plugHash: 1, isEnabled: true }], undefined, 3)
+    ]
+
+    const result = buildDedupedWeapon(instances)
+
+    expect(result.minGearTier).toBe(2)
+    expect(result.maxGearTier).toBe(5)
+  })
+
+  it('handles null gear tier for pre-9.0.0 items', () => {
+    setupMinimalMocks()
+
+    const instances = [
+      createInstance(12345, 'inst-1', [{ plugHash: 1, isEnabled: true }], undefined, undefined),
+      createInstance(12345, 'inst-2', [{ plugHash: 1, isEnabled: true }], undefined, undefined)
+    ]
+
+    const result = buildDedupedWeapon(instances)
+
+    expect(result.minGearTier).toBeNull()
+    expect(result.maxGearTier).toBeNull()
+  })
+
+  it('ignores invalid gear tier values', () => {
+    setupMinimalMocks()
+
+    const instances = [
+      createInstance(12345, 'inst-1', [{ plugHash: 1, isEnabled: true }], undefined, 0), // Invalid
+      createInstance(12345, 'inst-2', [{ plugHash: 1, isEnabled: true }], undefined, 3),
+      createInstance(12345, 'inst-3', [{ plugHash: 1, isEnabled: true }], undefined, 6)  // Invalid
+    ]
+
+    const result = buildDedupedWeapon(instances)
+
+    expect(result.minGearTier).toBe(3)
+    expect(result.maxGearTier).toBe(3)
+  })
+
+  it('calculates completion percentage correctly', () => {
+    setupMinimalMocks()
+
+    // Mock weapon definition with socket data that includes perk categories
+    vi.mocked(manifestService.getInventoryItem).mockReturnValue({
+      displayProperties: { name: 'Test Weapon', description: '', icon: '/icon.png' },
+      itemTypeDisplayName: 'Hand Cannon',
+      itemType: 3,
+      inventory: { tierType: 5 },
+      sockets: {
+        socketEntries: [
+          {
+            socketTypeHash: 1,
+            singleInitialItemHash: 100,
+            reusablePlugSetHash: 1000
+          }
+        ],
+        socketCategories: [
+          {
+            socketCategoryHash: 4241085061, // SOCKET_CATEGORY_WEAPON_PERKS
+            socketIndexes: [0]
+          }
+        ]
+      }
+    } as any)
+
+    // Mock socket type as "Barrel"
+    vi.mocked(manifestService.getDefinition).mockImplementation((table, hash) => {
+      if (table === 'DestinySocketTypeDefinition') {
+        return { displayProperties: { name: 'Barrel' } }
+      }
+      return null
+    })
+
+    // Mock plug set with 4 perks
+    vi.mocked(manifestService.getPlugSet).mockReturnValue({
+      reusablePlugItems: [
+        { plugItemHash: 100, currentlyCanRoll: true },
+        { plugItemHash: 101, currentlyCanRoll: true },
+        { plugItemHash: 102, currentlyCanRoll: true },
+        { plugItemHash: 103, currentlyCanRoll: true }
+      ]
+    } as any)
+
+    // Mock perk definitions (Barrel type)
+    vi.mocked(manifestService.getInventoryItem).mockImplementation((hash) => {
+      if (hash === 12345) {
+        return {
+          displayProperties: { name: 'Test Weapon', description: '', icon: '/icon.png' },
+          itemTypeDisplayName: 'Hand Cannon',
+          itemType: 3,
+          inventory: { tierType: 5 },
+          sockets: {
+            socketEntries: [
+              {
+                socketTypeHash: 1,
+                singleInitialItemHash: 100,
+                reusablePlugSetHash: 1000
+              }
+            ],
+            socketCategories: [
+              {
+                socketCategoryHash: 4241085061,
+                socketIndexes: [0]
+              }
+            ]
+          }
+        } as any
+      }
+      // Perk definitions
+      return {
+        displayProperties: { name: `Perk ${hash}`, description: '', icon: '' },
+        itemTypeDisplayName: 'Barrel'
+      } as any
+    })
+
+    // Instance owns 2 of the 4 perks
+    const instances = [
+      createInstance(12345, 'inst-1', [{ plugHash: 100, isEnabled: true }], { 0: [100, 101] })
+    ]
+
+    const result = buildDedupedWeapon(instances)
+
+    // Should have 2 owned out of 4 possible = 50%
+    expect(result.totalPerksPossible).toBe(4)
+    expect(result.totalPerksOwned).toBe(2)
+    expect(result.completionPercentage).toBe(50)
+  })
+
+  it('returns 0% completion when no perks possible', () => {
+    setupMinimalMocks()
+
+    const instances = [
+      createInstance(12345, 'inst-1', [{ plugHash: 1, isEnabled: true }])
+    ]
+
+    const result = buildDedupedWeapon(instances)
+
+    // No socket data means no perks
+    expect(result.totalPerksPossible).toBe(0)
+    expect(result.completionPercentage).toBe(0)
+  })
+
+  it('prefers non-holofoil hash as primary', () => {
+    setupMinimalMocks()
+
+    // Make the first instance holofoil, second non-holofoil
+    vi.mocked(manifestService.isHolofoilWeapon)
+      .mockReturnValueOnce(true)   // First instance
+      .mockReturnValueOnce(false)  // Second instance
+      .mockReturnValueOnce(true)   // variant collection for hash 12346
+      .mockReturnValueOnce(false)  // variant collection for hash 12345
+
+    const instances = [
+      createInstance(12346, 'inst-1', [{ plugHash: 1, isEnabled: true }]), // Holofoil first
+      createInstance(12345, 'inst-2', [{ plugHash: 2, isEnabled: true }])  // Normal second
+    ]
+
+    const result = buildDedupedWeapon(instances)
+
+    // Primary hash should be non-holofoil (12345)
+    expect(result.variantHashes[0].hash).toBe(12345)
+    expect(result.variantHashes[0].isHolofoil).toBe(false)
+  })
+})
+
+describe('buildDedupedWeaponFromManifest', () => {
+  beforeEach(() => {
+    vi.spyOn(manifestService, 'getInventoryItem')
+    vi.spyOn(manifestService, 'getDefinition')
+    vi.spyOn(manifestService, 'getPlugSet')
+    vi.spyOn(manifestService, 'getWeaponVariantHashes')
+    vi.spyOn(manifestService, 'isHolofoilWeapon')
+    vi.spyOn(weaponParser, 'getWeaponName')
+    vi.spyOn(weaponParser, 'getWeaponType')
+    vi.spyOn(weaponParser, 'getWeaponIcon')
+    vi.spyOn(weaponParser, 'getWeaponIconWatermark')
+    vi.spyOn(weaponParser, 'getWeaponSeasonName')
+    vi.spyOn(weaponParser, 'getWeaponTierType')
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('returns null for non-existent weapon', () => {
+    vi.mocked(manifestService.getInventoryItem).mockReturnValue(null)
+
+    const result = buildDedupedWeaponFromManifest(99999)
+    expect(result).toBeNull()
+  })
+
+  it('returns null for non-legendary/exotic weapons', () => {
+    vi.mocked(manifestService.getInventoryItem).mockReturnValue({
+      displayProperties: { name: 'Rare Weapon', description: '', icon: '' },
+      itemType: 3,
+      inventory: { tierType: 4 } // Rare
+    } as any)
+
+    const result = buildDedupedWeaponFromManifest(12345)
+    expect(result).toBeNull()
+  })
+
+  it('returns null for non-weapon items', () => {
+    vi.mocked(manifestService.getInventoryItem).mockReturnValue({
+      displayProperties: { name: 'Armor Piece', description: '', icon: '' },
+      itemType: 2, // Armor
+      inventory: { tierType: 5 }
+    } as any)
+
+    const result = buildDedupedWeaponFromManifest(12345)
+    expect(result).toBeNull()
+  })
+
+  it('builds deduped weapon from manifest with no owned instances', () => {
+    vi.mocked(manifestService.getInventoryItem).mockReturnValue({
+      displayProperties: { name: 'Austringer', description: '', icon: '/icon.png' },
+      itemType: 3,
+      inventory: { tierType: 5 }
+    } as any)
+
+    vi.mocked(manifestService.getWeaponVariantHashes).mockReturnValue([12345])
+    vi.mocked(manifestService.isHolofoilWeapon).mockReturnValue(false)
+    vi.mocked(weaponParser.getWeaponName).mockReturnValue('Austringer')
+    vi.mocked(weaponParser.getWeaponType).mockReturnValue('Hand Cannon')
+    vi.mocked(weaponParser.getWeaponIcon).mockReturnValue('/icon.png')
+    vi.mocked(weaponParser.getWeaponIconWatermark).mockReturnValue('/watermark.png')
+    vi.mocked(weaponParser.getWeaponSeasonName).mockReturnValue('Season 17')
+    vi.mocked(weaponParser.getWeaponTierType).mockReturnValue(5)
+
+    const result = buildDedupedWeaponFromManifest(12345)
+
+    expect(result).not.toBeNull()
+    expect(result!.weaponHash).toBe(12345)
+    expect(result!.weaponName).toBe('Austringer')
+    expect(result!.instances).toHaveLength(0)
+    expect(result!.totalPerksOwned).toBe(0)
+    expect(result!.completionPercentage).toBe(0)
+    expect(result!.minGearTier).toBeNull()
+    expect(result!.maxGearTier).toBeNull()
+  })
+
+  it('accepts legendary weapons (tierType 5)', () => {
+    vi.mocked(manifestService.getInventoryItem).mockReturnValue({
+      displayProperties: { name: 'Legendary Weapon', description: '', icon: '' },
+      itemType: 3,
+      inventory: { tierType: 5 }
+    } as any)
+
+    vi.mocked(manifestService.getWeaponVariantHashes).mockReturnValue([12345])
+    vi.mocked(manifestService.isHolofoilWeapon).mockReturnValue(false)
+    vi.mocked(weaponParser.getWeaponName).mockReturnValue('Legendary Weapon')
+    vi.mocked(weaponParser.getWeaponType).mockReturnValue('Auto Rifle')
+    vi.mocked(weaponParser.getWeaponIcon).mockReturnValue('')
+    vi.mocked(weaponParser.getWeaponIconWatermark).mockReturnValue(undefined)
+    vi.mocked(weaponParser.getWeaponSeasonName).mockReturnValue(undefined)
+    vi.mocked(weaponParser.getWeaponTierType).mockReturnValue(5)
+
+    const result = buildDedupedWeaponFromManifest(12345)
+    expect(result).not.toBeNull()
+    expect(result!.tierType).toBe(5)
+  })
+
+  it('accepts exotic weapons (tierType 6)', () => {
+    vi.mocked(manifestService.getInventoryItem).mockReturnValue({
+      displayProperties: { name: 'Exotic Weapon', description: '', icon: '' },
+      itemType: 3,
+      inventory: { tierType: 6 }
+    } as any)
+
+    vi.mocked(manifestService.getWeaponVariantHashes).mockReturnValue([12345])
+    vi.mocked(manifestService.isHolofoilWeapon).mockReturnValue(false)
+    vi.mocked(weaponParser.getWeaponName).mockReturnValue('Exotic Weapon')
+    vi.mocked(weaponParser.getWeaponType).mockReturnValue('Pulse Rifle')
+    vi.mocked(weaponParser.getWeaponIcon).mockReturnValue('')
+    vi.mocked(weaponParser.getWeaponIconWatermark).mockReturnValue(undefined)
+    vi.mocked(weaponParser.getWeaponSeasonName).mockReturnValue(undefined)
+    vi.mocked(weaponParser.getWeaponTierType).mockReturnValue(6)
+
+    const result = buildDedupedWeaponFromManifest(12345)
+    expect(result).not.toBeNull()
+    expect(result!.tierType).toBe(6)
+  })
+
+  it('includes variant hashes with holofoil detection', () => {
+    vi.mocked(manifestService.getInventoryItem).mockReturnValue({
+      displayProperties: { name: 'Test Weapon', description: '', icon: '' },
+      itemType: 3,
+      inventory: { tierType: 5 }
+    } as any)
+
+    vi.mocked(manifestService.getWeaponVariantHashes).mockReturnValue([12345, 12346])
+    vi.mocked(manifestService.isHolofoilWeapon)
+      .mockReturnValueOnce(false) // 12345 normal
+      .mockReturnValueOnce(true)  // 12346 holofoil
+
+    vi.mocked(weaponParser.getWeaponName).mockReturnValue('Test Weapon')
+    vi.mocked(weaponParser.getWeaponType).mockReturnValue('Hand Cannon')
+    vi.mocked(weaponParser.getWeaponIcon).mockReturnValue('')
+    vi.mocked(weaponParser.getWeaponIconWatermark).mockReturnValue(undefined)
+    vi.mocked(weaponParser.getWeaponSeasonName).mockReturnValue(undefined)
+    vi.mocked(weaponParser.getWeaponTierType).mockReturnValue(5)
+
+    const result = buildDedupedWeaponFromManifest(12345)
+
+    expect(result).not.toBeNull()
+    expect(result!.variantHashes).toHaveLength(2)
+    expect(result!.hasHolofoil).toBe(true)
+    // Non-holofoil should be first
+    expect(result!.variantHashes[0].isHolofoil).toBe(false)
   })
 })

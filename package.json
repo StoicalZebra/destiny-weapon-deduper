@@ -24,6 +24,7 @@
   "devDependencies": {
     "@playwright/test": "^1.57.0",
     "@vitejs/plugin-vue": "^5.2.1",
+    "@vitest/coverage-v8": "^4.0.17",
     "@vue/test-utils": "^2.4.6",
     "autoprefixer": "^10.4.20",
     "happy-dom": "^20.0.11",
