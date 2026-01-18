@@ -41,8 +41,8 @@
             <h4 class="font-medium text-text mb-3">Updating Canonical Wishlist</h4>
             <ol class="space-y-2 text-xs">
               <li><span class="text-text-subtle">1.</span> Run <code class="px-1 py-0.5 bg-surface-overlay rounded">npm run dev</code> locally</li>
-              <li><span class="text-text-subtle">2.</span> Navigate to Wishlists &rarr; StoicalZebra</li>
-              <li><span class="text-text-subtle">3.</span> Edit rolls, add notes, update tags</li>
+              <li><span class="text-text-subtle">2.</span> Wishlists &rarr; StoicalZebra &rarr; <span class="text-purple-400">Fork to Custom</span></li>
+              <li><span class="text-text-subtle">3.</span> Edit your custom copy: add rolls, notes, tags</li>
               <li><span class="text-text-subtle">4.</span> Click <span class="text-amber-500 font-medium">Save as Canonical</span> button</li>
               <li><span class="text-text-subtle">5.</span> Commit and push to GitHub</li>
             </ol>

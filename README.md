@@ -433,26 +433,28 @@ If you want to see what's in a large preset like Voltron, click "View on GitHub"
 
 ### Updating the StoicalZebra Canonical Wishlist
 
-The canonical wishlist lives at `data/wishlists/StoicalZebra-wishlist.txt` and is served via GitHub raw URL. Use the local dev app to edit and save changes.
+The canonical wishlist lives at `data/wishlists/StoicalZebra-wishlist.txt` and is served via GitHub raw URL.
 
 **Workflow:**
 
 ```
-┌─────────────────┐     ┌─────────────────────────┐     ┌─────────────────┐
-│  Edit in App    │ ──► │  Click "Save as         │ ──► │  Commit & Push  │
-│  (localhost)    │     │  Canonical" button      │     │  to GitHub      │
-└─────────────────┘     └─────────────────────────┘     └─────────────────┘
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────────────┐     ┌─────────────────┐
+│  Fork preset    │ ──► │  Edit custom    │ ──► │  Click "Save as         │ ──► │  Commit & Push  │
+│  to custom      │     │  wishlist       │     │  Canonical" button      │     │  to GitHub      │
+└─────────────────┘     └─────────────────┘     └─────────────────────────┘     └─────────────────┘
 ```
 
 **Steps:**
 
 1. `npm run dev` → Start local dev server
-2. Navigate to **Wishlists** → Click on **StoicalZebra**
-3. Edit rolls, add notes, update tags as needed
-4. Click the amber **"Save as Canonical"** button
+2. Navigate to **Wishlists** → **StoicalZebra** → Click **Fork to Custom**
+3. Edit your custom copy: add rolls, update notes, change tags
+4. Click the amber **"Save as Canonical"** button (appears on custom wishlists in dev mode)
    - Writes directly to `data/wishlists/StoicalZebra-wishlist.txt`
    - Auto-archives previous version to `data/wishlists/archive/`
 5. `git add . && git commit -m "chore: update wishlist" && git push`
+
+**Note:** Premade wishlists like StoicalZebra are read-only by design. Fork to a custom wishlist to make edits, then publish back to canonical.
 
 **Storage:**
 

@@ -369,10 +369,11 @@ const isEditable = computed(() => {
   return wishlist.value.sourceType === 'user'
 })
 
-// Check if this wishlist can be exported as canonical (dev mode + StoicalZebra)
+// Check if this wishlist can be exported as canonical (dev mode + user/custom wishlists)
+// Workflow: Fork StoicalZebra preset → Edit custom copy → Save as Canonical
 const canExportAsCanonical = computed(() => {
   if (!wishlist.value || !isDevMode.value) return false
-  return wishlist.value.id === 'stoicalzebra'
+  return wishlist.value.sourceType === 'user'
 })
 
 // Consolidation: merge multiple items per weapon into single view for large preset wishlists
