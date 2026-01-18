@@ -445,10 +445,26 @@ Premade wishlists under 500 rolls can be edited directly in the app with a manua
 
 ### Update Workflow
 
+**Dev Mode (Recommended):**
+
+```
+┌─────────────────┐     ┌─────────────────────────┐     ┌─────────────────┐
+│  Edit in App    │ ──► │  Click "Save as         │ ──► │  Commit & Push  │
+│  (localhost)    │     │  Canonical" button      │     │  to GitHub      │
+└─────────────────┘     └─────────────────────────┘     └─────────────────┘
+```
+
+The "Save as Canonical" button (amber, appears only in dev mode for StoicalZebra):
+- Writes directly to `data/wishlists/StoicalZebra-wishlist.txt`
+- Auto-archives previous version to `data/wishlists/archive/`
+- You just need to commit and push
+
+**Production Mode (Manual):**
+
 ```
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
 │  Edit in App    │ ──► │  Click Export   │ ──► │ Download .txt   │
-│  (localStorage) │     │                 │     │ (to Downloads)  │
+│  (production)   │     │                 │     │ (to Downloads)  │
 └─────────────────┘     └─────────────────┘     └─────────────────┘
                                                         │
                                                         ▼
@@ -458,14 +474,21 @@ Premade wishlists under 500 rolls can be edited directly in the app with a manua
 └─────────────────┘     └─────────────────┘     └─────────────────┘
 ```
 
-### Steps to Update
+### Steps to Update (Dev Mode)
+
+1. Run `npm run dev` to start local dev server
+2. **Edit in app** → Navigate to Wishlists, edit the StoicalZebra preset
+3. **Save** → Click "Save as Canonical" button (amber button, dev mode only)
+4. **Commit & push** → Updates the GitHub raw URL for everyone
+
+### Steps to Update (Production)
 
 1. **Edit in app** → Navigate to Wishlists, click "Edit" on StoicalZebra preset
 2. **Export** → Click "Export" button, downloads `StoicalZebra.txt` to `~/Downloads/`
 3. **Replace file** → Copy downloaded file to `data/wishlists/StoicalZebra-wishlist.txt`
 4. **Commit & push** → Updates the GitHub raw URL for everyone
 
-**Note:** Browsers cannot write directly to the filesystem for security reasons, hence the manual copy step.
+**Note:** Production mode requires manual file copying because browsers cannot write directly to the filesystem.
 
 ---
 
@@ -502,6 +525,55 @@ Requires obtaining a DIM API key (contact DIM team on Discord).
 | **Bungie Lock/Unlock API** | Possible | Requires `MoveEquipDestinyItems` OAuth scope |
 | **DIM Loadout Shares** | Not ideal | Designed for armor builds, not duplicate management |
 | **DIM Tag API** | Planned | Best option for full Keep/Junk workflow |
+
+---
+
+## Sharing Wishlists
+
+### Design Philosophy
+
+This app focuses on **personal wishlist management** - helping individual users organize their weapon knowledge, track god rolls, and record notes. Community sharing is supported through standard export, not built-in social features.
+
+### Why No Community Contribution System?
+
+We considered building features like:
+- A shared community repository where users submit wishlists
+- Collaborative editing of premade wishlists
+- Voting/ranking system for user-submitted rolls
+
+**We chose not to build these because:**
+
+| Concern | Problem |
+|---------|---------|
+| **Curation burden** | Open submissions require moderation to prevent spam/junk |
+| **Quality control** | No good way to automatically surface "best" entries |
+| **Existing solutions** | Major community wishlists (Voltron, JAT) already have established, high-trust contributor groups |
+| **Scope creep** | Social features add complexity without solving the core use case |
+
+### How to Share Your Wishlist
+
+**Option 1: Export and share manually**
+1. Create/edit your wishlist in the app
+2. Click "Export" to download as DIM-format `.txt`
+3. Share via Discord, Reddit, GitHub Gist, or any file host
+4. Others can import the `.txt` into DIM directly
+
+**Option 2: Contribute to existing community wishlists**
+- [Voltron](https://github.com/48klocs/dim-wish-list-sources) - The default DIM wishlist, curated by expert reviewers
+- [Just Another Team](https://github.com/dsf000z/JAT-wishlists-bundler) - Community-maintained bundles
+
+Submit a PR to these repos if you want your rolls included in widely-used wishlists.
+
+**Option 3: Host your own**
+- Push your exported `.txt` to a GitHub repo
+- Share the raw GitHub URL (others can add it as a custom wishlist source in DIM)
+- Example: `https://raw.githubusercontent.com/YourUsername/your-repo/main/wishlist.txt`
+
+### What We Focus On Instead
+
+- **Personal knowledge base**: Record your god roll research, YouTube notes, and perk preferences
+- **Deduplication**: See all your perk combinations across duplicate weapons
+- **DIM integration**: Export to DIM format for seamless use with the ecosystem standard
 
 ---
 

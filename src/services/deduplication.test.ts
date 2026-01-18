@@ -528,7 +528,7 @@ describe('buildDedupedWeapon', () => {
     } as any)
 
     // Mock socket type as "Barrel"
-    vi.mocked(manifestService.getDefinition).mockImplementation((table, hash) => {
+    vi.mocked(manifestService.getDefinition).mockImplementation((table, _hash) => {
       if (table === 'DestinySocketTypeDefinition') {
         return { displayProperties: { name: 'Barrel' } }
       }

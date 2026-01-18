@@ -84,6 +84,19 @@
               </svg>
               Fork to Custom
             </button>
+            <!-- Export as Canonical (dev only, StoicalZebra only) -->
+            <button
+              v-if="canExportAsCanonical"
+              @click="handleExportAsCanonical"
+              :disabled="exportingCanonical"
+              class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-100 dark:bg-amber-600/30 text-amber-700 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-600/40 disabled:opacity-50 transition-colors text-sm"
+              title="Write directly to data/wishlists/StoicalZebra-wishlist.txt (dev only)"
+            >
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+              {{ exportingCanonical ? 'Saving...' : 'Save as Canonical' }}
+            </button>
             <button
               @click="handleExport"
               class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-overlay text-text hover:bg-surface-elevated transition-colors text-sm"
@@ -322,6 +335,10 @@ const loading = ref(true)
 const searchQuery = ref('')
 const displayLimit = ref(50) // Start with 50 weapons, load more on scroll
 
+// Dev mode detection for canonical export
+const isDevMode = ref(false)
+const exportingCanonical = ref(false)
+
 // Editable fields for user wishlists
 const editableName = ref('')
 const editableDescription = ref('')
@@ -350,6 +367,12 @@ const isEditable = computed(() => {
   // Only user wishlists are directly editable
   // Premade wishlists require forking first
   return wishlist.value.sourceType === 'user'
+})
+
+// Check if this wishlist can be exported as canonical (dev mode + StoicalZebra)
+const canExportAsCanonical = computed(() => {
+  if (!wishlist.value || !isDevMode.value) return false
+  return wishlist.value.id === 'stoicalzebra'
 })
 
 // Consolidation: merge multiple items per weapon into single view for large preset wishlists
@@ -460,6 +483,18 @@ onMounted(async () => {
     editableName.value = wishlist.value.name
     editableDescription.value = wishlist.value.description || ''
   }
+
+  // Check if dev API is available
+  try {
+    const response = await fetch('/api/wishlist/is-dev')
+    if (response.ok) {
+      const data = await response.json()
+      isDevMode.value = data.isDev === true
+    }
+  } catch {
+    // Not in dev mode or API not available
+    isDevMode.value = false
+  }
 })
 
 // Watch for wishlist changes to update editable fields
@@ -566,6 +601,37 @@ function handleExport() {
   a.click()
   document.body.removeChild(a)
   URL.revokeObjectURL(url)
+}
+
+// Export as canonical (dev only) - writes directly to data/wishlists/StoicalZebra-wishlist.txt
+async function handleExportAsCanonical() {
+  if (!wishlist.value || !canExportAsCanonical.value) return
+
+  exportingCanonical.value = true
+  try {
+    const content = wishlistsStore.exportToDimFormat(wishlist.value.id)
+    if (!content) {
+      showSavedToast('Error: Could not export wishlist')
+      return
+    }
+
+    const response = await fetch('/api/wishlist/canonical', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content })
+    })
+
+    if (response.ok) {
+      showSavedToast('Saved to StoicalZebra-wishlist.txt (previous version archived)')
+    } else {
+      const error = await response.json()
+      showSavedToast(`Error: ${error.error || 'Failed to save'}`)
+    }
+  } catch (error) {
+    showSavedToast(`Error: ${String(error)}`)
+  } finally {
+    exportingCanonical.value = false
+  }
 }
 
 function handleDeleteItem(itemId: string) {
