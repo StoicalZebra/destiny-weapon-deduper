@@ -154,6 +154,8 @@ The codebase has two different approaches for grouping weapon variants:
 | Inventory ownership (what do I have?) | `getWeaponVariantHashes()` | Distinguishes seasonal versions |
 | UI display consolidation (show one card) | `groupItemsByWeaponName()` | Groups ALL versions of a weapon |
 
+**Important:** `WishlistDetailView.vue` always uses `groupItemsByWeaponName()` for grouping weapon cards, regardless of the `useConsolidation` setting. This is because wishlist files (like StoicalZebra) often include entries for multiple variant hashes of the same weapon (normal + holofoil) for DIM compatibility. Without name-based grouping, each variant would appear as a separate card, creating duplicates in the UI.
+
 ### DIM Wishlist Tags
 
 DIM ignores `|tags:` in wishlist files but we parse and display them in our UI. When exporting, tags are embedded in the notes field for round-trip compatibility.
