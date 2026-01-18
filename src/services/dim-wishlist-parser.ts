@@ -27,6 +27,54 @@ const VALID_TAGS: WishlistTag[] = ['pvp', 'pve', 'mkb', 'controller', 'alt', 'tr
 // Special item IDs
 export const WILDCARD_ITEM_ID = -69420
 
+// Pattern to extract YouTube info from notes: [YT: Author URL @timestamp]
+// Examples:
+//   [YT: IFrostBolt https://youtu.be/abc @1:23]
+//   [YT: Maven https://www.youtube.com/watch?v=xyz @4:09]
+//   [YT: https://www.blueberries.gg/weapons/xyz/]
+const YOUTUBE_INFO_PATTERN = /\[YT:\s*([^\]]+)\]/i
+
+/**
+ * Parse YouTube info from notes string
+ * Returns extracted author, link, and timestamp (if present)
+ */
+function parseYoutubeInfo(notes: string | undefined): {
+  youtubeAuthor?: string
+  youtubeLink?: string
+  youtubeTimestamp?: string
+} {
+  if (!notes) return {}
+
+  const match = notes.match(YOUTUBE_INFO_PATTERN)
+  if (!match) return {}
+
+  const content = match[1].trim()
+
+  // Try to extract URL (http/https)
+  const urlMatch = content.match(/(https?:\/\/[^\s@]+)/)
+  const youtubeLink = urlMatch?.[1]
+
+  // Try to extract timestamp (@1:23 or @10:52)
+  const timestampMatch = content.match(/@(\d+:\d+)/)
+  const youtubeTimestamp = timestampMatch?.[1]
+
+  // Extract author: everything before the URL (if URL exists) or the whole content
+  let youtubeAuthor: string | undefined
+  if (urlMatch) {
+    const beforeUrl = content.substring(0, urlMatch.index).trim()
+    if (beforeUrl) {
+      youtubeAuthor = beforeUrl
+    }
+  } else {
+    // No URL, just use the content as author if it doesn't look like a timestamp
+    if (!content.startsWith('@')) {
+      youtubeAuthor = content
+    }
+  }
+
+  return { youtubeAuthor, youtubeLink, youtubeTimestamp }
+}
+
 /**
  * Parse a tags string into an array of valid WishlistTags
  */
@@ -120,12 +168,18 @@ export function parseDimWishlist(content: string): ParsedWishlist {
         tags = ['trash', ...tags]
       }
 
+      // Extract YouTube info from notes
+      const { youtubeAuthor, youtubeLink, youtubeTimestamp } = parseYoutubeInfo(notes)
+
       const item: WishlistItem = {
         id: crypto.randomUUID(),
         weaponHash: actualWeaponHash,
         perkHashes: parsePerks(perksStr || ''),
         notes,
-        tags: tags.length > 0 ? tags : undefined
+        tags: tags.length > 0 ? tags : undefined,
+        youtubeAuthor,
+        youtubeLink,
+        youtubeTimestamp
       }
 
       items.push(item)

@@ -127,6 +127,57 @@ dimwishlist:item=789&perks=101112`
     })
   })
 
+  describe('YouTube info parsing', () => {
+    it('parses YouTube author, link, and timestamp from notes', () => {
+      const content =
+        'dimwishlist:item=123&perks=456#notes:Great roll [YT: IFrostBolt https://youtu.be/abc123 @1:23]|tags:pvp'
+      const result = parseDimWishlist(content)
+
+      expect(result.items[0].youtubeAuthor).toBe('IFrostBolt')
+      expect(result.items[0].youtubeLink).toBe('https://youtu.be/abc123')
+      expect(result.items[0].youtubeTimestamp).toBe('1:23')
+    })
+
+    it('parses YouTube info with full YouTube URL', () => {
+      const content =
+        'dimwishlist:item=123&perks=456#notes:Roll info [YT: Maven https://www.youtube.com/watch?v=xyz789 @4:09]'
+      const result = parseDimWishlist(content)
+
+      expect(result.items[0].youtubeAuthor).toBe('Maven')
+      expect(result.items[0].youtubeLink).toBe('https://www.youtube.com/watch?v=xyz789')
+      expect(result.items[0].youtubeTimestamp).toBe('4:09')
+    })
+
+    it('parses YouTube info with only URL (no author)', () => {
+      const content =
+        'dimwishlist:item=123&perks=456#notes:[YT: https://www.blueberries.gg/weapons/xyz/]'
+      const result = parseDimWishlist(content)
+
+      expect(result.items[0].youtubeAuthor).toBeUndefined()
+      expect(result.items[0].youtubeLink).toBe('https://www.blueberries.gg/weapons/xyz/')
+      expect(result.items[0].youtubeTimestamp).toBeUndefined()
+    })
+
+    it('parses YouTube info without timestamp', () => {
+      const content =
+        'dimwishlist:item=123&perks=456#notes:[YT: Legoleflash https://youtu.be/abc]'
+      const result = parseDimWishlist(content)
+
+      expect(result.items[0].youtubeAuthor).toBe('Legoleflash')
+      expect(result.items[0].youtubeLink).toBe('https://youtu.be/abc')
+      expect(result.items[0].youtubeTimestamp).toBeUndefined()
+    })
+
+    it('handles notes without YouTube info', () => {
+      const content = 'dimwishlist:item=123&perks=456#notes:Just a regular note'
+      const result = parseDimWishlist(content)
+
+      expect(result.items[0].youtubeAuthor).toBeUndefined()
+      expect(result.items[0].youtubeLink).toBeUndefined()
+      expect(result.items[0].youtubeTimestamp).toBeUndefined()
+    })
+  })
+
   describe('tags parsing', () => {
     it('parses single tag', () => {
       const content = 'dimwishlist:item=123&perks=456|tags:pvp'
@@ -405,7 +456,6 @@ describe('serializeToDimFormat', () => {
     // Maven items should be grouped together
     const mavenIndex1 = lines.findIndex((l) => l.includes('perks=1'))
     const mavenIndex2 = lines.findIndex((l) => l.includes('perks=3'))
-    const frostboltIndex = lines.findIndex((l) => l.includes('perks=2'))
 
     // Maven items should be adjacent (after the // Maven comment)
     expect(Math.abs(mavenIndex1 - mavenIndex2)).toBe(1)
