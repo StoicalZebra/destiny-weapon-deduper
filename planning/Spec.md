@@ -254,10 +254,39 @@ Front-end overhaul
 - let Claude use it's front-end skill and see what it looks like
   - Current pallete is kind of bland
 
-- [ ] iOS app: CapacitorJS or similar for web app → iOS app (also works for android) 
+- [ ] iOS app: CapacitorJS for web app → iOS app (also works for Android)
     - [ ] Notifications when God Roll profile is reached
         - [ ] User can enable / disable notifications
         - [ ] User can set notification threshold (e.g. 50%, 75%, 100%)
+
+#### Why Capacitor over PWA?
+
+| Feature | PWA on iOS | Capacitor |
+|---------|------------|-----------|
+| Push notifications | ❌ Limited (iOS 16.4+, very restricted) | ✅ Full native |
+| Background refresh | ❌ No | ✅ Yes |
+| Storage persistence | ⚠️ Safari can purge after 7 days inactive | ✅ Persistent |
+| Home screen install | ⚠️ Clunky, users don't know how | ✅ App Store |
+| App updates | Manual refresh | ✅ App Store handles it |
+
+The ~200MB manifest cache in IndexedDB is at risk of being purged by Safari if the user doesn't open the PWA for a week. Capacitor's storage is treated as native app data and won't be cleared.
+
+#### Capacitor Setup Steps
+
+```bash
+npm install @capacitor/core @capacitor/cli
+npx cap init "Destiny Deduper" "com.yourname.destinydeduper"
+npm run build
+npx cap add ios
+npx cap open ios  # Opens Xcode
+```
+
+#### Key Considerations
+
+1. **OAuth Redirect** - Register a custom URL scheme (e.g., `destinydeduper://callback`) with Bungie instead of `localhost:5173/callback`
+2. **IndexedDB** - Works in Capacitor's WebView, but consider `@capacitor/preferences` for critical data
+3. **App Store Review** - Apple requires "Sign in with Apple" for social logins, but Bungie OAuth may be exempt (game-related auth)
+4. **Annual cost** - $99/year Apple Developer Program
 
 - "God Roll" percentage chance section
     - Should show percentage chance of acquireing your selected god roll given a single Tier 5 weapon drop
