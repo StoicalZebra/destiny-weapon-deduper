@@ -271,8 +271,9 @@ export function serializeToDimFormat(
   // Serialize each weapon's items with blank lines between weapon groups
   let isFirstWeapon = true
   for (const [groupKey, weaponItems] of sortedWeaponGroups) {
-    // Add blank line before each weapon group (except the first)
+    // Add 2 blank lines before each weapon group (except the first)
     if (!isFirstWeapon) {
+      lines.push('')
       lines.push('')
     }
     isFirstWeapon = false
@@ -298,12 +299,14 @@ export function serializeToDimFormat(
       itemsByContributor.set(contributor, existing)
     }
 
-    // Output items grouped by contributor
-    for (const [contributor, contributorItems] of itemsByContributor) {
-      // Add contributor comment if we have weapon name comments enabled
-      if (options?.getWeaponName) {
-        lines.push(`// ${contributor}`)
+    // Output items grouped by contributor, separated by blank lines
+    let isFirstContributor = true
+    for (const [, contributorItems] of itemsByContributor) {
+      // Add blank line between contributors (not before first)
+      if (!isFirstContributor) {
+        lines.push('')
       }
+      isFirstContributor = false
 
       // Deduplicate items by roll signature (perks + notes + tags)
       // This prevents duplicate lines when the same roll exists for multiple variant hashes

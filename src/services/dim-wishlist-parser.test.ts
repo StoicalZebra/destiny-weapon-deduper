@@ -430,7 +430,7 @@ describe('serializeToDimFormat', () => {
     expect(lines[1]).toBe('dimwishlist:item=2222&perks=456,789|tags:pvp')
   })
 
-  it('adds blank lines between weapon groups', () => {
+  it('adds two blank lines between weapon groups', () => {
     const items: WishlistItem[] = [
       { id: 'test-1', weaponHash: 111, perkHashes: [1] },
       { id: 'test-2', weaponHash: 111, perkHashes: [2] },
@@ -438,12 +438,13 @@ describe('serializeToDimFormat', () => {
     ]
     const result = serializeToDimFormat(items)
 
-    // Should have blank line between weapon 111 and 222
+    // Should have 2 blank lines between weapon 111 and 222
     const lines = result.split('\n')
     expect(lines).toEqual([
       'dimwishlist:item=111&perks=1',
       'dimwishlist:item=111&perks=2',
-      '', // blank line between weapons
+      '', // first blank line between weapons
+      '', // second blank line between weapons
       'dimwishlist:item=222&perks=3'
     ])
   })
@@ -479,12 +480,13 @@ describe('serializeToDimFormat', () => {
     })
 
     expect(result).toContain('// ===== RIPTIDE (Fusion Rifle) =====')
-    expect(result).toContain('// Maven')
     expect(result).toContain('// ===== EYASLUNA (Hand Cannon) =====')
-    expect(result).toContain('// IFrostBolt')
+    // Contributor names are no longer output as comments
+    expect(result).not.toContain('// Maven')
+    expect(result).not.toContain('// IFrostBolt')
   })
 
-  it('groups items by contributor within each weapon', () => {
+  it('groups items by contributor within each weapon, separated by blank lines', () => {
     const items: WishlistItem[] = [
       { id: 'test-1', weaponHash: 111, perkHashes: [1], youtubeAuthor: 'Maven' },
       { id: 'test-2', weaponHash: 111, perkHashes: [2], youtubeAuthor: 'IFrostBolt' },
@@ -495,12 +497,15 @@ describe('serializeToDimFormat', () => {
     })
 
     const lines = result.split('\n')
-    // Maven items should be grouped together
+    // Maven items should be grouped together (adjacent)
     const mavenIndex1 = lines.findIndex((l) => l.includes('perks=1'))
     const mavenIndex2 = lines.findIndex((l) => l.includes('perks=3'))
-
-    // Maven items should be adjacent (after the // Maven comment)
     expect(Math.abs(mavenIndex1 - mavenIndex2)).toBe(1)
+
+    // There should be a blank line between Maven and IFrostBolt groups
+    const frostboltIndex = lines.findIndex((l) => l.includes('perks=2'))
+    // Blank line should be between Maven group and IFrostBolt
+    expect(lines[frostboltIndex - 1]).toBe('')
   })
 
   it('groups identical rolls with different hashes together', () => {
@@ -529,15 +534,18 @@ describe('serializeToDimFormat', () => {
     expect(lines[3]).toContain('item=222')
   })
 
-  it('uses Unknown for items without youtubeAuthor', () => {
+  it('does not output contributor comments', () => {
     const items: WishlistItem[] = [
-      { id: 'test-1', weaponHash: 111, perkHashes: [1] }
+      { id: 'test-1', weaponHash: 111, perkHashes: [1] },
+      { id: 'test-2', weaponHash: 111, perkHashes: [2], youtubeAuthor: 'Maven' }
     ]
     const result = serializeToDimFormat(items, {
       getWeaponName: () => 'TestWeapon'
     })
 
-    expect(result).toContain('// Unknown')
+    // Contributor comments are no longer output
+    expect(result).not.toContain('// Unknown')
+    expect(result).not.toContain('// Maven')
   })
 
   it('sorts weapons alphabetically by name', () => {
