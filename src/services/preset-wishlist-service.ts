@@ -20,10 +20,8 @@ export const PRESET_WISHLISTS: PresetWishlistConfig[] = [
     name: 'StoicalZebra',
     description:
       'Personal god rolls curated from YouTube reviews. Compiled from Legoleflash, IFrostBolt, Maven, and other community creators.',
-    githubUrl:
-      'https://raw.githubusercontent.com/StoicalZebra/destiny-weapon-deduper/main/data/wishlists/StoicalZebra-wishlist.txt',
-    // In dev mode, use local file instead of GitHub (avoids CDN cache issues)
-    localUrl: '/data/wishlists/StoicalZebra-wishlist.txt',
+    // Use local file for both dev and prod (deployed with app in public/)
+    localUrl: '/wishlists/StoicalZebra-wishlist.txt',
     author: 'StoicalZebra'
   },
   {
@@ -140,13 +138,14 @@ class PresetWishlistService {
   }
 
   /**
-   * Fetch a wishlist from GitHub (or local file in dev mode) and parse it
+   * Fetch a wishlist from GitHub (or local file) and parse it
+   * Uses localUrl if no githubUrl is configured (e.g., StoicalZebra)
    */
   async fetchWishlist(config: PresetWishlistConfig): Promise<Wishlist> {
-    // In dev mode, use local file if available (avoids GitHub CDN cache issues)
     const isDev = import.meta.env.DEV
-    const useLocalFile = isDev && config.localUrl
-    const fetchUrl = useLocalFile ? config.localUrl! : config.githubUrl
+    // Use local file if: no githubUrl OR (dev mode AND localUrl available)
+    const useLocalFile = !config.githubUrl || (isDev && config.localUrl)
+    const fetchUrl = useLocalFile ? config.localUrl! : config.githubUrl!
 
     if (isDev) {
       console.log(`[preset-wishlist] Fetching ${config.id} from: ${fetchUrl}`)
@@ -156,7 +155,9 @@ class PresetWishlistService {
     // Skip commit date fetch for local files
     const [response, commitDate] = await Promise.all([
       fetch(fetchUrl),
-      useLocalFile ? Promise.resolve(null) : fetchGithubCommitDate(config.githubUrl)
+      useLocalFile || !config.githubUrl
+        ? Promise.resolve(null)
+        : fetchGithubCommitDate(config.githubUrl)
     ])
 
     if (!response.ok) {
@@ -172,7 +173,7 @@ class PresetWishlistService {
       name: config.name, // Always use our configured name for clarity
       description: config.description, // Always use our configured description for clarity
       sourceType: 'preset',
-      sourceUrl: config.githubUrl,
+      sourceUrl: config.githubUrl || config.localUrl,
       author: config.author,
       version,
       lastFetched: new Date().toISOString(),
@@ -194,9 +195,9 @@ class PresetWishlistService {
   async checkForUpdate(config: PresetWishlistConfig): Promise<WishlistUpdateStatus> {
     const isDev = import.meta.env.DEV
 
-    // In dev mode, skip update checks for wishlists with local files
-    // The local file is the source of truth, no need to check GitHub
-    if (isDev && config.localUrl) {
+    // Skip update checks for wishlists without githubUrl (local-only wishlists)
+    // or in dev mode with localUrl (local file is source of truth)
+    if (!config.githubUrl || (isDev && config.localUrl)) {
       const localInfo = wishlistStorageService.getPresetVersionInfo(config.id)
       return {
         wishlistId: config.id,
@@ -214,7 +215,7 @@ class PresetWishlistService {
 
     try {
       // Fetch content and compute hash
-      const response = await fetch(config.githubUrl)
+      const response = await fetch(config.githubUrl!)
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`)
       }
