@@ -12,7 +12,7 @@ import type { Plugin } from 'vite'
 import fs from 'fs'
 import path from 'path'
 
-const WISHLISTS_DIR = 'data/wishlists'
+const WISHLISTS_DIR = 'public/wishlists'
 const ARCHIVE_DIR = 'data/wishlists/archive'
 const CANONICAL_FILENAME = 'StoicalZebra-wishlist.txt'
 

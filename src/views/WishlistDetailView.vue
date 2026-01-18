@@ -90,7 +90,7 @@
               @click="handleExportAsCanonical"
               :disabled="exportingCanonical"
               class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-100 dark:bg-amber-600/30 text-amber-700 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-600/40 disabled:opacity-50 transition-colors text-sm"
-              title="Write directly to data/wishlists/StoicalZebra-wishlist.txt (dev only)"
+              title="Write directly to public/wishlists/StoicalZebra-wishlist.txt (dev only)"
             >
               <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
@@ -605,7 +605,7 @@ function handleExport() {
   URL.revokeObjectURL(url)
 }
 
-// Export as canonical (dev only) - writes directly to data/wishlists/StoicalZebra-wishlist.txt
+// Export as canonical (dev only) - writes directly to public/wishlists/StoicalZebra-wishlist.txt
 async function handleExportAsCanonical() {
   if (!wishlist.value || !canExportAsCanonical.value) return
 
