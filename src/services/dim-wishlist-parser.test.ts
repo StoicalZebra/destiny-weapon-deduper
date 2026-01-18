@@ -447,6 +447,28 @@ describe('serializeToDimFormat', () => {
 
     expect(result).toContain('// Unknown')
   })
+
+  it('sorts weapons alphabetically by name', () => {
+    const items: WishlistItem[] = [
+      { id: 'test-1', weaponHash: 333, perkHashes: [1] },
+      { id: 'test-2', weaponHash: 111, perkHashes: [2] },
+      { id: 'test-3', weaponHash: 222, perkHashes: [3] }
+    ]
+    // Map hashes to names: 333 -> Riptide, 111 -> Ace, 222 -> Beloved
+    const nameMap: Record<number, string> = {
+      333: 'Riptide',
+      111: 'Ace of Spades',
+      222: 'Beloved'
+    }
+    const result = serializeToDimFormat(items, {
+      getWeaponName: (hash) => nameMap[hash]
+    })
+
+    const headerLines = result.split('\n').filter((l) => l.startsWith('// ====='))
+    expect(headerLines[0]).toContain('ACE OF SPADES') // Alphabetically first
+    expect(headerLines[1]).toContain('BELOVED')
+    expect(headerLines[2]).toContain('RIPTIDE') // Alphabetically last
+  })
 })
 
 describe('isDimWishlistFormat', () => {

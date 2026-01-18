@@ -207,9 +207,16 @@ export function serializeToDimFormat(
     itemsByWeaponGroup.set(groupKey, existing)
   }
 
+  // Sort weapon groups alphabetically by name
+  const sortedWeaponGroups = Array.from(itemsByWeaponGroup.entries()).sort((a, b) => {
+    const nameA = options?.getWeaponName?.(a[0])?.toLowerCase() ?? ''
+    const nameB = options?.getWeaponName?.(b[0])?.toLowerCase() ?? ''
+    return nameA.localeCompare(nameB)
+  })
+
   // Serialize each weapon's items with blank lines between weapon groups
   let isFirstWeapon = true
-  for (const [groupKey, weaponItems] of itemsByWeaponGroup) {
+  for (const [groupKey, weaponItems] of sortedWeaponGroups) {
     // Add blank line before each weapon group (except the first)
     if (!isFirstWeapon) {
       lines.push('')
