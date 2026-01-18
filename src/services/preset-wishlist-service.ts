@@ -263,10 +263,19 @@ class PresetWishlistService {
 
   /**
    * Get a preset wishlist, fetching if not cached or if forceRefresh is true
+   * In dev mode, wishlists with localUrl always fetch fresh (local file is source of truth)
    */
   async getPreset(id: string, forceRefresh = false): Promise<Wishlist | null> {
     const config = this.getPresetConfig(id)
     if (!config) return null
+
+    // In dev mode with local file, always fetch fresh
+    const isDev = import.meta.env.DEV
+    const useLocalFile = isDev && config.localUrl
+    if (useLocalFile) {
+      forceRefresh = true
+      console.log(`[preset-wishlist] Dev mode: always fetching fresh from local file for ${id}`)
+    }
 
     // Check cache first
     if (!forceRefresh) {
