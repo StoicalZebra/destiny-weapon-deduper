@@ -374,6 +374,79 @@ describe('serializeToDimFormat', () => {
     // All 4 lines should be consecutive (grouped together)
     expect(result).not.toContain('\n\n')
   })
+
+  it('adds weapon name comments when getWeaponName is provided', () => {
+    const items: WishlistItem[] = [
+      { id: 'test-1', weaponHash: 111, perkHashes: [1], youtubeAuthor: 'Maven' },
+      { id: 'test-2', weaponHash: 222, perkHashes: [2], youtubeAuthor: 'IFrostBolt' }
+    ]
+    const result = serializeToDimFormat(items, {
+      getWeaponName: (hash) => (hash === 111 ? 'Riptide' : 'Eyasluna'),
+      getWeaponType: (hash) => (hash === 111 ? 'Fusion Rifle' : 'Hand Cannon')
+    })
+
+    expect(result).toContain('// ===== RIPTIDE (Fusion Rifle) =====')
+    expect(result).toContain('// Maven')
+    expect(result).toContain('// ===== EYASLUNA (Hand Cannon) =====')
+    expect(result).toContain('// IFrostBolt')
+  })
+
+  it('groups items by contributor within each weapon', () => {
+    const items: WishlistItem[] = [
+      { id: 'test-1', weaponHash: 111, perkHashes: [1], youtubeAuthor: 'Maven' },
+      { id: 'test-2', weaponHash: 111, perkHashes: [2], youtubeAuthor: 'IFrostBolt' },
+      { id: 'test-3', weaponHash: 111, perkHashes: [3], youtubeAuthor: 'Maven' }
+    ]
+    const result = serializeToDimFormat(items, {
+      getWeaponName: () => 'TestWeapon'
+    })
+
+    const lines = result.split('\n')
+    // Maven items should be grouped together
+    const mavenIndex1 = lines.findIndex((l) => l.includes('perks=1'))
+    const mavenIndex2 = lines.findIndex((l) => l.includes('perks=3'))
+    const frostboltIndex = lines.findIndex((l) => l.includes('perks=2'))
+
+    // Maven items should be adjacent (after the // Maven comment)
+    expect(Math.abs(mavenIndex1 - mavenIndex2)).toBe(1)
+  })
+
+  it('groups identical rolls with different hashes together', () => {
+    const items: WishlistItem[] = [
+      { id: 'test-1', weaponHash: 111, perkHashes: [1, 2], notes: 'Roll A', youtubeAuthor: 'Maven' },
+      { id: 'test-2', weaponHash: 111, perkHashes: [3, 4], notes: 'Roll B', youtubeAuthor: 'Maven' }
+    ]
+    // Simulate multi-hash weapon
+    const getVariantHashes = (hash: number) => (hash === 111 ? [111, 222] : [hash])
+
+    const result = serializeToDimFormat(items, {
+      getVariantHashes,
+      getWeaponName: () => 'TestWeapon'
+    })
+
+    const lines = result.split('\n').filter((l) => l.startsWith('dimwishlist:'))
+
+    // Roll A's two hashes should be adjacent, then Roll B's two hashes
+    expect(lines[0]).toContain('perks=1,2')
+    expect(lines[0]).toContain('item=111')
+    expect(lines[1]).toContain('perks=1,2')
+    expect(lines[1]).toContain('item=222')
+    expect(lines[2]).toContain('perks=3,4')
+    expect(lines[2]).toContain('item=111')
+    expect(lines[3]).toContain('perks=3,4')
+    expect(lines[3]).toContain('item=222')
+  })
+
+  it('uses Unknown for items without youtubeAuthor', () => {
+    const items: WishlistItem[] = [
+      { id: 'test-1', weaponHash: 111, perkHashes: [1] }
+    ]
+    const result = serializeToDimFormat(items, {
+      getWeaponName: () => 'TestWeapon'
+    })
+
+    expect(result).toContain('// Unknown')
+  })
 })
 
 describe('isDimWishlistFormat', () => {

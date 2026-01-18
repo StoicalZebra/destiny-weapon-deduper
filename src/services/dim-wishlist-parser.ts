@@ -148,6 +148,8 @@ export function parseDimWishlist(content: string): ParsedWishlist {
  * @param items - Wishlist items to serialize
  * @param options - Optional title, description, and variant hash lookup
  * @param options.getVariantHashes - Function to get all variant hashes for a weapon (for multi-hash export)
+ * @param options.getWeaponName - Function to get weapon name for comments (e.g., "Riptide")
+ * @param options.getWeaponType - Function to get weapon type for comments (e.g., "Fusion Rifle")
  */
 export function serializeToDimFormat(
   items: WishlistItem[],
@@ -156,6 +158,10 @@ export function serializeToDimFormat(
     description?: string
     /** Optional function to get all variant hashes for a weapon hash (e.g., holofoil + normal) */
     getVariantHashes?: (hash: number) => number[]
+    /** Optional function to get weapon name for comments */
+    getWeaponName?: (hash: number) => string | undefined
+    /** Optional function to get weapon type for comments */
+    getWeaponType?: (hash: number) => string | undefined
   }
 ): string {
   const lines: string[] = []
@@ -203,22 +209,60 @@ export function serializeToDimFormat(
 
   // Serialize each weapon's items with blank lines between weapon groups
   let isFirstWeapon = true
-  for (const [_groupKey, weaponItems] of itemsByWeaponGroup) {
+  for (const [groupKey, weaponItems] of itemsByWeaponGroup) {
     // Add blank line before each weapon group (except the first)
     if (!isFirstWeapon) {
       lines.push('')
     }
     isFirstWeapon = false
 
-    for (const item of weaponItems) {
-      // Get all variant hashes for this weapon (or just the original hash)
-      const variantHashes = options?.getVariantHashes
-        ? options.getVariantHashes(item.weaponHash)
-        : [item.weaponHash]
+    // Add weapon name comment if available
+    if (options?.getWeaponName) {
+      const weaponName = options.getWeaponName(groupKey)
+      if (weaponName) {
+        const weaponType = options?.getWeaponType?.(groupKey)
+        const header = weaponType
+          ? `// ===== ${weaponName.toUpperCase()} (${weaponType}) =====`
+          : `// ===== ${weaponName.toUpperCase()} =====`
+        lines.push(header)
+      }
+    }
 
-      // Output one line per variant hash (for multi-hash weapons like holofoil + normal)
-      for (const hash of variantHashes) {
-        lines.push(serializeItem(item, hash))
+    // Group items by contributor (youtubeAuthor) within each weapon
+    const itemsByContributor = new Map<string, WishlistItem[]>()
+    for (const item of weaponItems) {
+      const contributor = item.youtubeAuthor || 'Unknown'
+      const existing = itemsByContributor.get(contributor) || []
+      existing.push(item)
+      itemsByContributor.set(contributor, existing)
+    }
+
+    // Output items grouped by contributor
+    for (const [contributor, contributorItems] of itemsByContributor) {
+      // Add contributor comment if we have weapon name comments enabled
+      if (options?.getWeaponName) {
+        lines.push(`// ${contributor}`)
+      }
+
+      // Sort items so identical rolls (same perks + notes) are adjacent
+      // This groups variant hashes together when the roll content is the same
+      const sortedItems = [...contributorItems].sort((a, b) => {
+        // Create a signature from perks and notes for grouping
+        const sigA = `${a.perkHashes.join(',')}-${a.notes || ''}-${a.tags?.join(',') || ''}`
+        const sigB = `${b.perkHashes.join(',')}-${b.notes || ''}-${b.tags?.join(',') || ''}`
+        return sigA.localeCompare(sigB)
+      })
+
+      for (const item of sortedItems) {
+        // Get all variant hashes for this weapon (or just the original hash)
+        const variantHashes = options?.getVariantHashes
+          ? options.getVariantHashes(item.weaponHash)
+          : [item.weaponHash]
+
+        // Output one line per variant hash (for multi-hash weapons like holofoil + normal)
+        for (const hash of variantHashes) {
+          lines.push(serializeItem(item, hash))
+        }
       }
     }
   }
