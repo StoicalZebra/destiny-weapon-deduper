@@ -324,7 +324,8 @@ import { sortItemsByTagPriority } from '@/utils/wishlist-sorting'
 import {
   shouldConsolidateWishlist,
   consolidateWishlistItems,
-  groupItemsByWeaponName
+  groupItemsByWeaponName,
+  deduplicateWishlistItems
 } from '@/utils/wishlist-consolidation'
 
 const route = useRoute()
@@ -391,9 +392,11 @@ const groupedByWeapon = computed(() => {
   // This handles wishlists that list both normal and holofoil hashes
   const groups = groupItemsByWeaponName(wishlist.value.items)
 
-  // Sort items within each group by tag priority
+  // Deduplicate and sort items within each group
+  // Deduplication removes identical rolls that were defined for multiple variant hashes
   for (const [hash, items] of groups) {
-    groups.set(hash, sortItemsByTagPriority(items))
+    const dedupedItems = deduplicateWishlistItems(items)
+    groups.set(hash, sortItemsByTagPriority(dedupedItems))
   }
 
   return groups

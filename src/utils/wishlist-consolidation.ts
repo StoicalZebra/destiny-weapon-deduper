@@ -155,6 +155,38 @@ export function groupItemsByWeaponName(items: WishlistItem[]): Map<number, Wishl
 }
 
 /**
+ * Deduplicate wishlist items that have identical roll definitions.
+ *
+ * When a wishlist contains entries for multiple variant hashes of the same weapon
+ * (e.g., normal + holofoil), the same roll may be defined for each hash.
+ * This function removes duplicate rolls, keeping only one instance.
+ *
+ * Two items are considered duplicates if they have:
+ * - Same perk hashes (sorted for comparison)
+ * - Same notes content
+ *
+ * @returns Array of deduplicated items, preserving the first occurrence of each unique roll
+ */
+export function deduplicateWishlistItems(items: WishlistItem[]): WishlistItem[] {
+  const seen = new Set<string>()
+  const result: WishlistItem[] = []
+
+  for (const item of items) {
+    // Create a unique key from sorted perk hashes + notes
+    const perkKey = [...item.perkHashes].sort((a, b) => a - b).join(',')
+    const notesKey = item.notes?.trim() || ''
+    const uniqueKey = `${perkKey}|${notesKey}`
+
+    if (!seen.has(uniqueKey)) {
+      seen.add(uniqueKey)
+      result.push(item)
+    }
+  }
+
+  return result
+}
+
+/**
  * Parse note content to extract the core review and masterwork recommendations.
  *
  * Example input:
