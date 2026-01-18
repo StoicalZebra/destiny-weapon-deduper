@@ -359,15 +359,21 @@ function serializeItem(item: WishlistItem, weaponHash?: number): string {
   // Build notes with YouTube data embedded
   let fullNotes = item.notes || ''
 
-  // Append YouTube info if present: [YT: Author link @timestamp]
-  const ytParts: string[] = []
-  if (item.youtubeAuthor) ytParts.push(item.youtubeAuthor)
-  if (item.youtubeLink) ytParts.push(item.youtubeLink)
-  if (item.youtubeTimestamp) ytParts.push(`@${item.youtubeTimestamp}`)
+  // Only append YouTube info if notes don't already contain a [YT:] tag
+  // This prevents duplicate tags when re-exporting imported wishlists
+  const notesAlreadyHaveYT = YOUTUBE_INFO_PATTERN.test(fullNotes)
 
-  if (ytParts.length > 0) {
-    const ytInfo = `[YT: ${ytParts.join(' ')}]`
-    fullNotes = fullNotes ? `${fullNotes} ${ytInfo}` : ytInfo
+  if (!notesAlreadyHaveYT) {
+    // Append YouTube info if present: [YT: Author link @timestamp]
+    const ytParts: string[] = []
+    if (item.youtubeAuthor) ytParts.push(item.youtubeAuthor)
+    if (item.youtubeLink) ytParts.push(item.youtubeLink)
+    if (item.youtubeTimestamp) ytParts.push(`@${item.youtubeTimestamp}`)
+
+    if (ytParts.length > 0) {
+      const ytInfo = `[YT: ${ytParts.join(' ')}]`
+      fullNotes = fullNotes ? `${fullNotes} ${ytInfo}` : ytInfo
+    }
   }
 
   // Add notes if present (now includes embedded YouTube data)

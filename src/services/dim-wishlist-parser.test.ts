@@ -307,6 +307,48 @@ describe('serializeToDimFormat', () => {
     expect(result).toBe('dimwishlist:item=123&perks=456#notes:Great roll')
   })
 
+  it('does not duplicate YouTube tag if notes already contain one', () => {
+    const items: WishlistItem[] = [
+      {
+        id: 'test-1',
+        weaponHash: 123,
+        perkHashes: [456],
+        notes: 'Great roll [YT: Maven https://youtube.com/abc @1:23]',
+        youtubeAuthor: 'Maven',
+        youtubeLink: 'https://youtube.com/abc',
+        youtubeTimestamp: '1:23'
+      }
+    ]
+    const result = serializeToDimFormat(items)
+
+    // Should only have one [YT:] tag, not two
+    const ytMatches = result.match(/\[YT:/g)
+    expect(ytMatches).toHaveLength(1)
+    expect(result).toBe(
+      'dimwishlist:item=123&perks=456#notes:Great roll [YT: Maven https://youtube.com/abc @1:23]'
+    )
+  })
+
+  it('appends YouTube tag if notes do not contain one', () => {
+    const items: WishlistItem[] = [
+      {
+        id: 'test-1',
+        weaponHash: 123,
+        perkHashes: [456],
+        notes: 'Great roll',
+        youtubeAuthor: 'Maven',
+        youtubeLink: 'https://youtube.com/abc',
+        youtubeTimestamp: '1:23'
+      }
+    ]
+    const result = serializeToDimFormat(items)
+
+    // Should append the [YT:] tag
+    expect(result).toBe(
+      'dimwishlist:item=123&perks=456#notes:Great roll [YT: Maven https://youtube.com/abc @1:23]'
+    )
+  })
+
   it('serializes item with tags', () => {
     const items: WishlistItem[] = [
       {
