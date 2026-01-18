@@ -14,6 +14,7 @@
     "test:e2e:failed": "playwright test --last-failed",
     "test:e2e:ui": "playwright test --ui",
     "lint:unused": "knip",
+    "sort:wishlist": "node scripts/sort-wishlist.js",
     "prepare": "husky"
   },
   "dependencies": {

@@ -382,23 +382,14 @@ const useConsolidation = computed(() => {
 })
 
 // Group items by weapon, sorted by tag priority within each group
-// When consolidation is enabled, group by canonical hash (merges weapon variants)
+// Always use name-based grouping to merge weapon variants (e.g., normal + holofoil)
+// This ensures weapons with multiple variant hashes appear as a single card
 const groupedByWeapon = computed(() => {
   if (!wishlist.value) return new Map<number, WishlistItem[]>()
 
-  // Use name-based grouping when consolidating (merges all variants + seasonal re-releases)
-  // Otherwise use direct hash grouping (preserves individual variant entries)
-  const groups = useConsolidation.value
-    ? groupItemsByWeaponName(wishlist.value.items)
-    : (() => {
-        const map = new Map<number, WishlistItem[]>()
-        for (const item of wishlist.value!.items) {
-          const existing = map.get(item.weaponHash) || []
-          existing.push(item)
-          map.set(item.weaponHash, existing)
-        }
-        return map
-      })()
+  // Always group by weapon name to merge all variants of the same weapon
+  // This handles wishlists that list both normal and holofoil hashes
+  const groups = groupItemsByWeaponName(wishlist.value.items)
 
   // Sort items within each group by tag priority
   for (const [hash, items] of groups) {
