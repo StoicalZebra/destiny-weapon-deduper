@@ -29,6 +29,7 @@ import {
 } from '@/services/dim-wishlist-parser'
 import { manifestService } from '@/services/manifest-service'
 import { isWishlistEditable } from '@/utils/admin'
+import { deduplicateWishlistItems } from '@/utils/wishlist-consolidation'
 
 export const useWishlistsStore = defineStore('wishlists', () => {
   // ==================== State ====================
@@ -626,7 +627,11 @@ export const useWishlistsStore = defineStore('wishlists', () => {
   /**
    * Get all wishlist items for a weapon and its variants (e.g., holofoil + normal)
    * Checks all variant hashes to find matching wishlist items
-   * Dedupes by variantGroupId (for user-created multi-hash entries) or item.id
+   *
+   * Applies two-phase deduplication:
+   * 1. ID-based: by variantGroupId (user entries) or item.id (avoids exact duplicates)
+   * 2. Content-based: by perkHashes + notes (catches preset wishlists with separate
+   *    entries for normal/holofoil that define the same roll)
    */
   function getItemsForWeaponVariants(
     variantHashes: number[]
@@ -639,6 +644,7 @@ export const useWishlistsStore = defineStore('wishlists', () => {
       const index = weaponIndexes.value.get(wishlist.id)
       if (!index) continue
 
+      // Phase 1: ID-based deduplication
       // Track seen items - dedupe by variantGroupId if present, otherwise by id
       const seenGroups = new Set<string>()
       const seenIds = new Set<string>()
@@ -660,8 +666,63 @@ export const useWishlistsStore = defineStore('wishlists', () => {
         }
       }
 
-      if (matchingItems.length > 0) {
-        results.push({ wishlist, items: matchingItems })
+      // Phase 2: Content-based deduplication
+      // Removes duplicate rolls that have same perks + notes but different IDs
+      // (common in preset wishlists that define same roll for multiple weapon hashes)
+      const dedupedItems = deduplicateWishlistItems(matchingItems)
+
+      if (dedupedItems.length > 0) {
+        results.push({ wishlist, items: dedupedItems })
+      }
+    }
+
+    return results
+  }
+
+  /**
+   * Get deduplicated item count per wishlist for a weapon and its variants.
+   * Unlike getItemsForWeaponVariants, this checks ALL wishlists (not just enabled ones)
+   * and returns counts rather than full items.
+   *
+   * Used by WishlistsApplied to show "X rolls" per wishlist in the toggle UI.
+   *
+   * Applies same two-phase deduplication as getItemsForWeaponVariants:
+   * 1. ID-based: by variantGroupId or item.id
+   * 2. Content-based: by perkHashes + notes
+   */
+  function getItemCountsForWeaponVariants(
+    variantHashes: number[]
+  ): Array<{ wishlist: Wishlist; itemCount: number }> {
+    const results: Array<{ wishlist: Wishlist; itemCount: number }> = []
+
+    for (const wishlist of allWishlists.value) {
+      const index = weaponIndexes.value.get(wishlist.id)
+      if (!index) continue
+
+      // Phase 1: ID-based deduplication
+      const seenGroups = new Set<string>()
+      const seenIds = new Set<string>()
+      const matchingItems: WishlistItem[] = []
+
+      for (const hash of variantHashes) {
+        const items = index.get(hash) || []
+        for (const item of items) {
+          if (item.variantGroupId) {
+            if (seenGroups.has(item.variantGroupId)) continue
+            seenGroups.add(item.variantGroupId)
+          } else {
+            if (seenIds.has(item.id)) continue
+            seenIds.add(item.id)
+          }
+          matchingItems.push(item)
+        }
+      }
+
+      // Phase 2: Content-based deduplication
+      const dedupedItems = deduplicateWishlistItems(matchingItems)
+
+      if (dedupedItems.length > 0) {
+        results.push({ wishlist, itemCount: dedupedItems.length })
       }
     }
 
@@ -1095,6 +1156,7 @@ export const useWishlistsStore = defineStore('wishlists', () => {
     updateItemInWishlist,
     getItemsForWeaponHash,
     getItemsForWeaponVariants,
+    getItemCountsForWeaponVariants,
     setWishlistEnabled,
     isWishlistEnabled,
     importDimFormat,

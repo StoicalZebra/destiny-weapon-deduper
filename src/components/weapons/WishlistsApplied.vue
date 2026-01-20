@@ -65,7 +65,6 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import { useWishlistsStore } from '@/stores/wishlists'
-import { getItemsForWeapon } from '@/services/dim-wishlist-parser'
 import type { Wishlist } from '@/models/wishlist'
 
 const props = defineProps<{
@@ -83,25 +82,13 @@ onMounted(async () => {
 })
 
 // Get all wishlists with their item counts for this weapon (checking all variant hashes)
+// Uses centralized deduplication from the store
 const wishlistsWithCounts = computed(() => {
   // Use variant hashes if provided, otherwise fall back to single weaponHash
   const hashesToCheck = props.variantHashes?.length ? props.variantHashes : [props.weaponHash]
 
-  return store.allWishlists
-    .map(wishlist => {
-      // Count items matching ANY of the variant hashes
-      const matchingItems = new Set<string>()
-      for (const hash of hashesToCheck) {
-        for (const item of getItemsForWeapon(wishlist.items, hash)) {
-          matchingItems.add(item.id)
-        }
-      }
-      return {
-        wishlist,
-        itemCount: matchingItems.size
-      }
-    })
-    .filter(({ itemCount }) => itemCount > 0)
+  // Store function handles deduplication (ID-based + content-based)
+  return store.getItemCountsForWeaponVariants(hashesToCheck)
     .sort((a, b) => {
       // Sort: enabled first, then by item count
       const aEnabled = isEnabled(a.wishlist) ? 1 : 0

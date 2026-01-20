@@ -1483,6 +1483,7 @@ const loadProfilesFromStore = async () => {
   const profiles: DisplayProfile[] = []
 
   for (const { wishlist, items } of wishlistResults) {
+    // Items are already deduplicated by the store's getItemsForWeaponVariants
     for (const item of items) {
       profiles.push({
         id: item.id,

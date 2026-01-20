@@ -160,6 +160,30 @@ The codebase has two different approaches for grouping weapon variants:
 
 DIM ignores `|tags:` in wishlist files but we parse and display them in our UI. When exporting, tags are embedded in the notes field for round-trip compatibility.
 
+### Wishlist Item Deduplication (Centralized)
+
+Preset wishlists (like StoicalZebra) often define the same roll for multiple weapon hashes (normal + holofoil) for DIM compatibility. When fetching items by variant hashes, this can cause duplicates.
+
+**Centralized deduplication is handled in `src/stores/wishlists.ts`:**
+
+| Store Function | What It Does | Deduplication |
+|----------------|--------------|---------------|
+| `getItemsForWeaponVariants()` | Returns items from **enabled** wishlists for a weapon | Two-phase: ID-based + content-based |
+| `getItemCountsForWeaponVariants()` | Returns item counts from **all** wishlists | Two-phase: ID-based + content-based |
+
+**Two-phase deduplication:**
+1. **ID-based**: Dedupes by `variantGroupId` (user entries) or `item.id` (prevents exact duplicates)
+2. **Content-based**: Dedupes by `perkHashes + notes` using `deduplicateWishlistItems()` from `wishlist-consolidation.ts`
+
+**Where deduplication happens:**
+| Consumer | Uses | Notes |
+|----------|------|-------|
+| `WeaponDetailUnified.vue` | `getItemsForWeaponVariants()` | For "SAVED WISHLIST ROLLS" display |
+| `WishlistsApplied.vue` | `getItemCountsForWeaponVariants()` | For "X rolls" count per wishlist |
+| `WishlistDetailView.vue` | `deduplicateWishlistItems()` directly | Different use case: deduping within a single wishlist grouped by weapon name |
+
+**Important:** Do NOT add `deduplicateWishlistItems()` calls in components that use the store functions above - the store already handles it. Only `WishlistDetailView.vue` needs to call it directly because it groups items by weapon name (not by variant hash lookup).
+
 ## Related Documentation
 
 - [README.md](README.md) - Setup, commands, feature docs, wishlist format specs
