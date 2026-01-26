@@ -20,8 +20,10 @@ export const PRESET_WISHLISTS: PresetWishlistConfig[] = [
     name: 'StoicalZebra',
     description:
       'Personal god rolls curated from YouTube reviews. Compiled from Legoleflash, IFrostBolt, Maven, and other community creators.',
-    // Use local file for both dev and prod (deployed with app in public/)
+    // In dev: use local file. In prod: fetch from GitHub for update checking
     localUrl: '/wishlists/StoicalZebra-wishlist.txt',
+    githubUrl:
+      'https://raw.githubusercontent.com/StoicalZebra/destiny-weapon-deduper/main/public/wishlists/StoicalZebra-wishlist.txt',
     author: 'StoicalZebra'
   },
   {
