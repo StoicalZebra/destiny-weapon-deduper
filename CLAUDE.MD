@@ -184,6 +184,16 @@ Preset wishlists (like StoicalZebra) often define the same roll for multiple wea
 
 **Important:** Do NOT add `deduplicateWishlistItems()` calls in components that use the store functions above - the store already handles it. Only `WishlistDetailView.vue` needs to call it directly because it groups items by weapon name (not by variant hash lookup).
 
+### Canonical Wishlist Update Workflow
+
+When updating the StoicalZebra canonical wishlist:
+
+1. **Update** `public/wishlists/StoicalZebra-wishlist.txt` (the master list)
+2. **Archive** the previous version to `data/wishlists/archive/StoicalZebra-wishlist-YYYY-MM-DD[-N].txt`
+3. **Commit both** files together in one commit
+
+This keeps the canonical list current while preserving history of previous versions.
+
 ## Related Documentation
 
 - [README.md](README.md) - Setup, commands, feature docs, wishlist format specs
