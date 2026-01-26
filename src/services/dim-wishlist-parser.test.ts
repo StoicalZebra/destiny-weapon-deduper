@@ -307,6 +307,25 @@ describe('serializeToDimFormat', () => {
     expect(result).toBe('dimwishlist:item=123&perks=456#notes:Great roll')
   })
 
+  it('strips newlines from notes to preserve single-line DIM format', () => {
+    const items: WishlistItem[] = [
+      {
+        id: 'test-1',
+        weaponHash: 123,
+        perkHashes: [456],
+        notes: 'First paragraph.\n\nSecond paragraph.\r\nThird line.'
+      }
+    ]
+    const result = serializeToDimFormat(items)
+
+    // All newlines should be converted to spaces
+    expect(result).toBe(
+      'dimwishlist:item=123&perks=456#notes:First paragraph. Second paragraph. Third line.'
+    )
+    // Should not contain any newlines except between wishlist entries
+    expect(result.split('\n')).toHaveLength(1)
+  })
+
   it('does not duplicate YouTube tag if notes already contain one', () => {
     const items: WishlistItem[] = [
       {

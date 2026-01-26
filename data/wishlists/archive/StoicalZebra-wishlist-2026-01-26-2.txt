@@ -1,5 +1,5 @@
-title:StoicalZebra
-description:Personal god rolls curated from YouTube reviews. Compiled from Legoleflash, IFrostBolt, Maven, and other community creators.
+title:Fork 2026-01-26
+description:Added Legoleflash Modified B-7 pistol 3 tap
 
 // ===== ALL OR NOTHING (Pulse Rifle) =====
 dimwishlist:item=2023002233&perks=839105230,3661387068,1092016998,2387244414,3619207468,1015611457,2697220197#notes:The stacking damage bonuses from the weapon's archetype, the Overclocked Heat Sink battery, and Kill Clip allow this weapon to achieve a 0.47s optimal Time-to-Kill by two-bursting Guardians.  This creates a high-reward playstyle for aggressive players who can chain kills. [YT: IFrostBolt https://youtu.be/fKQm5rltGck @1:25]|tags:pvp
@@ -51,8 +51,40 @@ dimwishlist:item=3146657388&perks=1611330137,1482024992,3250034553,1080094173,10
 dimwishlist:item=1872906663&perks=3619207468,47981717,699525795,3673922083,1092016998#notes:Keep Away as the essential 'must-use' perk to improve the weapon's accuracy and range. To achieve a three-tap kill on a 180 RPM frame, the 'Overclocked Heatsink' (referred to as a damage-increasing battery) is used to boost damage at the cost of cooling. Hammer-Forged Rifling and a Range Masterwork are recommended to maximize the effective engagement distance, while the 'Dynamic Heat' barrel synergizes with the weapon's unique heating and cooling mechanics for easier shot registrations. [YT: IFrostBolt https://www.youtube.com/watch?v=dq8SOcIavak @1:21]|tags:pvp
 dimwishlist:item=3146657388&perks=3619207468,47981717,699525795,3673922083,1092016998#notes:Keep Away as the essential 'must-use' perk to improve the weapon's accuracy and range. To achieve a three-tap kill on a 180 RPM frame, the 'Overclocked Heatsink' (referred to as a damage-increasing battery) is used to boost damage at the cost of cooling. Hammer-Forged Rifling and a Range Masterwork are recommended to maximize the effective engagement distance, while the 'Dynamic Heat' barrel synergizes with the weapon's unique heating and cooling mechanics for easier shot registrations. [YT: IFrostBolt https://www.youtube.com/watch?v=dq8SOcIavak @1:21]|tags:pvp
 
-dimwishlist:item=1872906663&perks=2697220197,3250034553,4090651448,1482024992,1092016998,307683764,3619207468,47981717,699525795,3673922083,124408337#notes:For the Modified B-7 Pistol, the specific PvP god roll recommendations discussed between [13:08] and [15:40] focus on maximizing range and consistency to achieve a reliable three-tap or building into a specialized two-tap loop. Core Stats & Components: Range Goal - Aim for at least 54 range [13:20], typically achieved with a Range Masterwork and a range-boosting mod [13:43]. Barrel - Hammer-Forged Rifling is the top pick, but Smallbore or Corkscrew Rifling are solid alternatives. Because it is a precision frame, recoil-correcting barrels like Extended Barrel are unnecessary [13:48]. Magazine - Overclocked Heat Sink is considered essential, providing the necessary damage buff to enable the three-tap without needing specific combat perks [14:00]. Main Perks: Column 3 - Delicate Tuning is the preferred choice for its handling boost and superior initial range [14:12]. Keep Away is a strong alternative that performs similarly, particularly for those who frequently shoot through the entire magazine. Column 4 (Three-Tap Focus) - Opening Shot is highly recommended for any character or subclass, ensuring the first bullet has maximum range and accuracy for a fast .67s kill [14:34]. Column 4 (Utility/Dueling) - Eye of the Storm is better for prolonged duels, while Headstone is useful for area denial or Stasis synergy [14:23]. Column 4 (Two-Tap Focus) - If running the specific Bakris two-tap loop, swap Opening Shot for Adagio [15:16]. [YT: Legoleflash https://youtu.be/Oc6bHfJCR3w @13:08]|tags:pvp
-dimwishlist:item=3146657388&perks=2697220197,3250034553,4090651448,1482024992,1092016998,307683764,3619207468,47981717,699525795,3673922083,124408337#notes:For the Modified B-7 Pistol, the specific PvP god roll recommendations discussed between [13:08] and [15:40] focus on maximizing range and consistency to achieve a reliable three-tap or building into a specialized two-tap loop. Core Stats & Components: Range Goal - Aim for at least 54 range [13:20], typically achieved with a Range Masterwork and a range-boosting mod [13:43]. Barrel - Hammer-Forged Rifling is the top pick, but Smallbore or Corkscrew Rifling are solid alternatives. Because it is a precision frame, recoil-correcting barrels like Extended Barrel are unnecessary [13:48]. Magazine - Overclocked Heat Sink is considered essential, providing the necessary damage buff to enable the three-tap without needing specific combat perks [14:00]. Main Perks: Column 3 - Delicate Tuning is the preferred choice for its handling boost and superior initial range [14:12]. Keep Away is a strong alternative that performs similarly, particularly for those who frequently shoot through the entire magazine. Column 4 (Three-Tap Focus) - Opening Shot is highly recommended for any character or subclass, ensuring the first bullet has maximum range and accuracy for a fast .67s kill [14:34]. Column 4 (Utility/Dueling) - Eye of the Storm is better for prolonged duels, while Headstone is useful for area denial or Stasis synergy [14:23]. Column 4 (Two-Tap Focus) - If running the specific Bakris two-tap loop, swap Opening Shot for Adagio [15:16]. [YT: Legoleflash https://youtu.be/Oc6bHfJCR3w @13:08]|tags:pvp
+dimwishlist:item=1872906663&perks=2697220197,3250034553,4090651448,1482024992,1092016998,307683764,3619207468,47981717,699525795,3673922083,124408337#notes:For the Modified B-7 Pistol, the specific PvP god roll recommendations discussed between [13:08] and [15:40] focus on maximizing range and consistency to achieve a reliable three-tap or building into a specialized two-tap loop.
+
+Core Stats & Components
+Range Goal: Aim for at least 54 range [13:20]. This is typically achieved with a Range Masterwork and a range-boosting mod [13:43].
+
+Barrel: Hammer-Forged Rifling is the top pick, but Smallbore or Corkscrew Rifling are solid alternatives. Because it is a precision frame, recoil-correcting barrels like Extended Barrel are unnecessary [13:48].
+
+Magazine: Overclocked Heat Sink is considered essential. It provides the necessary damage buff to enable the three-tap without needing specific combat perks [14:00].
+
+Main Perks
+Column 3: Delicate Tuning is the preferred choice for its handling boost and superior initial range [14:12]. Keep Away is a strong alternative that performs similarly, particularly for those who frequently shoot through the entire magazine [14:12].
+
+Column 4 (Three-Tap Focus): Opening Shot is highly recommended for any character or subclass. It ensures the first bullet has maximum range and accuracy, making the subsequent two hits much easier to land for a fast .67s kill [14:34].
+
+Column 4 (Utility/Dueling): Eye of the Storm is better for players who find themselves in prolonged duels, while Headstone is useful for area denial or Stasis synergy [14:23].
+
+Column 4 (Two-Tap Focus): If you are running the specific Bakris two-tap loop, swap Opening Shot for Adagio [15:16]. [YT: Legoleflash https://youtu.be/Oc6bHfJCR3w @13:08]|tags:pvp
+dimwishlist:item=3146657388&perks=2697220197,3250034553,4090651448,1482024992,1092016998,307683764,3619207468,47981717,699525795,3673922083,124408337#notes:For the Modified B-7 Pistol, the specific PvP god roll recommendations discussed between [13:08] and [15:40] focus on maximizing range and consistency to achieve a reliable three-tap or building into a specialized two-tap loop.
+
+Core Stats & Components
+Range Goal: Aim for at least 54 range [13:20]. This is typically achieved with a Range Masterwork and a range-boosting mod [13:43].
+
+Barrel: Hammer-Forged Rifling is the top pick, but Smallbore or Corkscrew Rifling are solid alternatives. Because it is a precision frame, recoil-correcting barrels like Extended Barrel are unnecessary [13:48].
+
+Magazine: Overclocked Heat Sink is considered essential. It provides the necessary damage buff to enable the three-tap without needing specific combat perks [14:00].
+
+Main Perks
+Column 3: Delicate Tuning is the preferred choice for its handling boost and superior initial range [14:12]. Keep Away is a strong alternative that performs similarly, particularly for those who frequently shoot through the entire magazine [14:12].
+
+Column 4 (Three-Tap Focus): Opening Shot is highly recommended for any character or subclass. It ensures the first bullet has maximum range and accuracy, making the subsequent two hits much easier to land for a fast .67s kill [14:34].
+
+Column 4 (Utility/Dueling): Eye of the Storm is better for players who find themselves in prolonged duels, while Headstone is useful for area denial or Stasis synergy [14:23].
+
+Column 4 (Two-Tap Focus): If you are running the specific Bakris two-tap loop, swap Opening Shot for Adagio [15:16]. [YT: Legoleflash https://youtu.be/Oc6bHfJCR3w @13:08]|tags:pvp
 
 
 // ===== MOS ATHANOR IV (Hand Cannon) =====

@@ -360,7 +360,8 @@ function serializeItem(item: WishlistItem, weaponHash?: number): string {
   }
 
   // Build notes with YouTube data embedded
-  let fullNotes = item.notes || ''
+  // Strip newlines - DIM format requires single-line entries
+  let fullNotes = (item.notes || '').replace(/[\r\n]+/g, ' ').trim()
 
   // Only append YouTube info if notes don't already contain a [YT:] tag
   // This prevents duplicate tags when re-exporting imported wishlists
