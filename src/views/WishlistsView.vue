@@ -14,18 +14,18 @@
         <button
           v-if="store.presetCount > 0"
           @click="handleCheckUpdates"
-          :disabled="store.loading"
+          :disabled="store.loading || checkingUpdates"
           class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-overlay text-text hover:bg-surface-elevated disabled:opacity-50 transition-colors"
         >
           <svg
-            :class="['h-4 w-4', store.loading && 'animate-spin']"
+            :class="['h-4 w-4', checkingUpdates && 'animate-spin']"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
           >
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
-          Check for Updates
+          {{ checkingUpdates ? 'Checking...' : 'Check for Updates' }}
         </button>
 
         <!-- Create New Button - only show when no custom wishlist exists -->
@@ -41,6 +41,70 @@
         </button>
       </div>
     </div>
+
+    <!-- Update Check Result Toast -->
+    <Transition
+      enter-active-class="transition ease-out duration-200"
+      enter-from-class="opacity-0 translate-y-1"
+      enter-to-class="opacity-100 translate-y-0"
+      leave-active-class="transition ease-in duration-150"
+      leave-from-class="opacity-100 translate-y-0"
+      leave-to-class="opacity-0 translate-y-1"
+    >
+      <div
+        v-if="updateResultMessage"
+        :class="[
+          'mb-4 rounded-lg px-4 py-3 flex items-center gap-3',
+          updateResultType === 'success'
+            ? 'bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700/50'
+            : 'bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700/50'
+        ]"
+      >
+        <!-- Success checkmark -->
+        <svg
+          v-if="updateResultType === 'success'"
+          class="h-5 w-5 text-green-600 dark:text-green-400 flex-shrink-0"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        <!-- Info icon -->
+        <svg
+          v-else
+          class="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span
+          :class="[
+            'text-sm',
+            updateResultType === 'success'
+              ? 'text-green-800 dark:text-green-200'
+              : 'text-blue-800 dark:text-blue-200'
+          ]"
+        >
+          {{ updateResultMessage }}
+        </span>
+        <button
+          @click="updateResultMessage = null"
+          :class="[
+            'ml-auto p-1 rounded hover:bg-black/10 dark:hover:bg-white/10',
+            updateResultType === 'success'
+              ? 'text-green-600 dark:text-green-400'
+              : 'text-blue-600 dark:text-blue-400'
+          ]"
+        >
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </Transition>
 
     <!-- Update Available Banner -->
     <div
@@ -274,6 +338,11 @@ const newWishlistDescription = ref('')
 const deletingWishlist = ref<Wishlist | null>(null)
 const loadingPresetId = ref<string | null>(null)
 
+// Update checking state
+const checkingUpdates = ref(false)
+const updateResultMessage = ref<string | null>(null)
+const updateResultType = ref<'info' | 'success'>('info')
+
 // Computed
 const unloadedLargePresets = computed(() => store.getUnloadedLargePresetConfigs())
 
@@ -304,7 +373,33 @@ async function handleLoadLargePreset(presetId: string) {
 }
 
 async function handleCheckUpdates() {
-  await store.checkForUpdates()
+  checkingUpdates.value = true
+  updateResultMessage.value = null
+
+  try {
+    await store.checkForUpdates()
+
+    // Count updates available
+    const updatesAvailable = Array.from(store.updateStatuses.values()).filter((s) => s.hasUpdate).length
+
+    if (updatesAvailable === 0) {
+      updateResultMessage.value = 'All wishlists are up to date'
+      updateResultType.value = 'success'
+    } else if (updatesAvailable === 1) {
+      updateResultMessage.value = '1 update available'
+      updateResultType.value = 'info'
+    } else {
+      updateResultMessage.value = `${updatesAvailable} updates available`
+      updateResultType.value = 'info'
+    }
+
+    // Auto-dismiss after 4 seconds
+    setTimeout(() => {
+      updateResultMessage.value = null
+    }, 4000)
+  } finally {
+    checkingUpdates.value = false
+  }
 }
 
 async function handleRefreshAll() {
