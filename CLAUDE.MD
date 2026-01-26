@@ -190,9 +190,14 @@ When updating the StoicalZebra canonical wishlist:
 
 1. **Update** `public/wishlists/StoicalZebra-wishlist.txt` (the master list)
 2. **Archive** the previous version to `data/wishlists/archive/StoicalZebra-wishlist-YYYY-MM-DD[-N].txt`
-3. **Commit both** files together in one commit
+3. **Commit & push** both files together
+4. **Production**: Users click "Check for Updates" on Wishlists page (compares against `githubUrl`)
 
 This keeps the canonical list current while preserving history of previous versions.
+
+**Local vs Production:**
+- **Dev mode**: Uses `localUrl` → changes instant via Vite
+- **Production**: Serves from deployed `localUrl`, but `githubUrl` enables update detection
 
 ## Related Documentation
 

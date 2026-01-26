@@ -433,15 +433,15 @@ If you want to see what's in a large preset like Voltron, click "View on GitHub"
 
 ### Updating the StoicalZebra Canonical Wishlist
 
-The canonical wishlist lives at `data/wishlists/StoicalZebra-wishlist.txt` and is served via GitHub raw URL.
+The canonical wishlist lives at `public/wishlists/StoicalZebra-wishlist.txt` and is deployed with the app.
 
 **Workflow:**
 
 ```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────────────┐     ┌─────────────────┐
-│  Fork preset    │ ──► │  Edit custom    │ ──► │  Click "Save as         │ ──► │  Commit & Push  │
-│  to custom      │     │  wishlist       │     │  Canonical" button      │     │  to GitHub      │
-└─────────────────┘     └─────────────────┘     └─────────────────────────┘     └─────────────────┘
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│  Fork preset    │ ──► │  Edit custom    │ ──► │  Click "Save as         │ ──► │  Commit & Push  │ ──► │  Check for      │
+│  to custom      │     │  wishlist       │     │  Canonical" button      │     │  to GitHub      │     │  Updates        │
+└─────────────────┘     └─────────────────┘     └─────────────────────────┘     └─────────────────┘     └─────────────────┘
 ```
 
 **Steps:**
@@ -450,19 +450,29 @@ The canonical wishlist lives at `data/wishlists/StoicalZebra-wishlist.txt` and i
 2. Navigate to **Wishlists** → **StoicalZebra** → Click **Fork to Custom**
 3. Edit your custom copy: add rolls, update notes, change tags
 4. Click the amber **"Save as Canonical"** button (appears on custom wishlists in dev mode)
-   - Writes directly to `data/wishlists/StoicalZebra-wishlist.txt`
+   - Writes directly to `public/wishlists/StoicalZebra-wishlist.txt`
    - Auto-archives previous version to `data/wishlists/archive/`
 5. `git add . && git commit -m "chore: update wishlist" && git push`
+6. Wait for Vercel deployment, then click **"Check for Updates"** on the Wishlists page
 
 **Note:** Premade wishlists like StoicalZebra are read-only by design. Fork to a custom wishlist to make edits, then publish back to canonical.
+
+**Dev vs Production:**
+
+| Environment | Source | Update Detection |
+|-------------|--------|------------------|
+| Dev (`localhost`) | Local file via Vite | Instant (no refresh needed) |
+| Production | Deployed with app | Click "Check for Updates" → compares against GitHub |
+
+GitHub CDN (`raw.githubusercontent.com`) may cache for a few minutes after push. If "Check for Updates" doesn't detect changes immediately, wait and try again.
 
 **Storage:**
 
 | Location | Purpose |
 |----------|---------|
-| `data/wishlists/StoicalZebra-wishlist.txt` | Source of truth (in Git) |
+| `public/wishlists/StoicalZebra-wishlist.txt` | Source of truth (deployed with app) |
 | `data/wishlists/archive/` | Timestamped backups of previous versions |
-| GitHub raw URL | Public link for DIM users to import |
+| GitHub raw URL | Used for update detection in production |
 
 ---
 
