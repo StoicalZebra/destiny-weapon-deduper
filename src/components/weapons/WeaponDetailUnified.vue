@@ -1849,6 +1849,10 @@ const editWishlistItem = (item: WishlistItem, wishlist: Wishlist) => {
   currentProfileId.value = item.id
   sourceWishlistId.value = wishlist.id
   profileNotesInput.value = item.notes || ''
+  selectedTags.value = new Set(item.tags || [])
+  youtubeLink.value = item.youtubeLink || ''
+  youtubeAuthor.value = item.youtubeAuthor || ''
+  youtubeTimestamp.value = item.youtubeTimestamp || ''
 
   if (!displayProfiles.value.find(p => p.id === item.id)) {
     displayProfiles.value.push({
