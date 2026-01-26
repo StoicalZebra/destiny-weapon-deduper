@@ -25,6 +25,18 @@
     @back="router.push('/')"
   />
 
+  <!-- Fallback: weapon not in inventory but available in manifest -->
+  <WeaponDetailLayout
+    v-else-if="fallbackWeapon"
+    :weapon="fallbackWeapon"
+    :loading="manifestLoading"
+    :edit-item-id="editItemId"
+    :edit-wishlist-id="editWishlistId"
+    back-label="Back to inventory"
+    loading-message="Loading weapon data..."
+    @back="router.push('/')"
+  />
+
   <!-- Unowned weapon with god rolls: placeholder view -->
   <UnownedWeaponGodRolls
     v-else-if="!weaponsStore.loading && hasGodRolls && weaponFromManifest"
@@ -43,6 +55,12 @@
   <div v-else-if="weaponsStore.loading" class="text-center py-12">
     <div class="inline-block w-8 h-8 border-4 border-accent-primary border-t-transparent rounded-full animate-spin"></div>
     <p class="mt-4 text-text-muted">Loading your arsenal...</p>
+  </div>
+
+  <!-- Loading state (inventory mode fallback - loading manifest) -->
+  <div v-else-if="!isBrowseMode && manifestLoading" class="text-center py-12">
+    <div class="inline-block w-8 h-8 border-4 border-accent-primary border-t-transparent rounded-full animate-spin"></div>
+    <p class="mt-4 text-text-muted">Loading weapon data...</p>
   </div>
 
   <!-- Error state -->
@@ -97,6 +115,16 @@ const editWishlistId = computed(() => route.query.wishlistId as string | undefin
 const selectedWeapon = computed(() => {
   if (!Number.isFinite(weaponHash.value)) return null
   return weaponsStore.weapons.find(weapon => weapon.weaponHash === weaponHash.value) || null
+})
+
+// Fallback weapon from manifest when not in inventory (for viewing wishlist rolls)
+const fallbackWeapon = computed(() => {
+  // Only use fallback if weapon not in inventory and manifest is loaded
+  if (isBrowseMode.value) return null
+  if (selectedWeapon.value) return null
+  if (!manifestStore.isLoaded) return null
+  if (!Number.isFinite(weaponHash.value)) return null
+  return buildDedupedWeaponFromManifest(weaponHash.value)
 })
 
 // Check if user owns this weapon (for browse mode redirect)
@@ -163,6 +191,13 @@ watch(ownedWeapon, (weapon) => {
     // User owns this weapon (possibly a different variant), redirect to inventory detail view
     // Use the owned weapon's hash, not the URL hash (they may differ for variants)
     router.replace(`/weapons/${weapon.weaponHash}`)
+  }
+}, { immediate: true })
+
+// In inventory mode, load manifest if weapon not found (for fallback display)
+watch([() => weaponsStore.loading, selectedWeapon], async ([loading, weapon]) => {
+  if (!isBrowseMode.value && !loading && !weapon && !manifestStore.isLoaded) {
+    await loadManifestForBrowse()
   }
 }, { immediate: true })
 
