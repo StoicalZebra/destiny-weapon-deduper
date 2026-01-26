@@ -67,7 +67,7 @@ Column 4 (Three-Tap Focus): Opening Shot is highly recommended for any character
 
 Column 4 (Utility/Dueling): Eye of the Storm is better for players who find themselves in prolonged duels, while Headstone is useful for area denial or Stasis synergy [14:23].
 
-Column 4 (Two-Tap Focus): If you are running the specific Bakris two-tap loop, swap Opening Shot for Adagio [15:16]. [YT: Legoleflash https://youtu.be/Oc6bHfJCR3w @13:08]|tags:pvp
+Column 4 (Two-Tap Focus): If you are running the specific Bakris two-tap loop, swap Opening Shot for Adagio [15:16]. [YT: Legoleflash https://youtu.be/Oc6bHfJCR3w @13:08]
 dimwishlist:item=3146657388&perks=2697220197,3250034553,4090651448,1482024992,1092016998,307683764,3619207468,47981717,699525795,3673922083,124408337#notes:For the Modified B-7 Pistol, the specific PvP god roll recommendations discussed between [13:08] and [15:40] focus on maximizing range and consistency to achieve a reliable three-tap or building into a specialized two-tap loop.
 
 Core Stats & Components
@@ -84,7 +84,7 @@ Column 4 (Three-Tap Focus): Opening Shot is highly recommended for any character
 
 Column 4 (Utility/Dueling): Eye of the Storm is better for players who find themselves in prolonged duels, while Headstone is useful for area denial or Stasis synergy [14:23].
 
-Column 4 (Two-Tap Focus): If you are running the specific Bakris two-tap loop, swap Opening Shot for Adagio [15:16]. [YT: Legoleflash https://youtu.be/Oc6bHfJCR3w @13:08]|tags:pvp
+Column 4 (Two-Tap Focus): If you are running the specific Bakris two-tap loop, swap Opening Shot for Adagio [15:16]. [YT: Legoleflash https://youtu.be/Oc6bHfJCR3w @13:08]
 
 
 // ===== MOS ATHANOR IV (Hand Cannon) =====
