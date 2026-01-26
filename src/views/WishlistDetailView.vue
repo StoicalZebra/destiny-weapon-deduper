@@ -288,24 +288,12 @@
     </div>
 
     <!-- Saved Toast -->
-    <Transition
-      enter-active-class="transition-all duration-200 ease-out"
-      enter-from-class="opacity-0 translate-y-2"
-      enter-to-class="opacity-100 translate-y-0"
-      leave-active-class="transition-all duration-150 ease-in"
-      leave-from-class="opacity-100 translate-y-0"
-      leave-to-class="opacity-0 translate-y-2"
-    >
-      <div
-        v-if="savedMessage"
-        class="fixed bottom-4 right-4 z-50 flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 text-white shadow-lg"
-      >
-        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-        </svg>
-        {{ savedMessage }}
-      </div>
-    </Transition>
+    <AppToast
+      :visible="!!savedMessage"
+      :message="savedMessage || ''"
+      type="success"
+      position="fixed"
+    />
   </div>
 </template>
 
@@ -317,6 +305,7 @@ import { manifestService } from '@/services/manifest-service'
 import { weaponParser } from '@/services/weapon-parser'
 import WishlistRollCard from '@/components/wishlists/WishlistRollCard.vue'
 import ConsolidatedRollCard from '@/components/wishlists/ConsolidatedRollCard.vue'
+import AppToast from '@/components/common/AppToast.vue'
 import type { WishlistItem, ConsolidatedWishlistItem } from '@/models/wishlist'
 import { formatHashSuffix } from '@/utils/formatting'
 import { sortItemsByTagPriority } from '@/utils/wishlist-sorting'
