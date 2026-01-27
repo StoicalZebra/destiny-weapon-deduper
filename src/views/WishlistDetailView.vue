@@ -205,6 +205,7 @@
                 :weapon-hash="weaponHash"
                 :wishlist-name="wishlist?.name || 'Unknown'"
                 :show-actions="isEditable"
+                :show-view-only="!isEditable"
                 @view="handleViewItem(item, weaponHash)"
                 @edit="handleEditItem(item, weaponHash)"
                 @remove="handleDeleteItem(item.id)"
