@@ -22,9 +22,6 @@ dimwishlist:item=2819552809&perks=1482024992,307683764,555281244,4090651448,3868
 dimwishlist:item=1763361847&perks=2579169598,460017080|tags:pvp
 dimwishlist:item=3618823368&perks=2579169598,460017080|tags:pvp
 
-dimwishlist:item=1763361847&perks=3713579091,2890807135,3017780555#notes:[YT: Chablo 91 https://www.youtube.com/watch?v=6IKUntLeQJk @1:44]|tags:pve
-dimwishlist:item=3618823368&perks=3713579091,2890807135,3017780555#notes:[YT: Chablo 91 https://www.youtube.com/watch?v=6IKUntLeQJk @1:44]|tags:pve
-
 
 // ===== FINITE IMPACTOR (Hand Cannon) =====
 dimwishlist:item=1917334929&perks=2451262963,555281244#notes:[YT: https://www.blueberries.gg/weapons/finite-impactor-god-rolls/]|tags:pvp
@@ -61,6 +58,8 @@ dimwishlist:item=4118334987&perks=2579169598,2039302152,555281244,3673922083,148
 
 
 // ===== PSI AETERNA IV (Pulse Rifle) =====
+dimwishlist:item=135971347&perks=1115162408,3966416502,3218042543#notes:[YT: Aztecross https://www.youtube.com/watch?v=DQWCgScvCRU @10:23]|tags:pve
+dimwishlist:item=3556730800&perks=1115162408,3966416502,3218042543#notes:[YT: Aztecross https://www.youtube.com/watch?v=DQWCgScvCRU @10:23]|tags:pve
 dimwishlist:item=135971347&perks=1115162408,3966416502,3218042543,1089671869#notes:[YT: Aztecross https://www.youtube.com/watch?v=DQWCgScvCRU @10:23]|tags:pve
 dimwishlist:item=3556730800&perks=1115162408,3966416502,3218042543,1089671869#notes:[YT: Aztecross https://www.youtube.com/watch?v=DQWCgScvCRU @10:23]|tags:pve
 
