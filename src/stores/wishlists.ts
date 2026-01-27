@@ -410,13 +410,18 @@ export const useWishlistsStore = defineStore('wishlists', () => {
     const preset = presetWishlists.value.find((w) => w.id === presetId)
     if (!preset) return null
 
+    // Deduplicate items before forking - preset wishlists often have duplicate
+    // entries for the same roll (normal + holofoil variants) for DIM compatibility,
+    // but user wishlists don't need these duplicates
+    const dedupedItems = deduplicateWishlistItems(preset.items)
+
     const forked: Wishlist = {
       id: crypto.randomUUID(),
       name: newName,
       description: newDescription || `Based on ${preset.name}`,
       sourceType: 'user',
       lastUpdated: new Date().toISOString(),
-      items: preset.items.map((item) => ({
+      items: dedupedItems.map((item) => ({
         ...item,
         id: crypto.randomUUID() // Generate new IDs for forked items
       }))
