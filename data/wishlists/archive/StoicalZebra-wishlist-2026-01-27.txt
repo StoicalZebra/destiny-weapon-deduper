@@ -60,8 +60,6 @@ dimwishlist:item=4118334987&perks=2579169598,2039302152,555281244,3673922083,148
 // ===== PSI AETERNA IV (Pulse Rifle) =====
 dimwishlist:item=135971347&perks=1115162408,3966416502,3218042543#notes:[YT: Aztecross https://www.youtube.com/watch?v=DQWCgScvCRU @10:23]|tags:pve
 dimwishlist:item=3556730800&perks=1115162408,3966416502,3218042543#notes:[YT: Aztecross https://www.youtube.com/watch?v=DQWCgScvCRU @10:23]|tags:pve
-dimwishlist:item=135971347&perks=1115162408,3966416502,3218042543,1089671869#notes:[YT: Aztecross https://www.youtube.com/watch?v=DQWCgScvCRU @10:23]|tags:pve
-dimwishlist:item=3556730800&perks=1115162408,3966416502,3218042543,1089671869#notes:[YT: Aztecross https://www.youtube.com/watch?v=DQWCgScvCRU @10:23]|tags:pve
 
 
 // ===== PURE RECOLLECTION (Shotgun) =====
