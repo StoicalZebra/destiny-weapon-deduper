@@ -87,7 +87,7 @@
         <!-- View-only for premade wishlists -->
         <button
           v-if="showViewOnly && !showActions"
-          @click="emit('view')"
+          @click.stop="emit('view')"
           class="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300"
         >
           View
@@ -95,22 +95,22 @@
         <!-- Full actions for user wishlists -->
         <template v-if="showActions">
           <button
-            @click="emit('view')"
+            @click.stop="emit('view')"
             class="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300"
           >
             View
           </button>
           <button
-            @click="emit('edit')"
+            @click.stop="emit('edit')"
             class="text-accent-primary hover:text-accent-primary/80"
           >
             Edit
           </button>
           <button
-            @click="emit('remove')"
+            @click.stop="emit('remove')"
             class="text-red-600 dark:text-red-400 hover:text-red-500 dark:hover:text-red-300"
           >
-            Remove
+            Delete
           </button>
         </template>
       </div>

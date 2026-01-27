@@ -288,6 +288,35 @@
       </div>
     </div>
 
+    <!-- Delete Confirmation Modal -->
+    <div
+      v-if="deletingItemId"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+      @click.self="deletingItemId = null"
+    >
+      <div class="w-full max-w-sm rounded-xl bg-surface-elevated border border-border p-6">
+        <h2 class="text-xl font-semibold text-text mb-2">Delete Roll?</h2>
+        <p class="text-sm text-text-muted mb-6">
+          This will permanently remove this roll from your wishlist.
+        </p>
+
+        <div class="flex justify-end gap-2">
+          <button
+            @click="deletingItemId = null"
+            class="px-4 py-2 rounded-lg bg-surface-overlay text-text-muted hover:bg-surface-elevated transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            @click="confirmDeleteItem"
+            class="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-500 transition-colors"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Saved Toast -->
     <AppToast
       :visible="!!savedMessage"
@@ -338,6 +367,9 @@ const showForkModal = ref(false)
 const forkName = ref('')
 const forkDescription = ref('')
 const forking = ref(false)
+
+// Delete confirmation state
+const deletingItemId = ref<string | null>(null)
 
 // Get wishlist
 const wishlist = computed(() => {
@@ -628,7 +660,13 @@ async function handleExportAsCanonical() {
 
 function handleDeleteItem(itemId: string) {
   if (!wishlist.value || wishlist.value.sourceType !== 'user') return
-  wishlistsStore.removeItemFromWishlist(wishlist.value.id, itemId)
+  deletingItemId.value = itemId
+}
+
+function confirmDeleteItem() {
+  if (!wishlist.value || !deletingItemId.value) return
+  wishlistsStore.removeItemFromWishlist(wishlist.value.id, deletingItemId.value)
+  deletingItemId.value = null
 }
 
 function handleViewItem(_item: WishlistItem, weaponHash: number) {
