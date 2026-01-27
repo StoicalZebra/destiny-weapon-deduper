@@ -291,6 +291,26 @@ class ManifestService {
   }
 
   /**
+   * Get all weapon hashes that share the same name (ignoring season/watermark).
+   * This catches ALL variants including holofoils which have different watermarks.
+   * Use this when you need to merge perk options across all versions of a weapon.
+   */
+  getAllHashesForWeaponName(weaponName: string): number[] {
+    const table = this.cache.get('DestinyInventoryItemDefinition')
+    if (!table) return []
+
+    const hashes: number[] = []
+    for (const key in table) {
+      const def = table[key] as DestinyInventoryItemDefinition
+      if (def?.displayProperties?.name === weaponName && def.itemType === 3) {
+        const hash = typeof def.hash === 'number' ? def.hash : parseInt(key)
+        hashes.push(hash)
+      }
+    }
+    return hashes
+  }
+
+  /**
    * Get all legendary and exotic weapons from the manifest.
    * Used for browsing all weapons regardless of ownership.
    * Returns an array of weapon definitions sorted by name.

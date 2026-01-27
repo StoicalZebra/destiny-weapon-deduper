@@ -633,6 +633,7 @@ describe('buildDedupedWeaponFromManifest', () => {
     vi.spyOn(manifestService, 'getDefinition')
     vi.spyOn(manifestService, 'getPlugSet')
     vi.spyOn(manifestService, 'getWeaponVariantHashes')
+    vi.spyOn(manifestService, 'getAllHashesForWeaponName')
     vi.spyOn(manifestService, 'isHolofoilWeapon')
     vi.spyOn(weaponParser, 'getWeaponName')
     vi.spyOn(weaponParser, 'getWeaponType')
@@ -682,7 +683,7 @@ describe('buildDedupedWeaponFromManifest', () => {
       inventory: { tierType: 5 }
     } as any)
 
-    vi.mocked(manifestService.getWeaponVariantHashes).mockReturnValue([12345])
+    vi.mocked(manifestService.getAllHashesForWeaponName).mockReturnValue([12345])
     vi.mocked(manifestService.isHolofoilWeapon).mockReturnValue(false)
     vi.mocked(weaponParser.getWeaponName).mockReturnValue('Austringer')
     vi.mocked(weaponParser.getWeaponType).mockReturnValue('Hand Cannon')
@@ -710,7 +711,7 @@ describe('buildDedupedWeaponFromManifest', () => {
       inventory: { tierType: 5 }
     } as any)
 
-    vi.mocked(manifestService.getWeaponVariantHashes).mockReturnValue([12345])
+    vi.mocked(manifestService.getAllHashesForWeaponName).mockReturnValue([12345])
     vi.mocked(manifestService.isHolofoilWeapon).mockReturnValue(false)
     vi.mocked(weaponParser.getWeaponName).mockReturnValue('Legendary Weapon')
     vi.mocked(weaponParser.getWeaponType).mockReturnValue('Auto Rifle')
@@ -731,7 +732,7 @@ describe('buildDedupedWeaponFromManifest', () => {
       inventory: { tierType: 6 }
     } as any)
 
-    vi.mocked(manifestService.getWeaponVariantHashes).mockReturnValue([12345])
+    vi.mocked(manifestService.getAllHashesForWeaponName).mockReturnValue([12345])
     vi.mocked(manifestService.isHolofoilWeapon).mockReturnValue(false)
     vi.mocked(weaponParser.getWeaponName).mockReturnValue('Exotic Weapon')
     vi.mocked(weaponParser.getWeaponType).mockReturnValue('Pulse Rifle')
@@ -752,7 +753,8 @@ describe('buildDedupedWeaponFromManifest', () => {
       inventory: { tierType: 5 }
     } as any)
 
-    vi.mocked(manifestService.getWeaponVariantHashes).mockReturnValue([12345, 12346])
+    // Mock getAllHashesForWeaponName to return both normal and holofoil hashes
+    vi.mocked(manifestService.getAllHashesForWeaponName).mockReturnValue([12345, 12346])
     vi.mocked(manifestService.isHolofoilWeapon)
       .mockReturnValueOnce(false) // 12345 normal
       .mockReturnValueOnce(true)  // 12346 holofoil

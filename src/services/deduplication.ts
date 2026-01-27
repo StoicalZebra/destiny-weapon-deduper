@@ -236,6 +236,40 @@ function getPlugItemHashes(socketEntry: SocketEntry): number[] {
   return getPlugItemsWithRollStatus(socketEntry).map(p => p.hash)
 }
 
+/**
+ * Merge plug items from all variant hashes for a given socket index.
+ * This ensures perks available only on holofoil variants are included.
+ */
+function getMergedPlugItemsForSocket(
+  variantHashes: number[],
+  socketIndex: number
+): PlugItemInfo[] {
+  const plugMap = new Map<number, boolean | undefined>()
+
+  for (const hash of variantHashes) {
+    const weaponDef = manifestService.getInventoryItem(hash)
+    const socketEntries = weaponDef?.sockets?.socketEntries as SocketEntry[] | undefined
+    if (!socketEntries?.[socketIndex]) continue
+
+    const socketEntry = socketEntries[socketIndex]
+    const plugItems = getPlugItemsWithRollStatus(socketEntry)
+
+    for (const plugItem of plugItems) {
+      const existing = plugMap.get(plugItem.hash)
+      if (existing === true) {
+        // Already marked as rollable, don't downgrade
+        continue
+      }
+      plugMap.set(plugItem.hash, plugItem.currentlyCanRoll === true ? true : (existing ?? plugItem.currentlyCanRoll))
+    }
+  }
+
+  return Array.from(plugMap.entries()).map(([hash, currentlyCanRoll]) => ({
+    hash,
+    currentlyCanRoll
+  }))
+}
+
 function getOwnedPlugHashes(
   instances: WeaponInstance[],
   socketIndex: number,
@@ -363,10 +397,12 @@ function buildPerkColumn(
 }
 
 function buildPerkMatrix(
-  weaponHash: number,
+  variantHashes: number[],
   instances: WeaponInstance[]
 ): { matrix: PerkColumn[]; intrinsicPerks: Perk[]; masterworkPerks: Perk[]; masterworkSocketIndex?: number } {
-  const weaponDef = manifestService.getInventoryItem(weaponHash)
+  // Use primary hash for structure, but collect plug items from all variants
+  const primaryHash = variantHashes[0]
+  const weaponDef = manifestService.getInventoryItem(primaryHash)
   const socketData = weaponDef?.sockets
 
   if (!socketData?.socketEntries?.length || !socketData.socketCategories?.length) {
@@ -410,7 +446,8 @@ function buildPerkMatrix(
       socketEntry.socketTypeHash,
       `Perk Column ${socketIndex + 1}`
     )
-    const plugItems = getPlugItemsWithRollStatus(socketEntry)
+    // Merge plug items from all variant hashes to catch holofoil-exclusive perks
+    const plugItems = getMergedPlugItemsForSocket(variantHashes, socketIndex)
     const plugItemHashes = plugItems.map(p => p.hash)
     const perkTypeNames = getPlugItemTypeNames(plugItemHashes)
     const kind = getColumnKind(socketTypeName, categoryName, perkTypeNames)
@@ -629,14 +666,28 @@ function collectVariantHashes(instances: WeaponInstance[]): WeaponVariantInfo[] 
 export function buildDedupedWeapon(
   instances: WeaponInstance[]
 ): DedupedWeapon {
-  // Collect all variant hashes (may include both normal and holofoil)
+  // Collect all variant hashes from user's instances (may include both normal and holofoil)
   const variantHashes = collectVariantHashes(instances)
   const hasHolofoil = variantHashes.some(v => v.isHolofoil)
 
   // Use primary hash (non-holofoil preferred) for weapon metadata
   const primaryHash = variantHashes[0].hash
 
-  const { matrix, intrinsicPerks, masterworkPerks, masterworkSocketIndex } = buildPerkMatrix(primaryHash, instances)
+  // For perk matrix, also include all manifest hashes for this weapon name
+  // This catches holofoil variants the user doesn't own but want to see perks for
+  const instanceHashes = new Set(variantHashes.map(v => v.hash))
+  const weaponName = weaponParser.getWeaponName(primaryHash)
+  const allNamedHashes = manifestService.getAllHashesForWeaponName(weaponName)
+
+  // Merge: instance hashes + all manifest hashes with same name
+  const allHashesForPerkMatrix = [...instanceHashes]
+  for (const hash of allNamedHashes) {
+    if (!instanceHashes.has(hash)) {
+      allHashesForPerkMatrix.push(hash)
+    }
+  }
+
+  const { matrix, intrinsicPerks, masterworkPerks, masterworkSocketIndex } = buildPerkMatrix(allHashesForPerkMatrix, instances)
   const totalPerksOwned = countOwnedPerks(matrix)
   const totalPerksPossible = countPossiblePerks(matrix)
   const completionPercentage = totalPerksPossible > 0
@@ -712,11 +763,20 @@ export function buildDedupedWeaponFromManifest(weaponHash: number): DedupedWeapo
   // Must be an actual weapon (itemType 3)
   if (weaponDef.itemType !== 3) return null
 
-  // Build perk matrix with no instances (all perks will be unowned)
-  const { matrix, intrinsicPerks, masterworkPerks, masterworkSocketIndex } = buildPerkMatrix(weaponHash, [])
+  // Get all hashes for this weapon name (catches all variants including holofoils)
+  const weaponName = weaponDef.displayProperties?.name
+  const allNamedHashes = weaponName
+    ? manifestService.getAllHashesForWeaponName(weaponName)
+    : [weaponHash]
 
-  // Get variant hashes from manifest service
-  const variantHashList = manifestService.getWeaponVariantHashes(weaponHash)
+  // Use name-based hashes for perk matrix, ensuring requested hash is included
+  const hashesForMatrix = allNamedHashes.length > 0 ? allNamedHashes : [weaponHash]
+
+  // Build perk matrix with all variant hashes (to include holofoil-exclusive perks)
+  const { matrix, intrinsicPerks, masterworkPerks, masterworkSocketIndex } = buildPerkMatrix(hashesForMatrix, [])
+
+  // For the variantHashes field, use the same list
+  const variantHashList = hashesForMatrix
   const variantHashes: WeaponVariantInfo[] = variantHashList.map(h => ({
     hash: h,
     isHolofoil: manifestService.isHolofoilWeapon(h)
