@@ -485,17 +485,32 @@ export const useWishlistsStore = defineStore('wishlists', () => {
    * Remove an item from a user wishlist
    */
   function removeItemFromWishlist(wishlistId: string, itemId: string): void {
-    const wishlist = userWishlists.value.find((w) => w.id === wishlistId)
-    if (!wishlist || wishlist.sourceType !== 'user') return
+    const wishlistIndex = userWishlists.value.findIndex((w) => w.id === wishlistId)
+    if (wishlistIndex < 0) return
 
-    const index = wishlist.items.findIndex((i) => i.id === itemId)
-    if (index >= 0) {
-      wishlist.items.splice(index, 1)
-      wishlist.lastUpdated = new Date().toISOString()
-      wishlistStorageService.saveUserWishlist(wishlist)
+    const wishlist = userWishlists.value[wishlistIndex]
+    if (wishlist.sourceType !== 'user') return
+
+    const itemIndex = wishlist.items.findIndex((i) => i.id === itemId)
+    if (itemIndex >= 0) {
+      // Create new items array without the removed item (triggers Vue reactivity)
+      const newItems = [
+        ...wishlist.items.slice(0, itemIndex),
+        ...wishlist.items.slice(itemIndex + 1)
+      ]
+
+      // Replace wishlist object to ensure Vue detects the change
+      const updatedWishlist: Wishlist = {
+        ...wishlist,
+        items: newItems,
+        lastUpdated: new Date().toISOString()
+      }
+
+      userWishlists.value[wishlistIndex] = updatedWishlist
+      wishlistStorageService.saveUserWishlist(updatedWishlist)
 
       // Rebuild weapon index for this wishlist
-      weaponIndexes.value.set(wishlistId, buildWeaponIndex(wishlist))
+      weaponIndexes.value.set(wishlistId, buildWeaponIndex(updatedWishlist))
     }
   }
 
